@@ -114,6 +114,8 @@ function renderLoop() {
 
 // Bắt đầu khởi chạy ứng dụng
 async function startApp() {
+  console.log("[AuraApp] startApp() đã được gọi. readyState:", document.readyState);
+  
   // Đặt cấu hình theme ban đầu cho body
   document.body.classList.add(`theme-${state.activePreset}`);
 
@@ -124,14 +126,19 @@ async function startApp() {
   }
   
   // 1. Tải mô hình AI
+  console.log("[AuraApp] Bắt đầu tải mô hình AI...");
   await loadHandLandmarkerModel();
+  console.log("[AuraApp] Tải mô hình AI xong. isModelLoaded:", state.isModelLoaded);
   
   // 2. Lấy quyền webcam
+  console.log("[AuraApp] Bắt đầu khởi động Webcam...");
   const success = await setupWebcam(null, showToast);
+  console.log("[AuraApp] Webcam setup result:", success);
   
   if (success) {
     // 3. Khởi tạo event listeners của UI
     setupUI();
+    console.log("[AuraApp] UI đã được thiết lập.");
 
     // Lấy danh sách camera đầu vào
     await getCameraDevices();
@@ -145,9 +152,19 @@ async function startApp() {
     }, { once: true });
     
     // 4. Khởi chạy vòng lặp dựng hình 60 FPS
+    console.log("[AuraApp] Khởi chạy renderLoop 60 FPS!");
     renderLoop();
+  } else {
+    console.error("[AuraApp] Webcam setup thất bại! Ứng dụng không thể chạy.");
   }
 }
 
 // Khởi động khi DOM tải xong
-document.addEventListener('DOMContentLoaded', startApp);
+// ES Modules được tải dạng "deferred" nên DOMContentLoaded có thể đã fire trước khi module load xong.
+// Phải kiểm tra cả hai trường hợp để đảm bảo startApp() luôn được gọi.
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', startApp);
+} else {
+  // DOM đã sẵn sàng rồi, gọi trực tiếp
+  startApp();
+}
