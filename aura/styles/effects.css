@@ -1,0 +1,48 @@
+/* Hiệu ứng chớp lóa khi kích hoạt hào quang */
+.flash-effect {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: #fff;
+  z-index: 99;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.05s ease-out;
+}
+
+.flash-effect.flash {
+  opacity: 0.9;
+  transition: none; /* Lên lóa lập tức */
+}
+
+/* Toast thông báo siêu chất */
+.toast-notification {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translate(-50%, 100px);
+  z-index: 101;
+  background: rgba(18, 18, 28, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--theme-color);
+  box-shadow: var(--theme-glow), 0 10px 30px rgba(0, 0, 0, 0.3);
+  border-radius: 16px;
+  padding: 14px 28px;
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s ease;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.toast-notification.show {
+  transform: translate(-50%, 0);
+  opacity: 1;
+}

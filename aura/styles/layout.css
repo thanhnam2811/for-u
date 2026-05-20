@@ -1,0 +1,87 @@
+/* Layout Chính */
+.main-layout {
+  flex: 1;
+  display: flex;
+  padding: 80px 24px 24px 24px;
+  gap: 24px;
+  height: 100%;
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* RESPONSIVE LAYOUT */
+@media (max-width: 1024px) {
+  .main-layout {
+    flex-direction: column;
+    padding-top: 80px;
+    height: auto;
+    overflow-y: auto;
+  }
+  
+  .controls-sidebar {
+    max-height: none;
+  }
+  
+  .camera-section {
+    flex: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .app-container {
+    height: auto;
+    min-height: 100vh;
+  }
+  .main-layout {
+    padding: 70px 12px 12px 12px;
+    gap: 16px;
+  }
+  
+  .loading-card {
+    padding: 24px;
+  }
+  
+  .lotus-spinner {
+    width: 70px;
+    height: 70px;
+    margin-bottom: 15px;
+  }
+  
+  .lotus-spinner span {
+    font-size: 2.5rem;
+  }
+  
+  .loading-card h2 {
+    font-size: 1.3rem;
+  }
+  
+  .camera-wrapper {
+    border-radius: 16px;
+  }
+  
+  .controls-sidebar {
+    border-radius: 16px;
+  }
+  
+  .sidebar-header {
+    padding: 16px;
+  }
+  
+  .sidebar-content {
+    padding: 16px;
+    gap: 16px;
+  }
+  
+  .color-presets, .sound-presets {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .sparkle-text {
+    font-size: 2rem;
+  }
+  
+  .gesture-instruction p {
+    font-size: 0.85rem;
+  }
+}
