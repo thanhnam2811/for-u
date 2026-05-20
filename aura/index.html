@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trải Nghiệm Hào Quang AI 🌟</title>
+  
+  <!-- Font chữ tròn trịa, hiện đại, dễ thương và hỗ trợ 100% tiếng Việt không lỗi hiển thị -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@500;700&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Thư viện Material Icons chất lượng cao -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+  
+  <link rel="stylesheet" href="style.css">
+  
+  <!-- Nạp MediaPipe Tasks-Vision từ CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.8/vision_bundle.js" crossorigin="anonymous"></script>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Nút quay lại trang chủ -->
+    <a href="../index.html" class="btn-back">
+      <span class="material-icons-round">arrow_back</span>
+      <span>Quay lại</span>
+    </a>
+
+    <!-- Màn hình tải mô hình AI ban đầu -->
+    <div id="loading-screen" class="loading-screen">
+      <div class="loading-card">
+        <div class="lotus-spinner">
+          <span class="material-icons-round active-lotus">auto_awesome</span>
+        </div>
+        <h2>Đang chuẩn bị công cụ AI...</h2>
+        <p id="loading-status">Đang tải mô hình nhận diện tay của MediaPipe...</p>
+        <div class="progress-bar-container">
+          <div id="progress-bar" class="progress-bar"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Layout chính -->
+    <main class="main-layout">
+      <!-- Vùng hiển thị Camera & Canvas vẽ hiệu ứng -->
+      <section class="camera-section">
+        <div class="camera-wrapper" id="camera-wrapper">
+          <!-- Video ẩn đi hoặc hiển thị làm nền -->
+          <video id="webcam" autoplay playsinline muted></video>
+          
+          <!-- Canvas vẽ hiệu ứng hào quang, xương tay và hạt sáng -->
+          <canvas id="canvas-overlay"></canvas>
+          
+          <!-- Lớp phủ thông tin trạng thái cử chỉ -->
+          <div class="gesture-overlay" id="gesture-overlay">
+            <div class="gesture-instruction" id="gesture-instruction">
+              <span class="material-icons-round pray-icon">spa</span>
+              <p>🙏 Chắp hai tay trước ngực để toả Hào Quang 🙏</p>
+            </div>
+            <div class="gesture-triggered-msg" id="gesture-triggered-msg">
+              <h1 class="sparkle-text">HÀO QUANG TOẢ SÁNG!</h1>
+              <p>Hiệu ứng đã được kích hoạt!</p>
+            </div>
+          </div>
+
+          <!-- Thông số kỹ thuật hiển thị góc nhỏ (Techy style) -->
+          <div class="tech-stats">
+            <div class="stat-item"><span class="label">FPS:</span> <span id="stat-fps">0</span></div>
+            <div class="stat-item"><span class="label">Bàn tay:</span> <span id="stat-hands">0/2</span></div>
+            <div class="stat-item"><span class="label">Khoảng cách:</span> <span id="stat-dist">--</span></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Bảng điều khiển cấu hình bên cạnh (Glassmorphism Sidebar) -->
+      <aside class="controls-sidebar">
+        <div class="sidebar-header">
+          <span class="material-icons-round header-icon">tune</span>
+          <h2>Cài Đặt Hiệu Ứng</h2>
+        </div>
+
+        <div class="sidebar-content">
+          <!-- Chọn Camera -->
+          <div class="control-group">
+            <label for="camera-select">
+              <span class="material-icons-round">videocam</span>
+              Chọn thiết bị ghi hình
+            </label>
+            <select id="camera-select" class="custom-select">
+              <option value="">Đang tìm camera...</option>
+            </select>
+          </div>
+
+          <!-- Kiểu Hào Quang (Màu sắc) -->
+          <div class="control-group">
+            <label>
+              <span class="material-icons-round">palette</span>
+              Tông màu Hào Quang
+            </label>
+            <div class="color-presets">
+              <button class="color-btn active" data-preset="gold" title="Hoàng Kim">
+                <span class="color-dot gold"></span>
+                <span>Hoàng Kim</span>
+              </button>
+              <button class="color-btn" data-preset="cosmic" title="Tinh Vân">
+                <span class="color-dot cosmic"></span>
+                <span>Tinh Vân</span>
+              </button>
+              <button class="color-btn" data-preset="lotus" title="Hồng Sen">
+                <span class="color-dot lotus"></span>
+                <span>Hồng Sen</span>
+              </button>
+              <button class="color-btn" data-preset="emerald" title="Lục Bảo">
+                <span class="color-dot emerald"></span>
+                <span>Lục Bảo</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Âm thanh giải phóng -->
+          <div class="control-group">
+            <label>
+              <span class="material-icons-round">music_note</span>
+              Âm thanh hiệu ứng
+            </label>
+            <div class="sound-presets">
+              <button class="sound-btn active" data-sound="gong">
+                <span class="material-icons-round">notifications_active</span>
+                <span>Chuông Đồng</span>
+              </button>
+              <button class="sound-btn" data-sound="chime">
+                <span class="material-icons-round">graphic_eq</span>
+                <span>Chuông Gió</span>
+              </button>
+              <button class="sound-btn" data-sound="bowl">
+                <span class="material-icons-round">waves</span>
+                <span>Chuông Xoay</span>
+              </button>
+              <button class="sound-btn" data-sound="mute">
+                <span class="material-icons-round">volume_off</span>
+                <span>Tắt Âm</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Slider Âm lượng -->
+          <div class="control-group" id="volume-group">
+            <div class="slider-label">
+              <span class="label-text">
+                <span class="material-icons-round">volume_up</span>
+                Âm lượng âm thanh
+              </span>
+              <span id="volume-val">70%</span>
+            </div>
+            <input type="range" id="volume-slider" min="0" max="100" value="70" class="custom-slider">
+          </div>
+
+          <!-- Slider Độ nhạy cử chỉ -->
+          <div class="control-group">
+            <div class="slider-label">
+              <span class="label-text">
+                <span class="material-icons-round">bolt</span>
+                Độ nhạy chắp tay
+              </span>
+              <span id="sensitivity-val">Khá nhạy</span>
+            </div>
+            <input type="range" id="sensitivity-slider" min="10" max="30" value="20" class="custom-slider" title="Khoảng cách tối đa để nhận diện chắp tay">
+          </div>
+
+          <!-- Các nút bật tắt nhanh -->
+          <div class="toggles-group">
+            <!-- Hiện khung xương tay AI -->
+            <div class="toggle-item">
+              <span class="toggle-label">
+                <span class="material-icons-round">grain</span>
+                Khung xương tay AI
+              </span>
+              <label class="switch">
+                <input type="checkbox" id="toggle-skeleton" checked>
+                <span class="slider round"></span>
+              </label>
+            </div>
+
+            <!-- Lật ngược Camera (Mirror) -->
+            <div class="toggle-item">
+              <span class="toggle-label">
+                <span class="material-icons-round">flip</span>
+                Chế độ gương soi
+              </span>
+              <label class="switch">
+                <input type="checkbox" id="toggle-mirror" checked>
+                <span class="slider round"></span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Nút Chụp Ảnh Hào Quang (Tạo thêm niềm vui) -->
+          <button id="btn-screenshot" class="btn-primary">
+            <span class="material-icons-round">photo_camera</span>
+            <span>Chụp Ảnh Lưu Kỷ Niệm</span>
+          </button>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <!-- Flash Screen flash effect when aura is triggered -->
+  <div id="flash-effect" class="flash-effect"></div>
+
+  <!-- Thông báo nhỏ khi chụp ảnh hoặc có sự kiện -->
+  <div id="toast-notification" class="toast-notification"></div>
+
+  <!-- Scripts -->
+  <script type="module" src="app.js"></script>
+</body>
+</html>

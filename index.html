@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Góc Nhỏ Phép Thuật ✨ (Magic Playground)</title>
+  
+  <!-- Font chữ cực kỳ tròn trịa, đáng yêu và hỗ trợ tiếng Việt 100% không lỗi ký tự -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@500;700&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Material Icons cho các biểu tượng xinh xắn -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+  
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Hiệu ứng bóng bong bóng trái tim bay bay nền -->
+  <div class="floating-hearts-container" id="hearts-container"></div>
+
+  <div class="hub-container">
+    <header class="hub-header">
+      <div class="avatar-glow">
+        <span class="material-icons-round heart-pulse">auto_awesome</span>
+      </div>
+      <h1 class="main-title">Góc Nhỏ Phép Thuật ✨</h1>
+      <p class="subtitle">Nơi tổng hợp những trò nghịch ngợm công nghệ vui vẻ được làm riêng cho bạn chơi đùa!</p>
+    </header>
+
+    <!-- Grid chứa các thẻ trò chơi nhỏ -->
+    <main class="games-grid">
+      
+      <!-- CARD 1: Ứng dụng Hào Quang 🙏 -->
+      <a href="aura/index.html" class="game-card card-aura">
+        <div class="card-badge">Mới Nhất ⚡</div>
+        <div class="card-icon-wrapper">
+          <span class="material-icons-round card-icon">spa</span>
+        </div>
+        <div class="card-content">
+          <h2 class="card-title">Hào Quang Hộ Thể 🙏</h2>
+          <p class="card-description">Bật webcam, chắp hai tay trước ngực để tự tỏa ra vòng hào quang lấp lánh cực ảo kèm tiếng chuông tịnh tâm thư thái.</p>
+          <span class="card-btn">
+            <span>Vào nghịch thử</span>
+            <span class="material-icons-round">play_arrow</span>
+          </span>
+        </div>
+      </a>
+
+      <!-- CARD 2: Trò chơi Tình Yêu -->
+      <div class="game-card card-locked card-love">
+        <div class="card-badge-locked">Đang thiết lập...</div>
+        <div class="card-icon-wrapper">
+          <span class="material-icons-round card-icon">favorite_border</span>
+        </div>
+        <div class="card-content">
+          <h2 class="card-title">Hộp Quà Bí Ẩn 💝</h2>
+          <p class="card-description">Nơi chứa đựng những bất ngờ nhỏ nhắn thú vị và dễ thương đang được hì hục lập trình...</p>
+          <span class="card-btn-locked">
+            <span>Sắp ra mắt</span>
+            <span class="material-icons-round">lock</span>
+          </span>
+        </div>
+      </div>
+
+      <!-- CARD 3: Đo Độ Đáng Yêu -->
+      <div class="game-card card-locked card-fortune">
+        <div class="card-badge-locked">Đang nghiên cứu...</div>
+        <div class="card-icon-wrapper">
+          <span class="material-icons-round card-icon">psychology</span>
+        </div>
+        <div class="card-content">
+          <h2 class="card-title">Máy Đo Đáng Yêu 🔮</h2>
+          <p class="card-description">Hệ thống phân tích vui nhộn chỉ số dễ thương và mức độ vui vẻ của bạn hôm nay xem đạt bao nhiêu %.</p>
+          <span class="card-btn-locked">
+            <span>Chờ xíu nha</span>
+            <span class="material-icons-round">hourglass_empty</span>
+          </span>
+        </div>
+      </div>
+
+    </main>
+
+    <footer class="hub-footer">
+      <p>Made with 💖 by Me • 2026</p>
+    </footer>
+  </div>
+
+  <!-- Script tạo trái tim trôi nổi ngẫu nhiên nền -->
+  <script>
+    const container = document.getElementById('hearts-container');
+    const heartSymbols = ['🎈', '🌸', '✨', '💕', '🥰', '☁️', '🌸'];
+    
+    function createHeart() {
+      const heart = document.createElement('div');
+      heart.className = 'floating-heart';
+      
+      // Chọn biểu tượng ngẫu nhiên
+      heart.innerText = heartSymbols[Math.floor(Math.random() * heartSymbols.length)];
+      
+      // Vị trí ngang ngẫu nhiên
+      heart.style.left = Math.random() * 100 + 'vw';
+      
+      // Kích thước ngẫu nhiên
+      const size = 14 + Math.random() * 20;
+      heart.style.fontSize = size + 'px';
+      
+      // Thời gian trôi ngẫu nhiên (8 - 18 giây)
+      const duration = 8 + Math.random() * 10;
+      heart.style.animationDuration = duration + 's';
+      
+      // Độ mờ ngẫu nhiên
+      heart.style.opacity = 0.25 + Math.random() * 0.45;
+      
+      container.appendChild(heart);
+      
+      // Tự hủy sau khi bay xong
+      setTimeout(() => {
+        heart.remove();
+      }, duration * 1000);
+    }
+
+    // Tạo các hạt bong bóng ban đầu
+    for (let i = 0; i < 12; i++) {
+      setTimeout(createHeart, Math.random() * 5000);
+    }
+
+    // Tạo liên tục theo chu kỳ
+    setInterval(createHeart, 1000);
+  </script>
+</body>
+</html>
