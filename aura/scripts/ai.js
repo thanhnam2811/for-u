@@ -41,7 +41,11 @@ export async function loadHandLandmarkerModel() {
         delegate: "GPU"
       },
       runningMode: "VIDEO",
-      numHands: 2 // Nhận diện tối đa 2 tay để làm cử chỉ chắp tay
+      numHands: 2,
+      // Hạ ngưỡng confidence xuống để detect tốt hơn khi 2 tay gần nhau / chồng lấp
+      minHandDetectionConfidence: 0.3,
+      minHandPresenceConfidence: 0.3,
+      minTrackingConfidence: 0.3
     });
 
     if (progressBar) progressBar.style.width = "100%";
@@ -110,75 +114,112 @@ export function drawHandSkeleton(ctx, landmarks, isRightHand, canvasWidth, canva
   ctx.restore();
 }
 
-// Phân tích và phát hiện cử chỉ chắp tay (Pray gesture)
-export function analyzeHands(handResults, canvasWidth, canvasHeight, showToastCallback) {
-  initDomRefs();
-  const detectedCount = handResults.landmarks ? handResults.landmarks.length : 0;
-  
-  if (statHands) {
-    statHands.innerText = `${detectedCount}/2`;
-  }
-  
-  if (detectedCount < 2) {
-    state.distanceNormalized = 999;
-    if (statDist) statDist.innerText = "--";
-    
-    if (state.gestureActive) {
-      state.gestureActive = false;
-      if (gestureInstruction) gestureInstruction.classList.remove('hidden');
-    }
-    return;
-  }
-
-  // Có đủ 2 tay trên màn hình
-  const hand1 = handResults.landmarks[0];
-  const hand2 = handResults.landmarks[1];
-
-  // 1. Tính kích thước lòng bàn tay để chuẩn hóa tỷ lệ xa/gần
+// === HELPER: Tính khoảng cách và thông tin giữa 2 bàn tay ===
+function computeTwoHandsInfo(hand1, hand2, canvasWidth, canvasHeight) {
+  // Tính kích thước lòng bàn tay để chuẩn hóa tỷ lệ xa/gần
   const getHandScale = (hand) => {
     const dx = hand[9].x - hand[0].x;
     const dy = hand[9].y - hand[0].y;
-    return Math.sqrt(dx*dx + dy*dy);
+    return Math.sqrt(dx * dx + dy * dy);
   };
   const scale = (getHandScale(hand1) + getHandScale(hand2)) / 2;
 
-  // 2. Tính khoảng cách giữa các điểm khớp quan trọng của 2 bàn tay
+  // Tính khoảng cách giữa các điểm khớp quan trọng
   const getDistance = (pt1, pt2) => {
     const dx = pt1.x - pt2.x;
     const dy = pt1.y - pt2.y;
-    return Math.sqrt(dx*dx + dy*dy);
+    return Math.sqrt(dx * dx + dy * dy);
   };
 
   const distWrist = getDistance(hand1[0], hand2[0]);
   const distIndex = getDistance(hand1[5], hand2[5]);
   const distPinky = getDistance(hand1[17], hand2[17]);
-
-  // Khoảng cách trung bình
   const avgDistance = (distWrist + distIndex + distPinky) / 3;
 
-  // 3. Chuẩn hóa khoảng cách (loại bỏ sai số xa/gần camera)
-  state.distanceNormalized = avgDistance / scale;
-  if (statDist) {
-    statDist.innerText = state.distanceNormalized.toFixed(2);
-  }
+  // Khoảng cách chuẩn hoá
+  const normalizedDist = scale > 0 ? avgDistance / scale : 999;
 
-  // Tâm phát hào quang (giữa 2 bàn tay)
+  // Tâm giữa 2 bàn tay (pixel)
   const midX = ((hand1[9].x + hand2[9].x) / 2) * canvasWidth;
   const midY = ((hand1[9].y + hand2[9].y) / 2) * canvasHeight;
 
-  // 4. Ngưỡng kích hoạt chắp tay
-  if (state.distanceNormalized < state.sensitivityThreshold) {
-    if (!state.gestureActive) {
-      state.gestureActive = true;
-      triggerAuraEffects(midX, midY, canvasWidth, canvasHeight, showToastCallback);
-    } else {
-      // Tiếp tục duy trì chắp tay -> rơi nhẹ vài hạt bụi lấp lánh
+  return { normalizedDist, midX, midY };
+}
+
+// === THUẬT TOÁN NHẬN DIỆN CỬ CHỈ CHẮP TAY (CÓ DỰ ĐOÁN) ===
+export function analyzeHands(handResults, canvasWidth, canvasHeight, showToastCallback) {
+  initDomRefs();
+  const detectedCount = handResults.landmarks ? handResults.landmarks.length : 0;
+  const now = performance.now();
+
+  if (statHands) {
+    statHands.innerText = `${detectedCount}/2`;
+  }
+
+  // ============================================================
+  // TRƯỜNG HỢP 1: Detect được đủ 2 tay — Thuật toán chuẩn
+  // ============================================================
+  if (detectedCount >= 2) {
+    const hand1 = handResults.landmarks[0];
+    const hand2 = handResults.landmarks[1];
+    const info = computeTwoHandsInfo(hand1, hand2, canvasWidth, canvasHeight);
+
+    state.distanceNormalized = info.normalizedDist;
+    if (statDist) statDist.innerText = info.normalizedDist.toFixed(2);
+
+    // Luôn cập nhật lịch sử 2 tay mỗi frame (để bộ dự đoán dùng khi mất detect)
+    state.lastTwoHandsTime = now;
+    state.lastTwoHandsDist = info.normalizedDist;
+    state.lastTwoHandsMidX = info.midX;
+    state.lastTwoHandsMidY = info.midY;
+    state.lastHandsDetected = 2;
+
+    // So sánh ngưỡng kích hoạt chắp tay
+    if (info.normalizedDist < state.sensitivityThreshold) {
+      activateGesture(info.midX, info.midY, canvasWidth, canvasHeight, showToastCallback);
+    } else if (info.normalizedDist > (state.sensitivityThreshold + 0.10)) {
+      deactivateGesture();
+    }
+    return;
+  }
+
+  // ============================================================
+  // TRƯỜNG HỢP 2: Chỉ detect được 0 hoặc 1 tay
+  // → Kiểm tra xem có phải MediaPipe bị mất detect do 2 tay chồng nhau không
+  // ============================================================
+  const timeSinceLastTwoHands = now - state.lastTwoHandsTime;
+  const wasRecentlyTwoHands = timeSinceLastTwoHands < state.predictionWindowMs;
+  const wereHandsClose = state.lastTwoHandsDist < (state.sensitivityThreshold + 0.15);
+
+  if (detectedCount === 1 && wasRecentlyTwoHands && wereHandsClose) {
+    // ĐÂY LÀ TÌNH HUỐNG CHÍNH CẦN XỬ LÝ:
+    // Vừa mới thấy 2 tay rất gần nhau → đột ngột chỉ còn 1 tay
+    // → Suy luận: 2 tay đã chạm/chồng nhau, MediaPipe mất detect 1 tay
+    // → Kích hoạt hào quang với toạ độ gần nhất đã biết!
+    console.log(`[AuraAI] Dự đoán chắp tay! dist=${state.lastTwoHandsDist.toFixed(2)}, elapsed=${timeSinceLastTwoHands.toFixed(0)}ms`);
+
+    if (statDist) statDist.innerText = state.lastTwoHandsDist.toFixed(2) + " ⚡";
+
+    activateGesture(
+      state.lastTwoHandsMidX,
+      state.lastTwoHandsMidY,
+      canvasWidth,
+      canvasHeight,
+      showToastCallback
+    );
+
+    // Duy trì hiệu ứng lấp lánh khi chỉ detect 1 tay (tay vẫn đang chắp)
+    if (state.gestureActive) {
       state.continuousSparkleTimer++;
-      if (state.continuousSparkleTimer % 2 === 0) {
+      if (state.continuousSparkleTimer % 3 === 0) {
+        // Dùng vị trí tay detect được hiện tại thay vì vị trí cũ
+        const singleHand = handResults.landmarks[0];
+        const hx = singleHand[9].x * canvasWidth;
+        const hy = singleHand[9].y * canvasHeight;
         state.particles.push(
           new Particle(
-            midX + (Math.random() - 0.5) * 40,
-            midY + (Math.random() - 0.5) * 40,
+            hx + (Math.random() - 0.5) * 40,
+            hy + (Math.random() - 0.5) * 40,
             state.activePreset,
             canvasWidth,
             canvasHeight
@@ -186,11 +227,49 @@ export function analyzeHands(handResults, canvasWidth, canvasHeight, showToastCa
         );
       }
     }
-  } else if (state.distanceNormalized > (state.sensitivityThreshold + 0.10)) {
-    // Tách tay hẳn (áp dụng trễ trượt để chống nhiễu lặp)
-    if (state.gestureActive) {
-      state.gestureActive = false;
-      if (gestureInstruction) gestureInstruction.classList.remove('hidden');
+    return;
+  }
+
+  // ============================================================
+  // TRƯỜNG HỢP 3: Không có tay nào, hoặc 1 tay nhưng không gần nhau gần đây
+  // → Reset trạng thái
+  // ============================================================
+  state.distanceNormalized = 999;
+  if (statDist) statDist.innerText = "--";
+  state.lastHandsDetected = detectedCount;
+
+  // Chỉ deactivate nếu đã qua cửa sổ dự đoán (tránh nhấp nháy)
+  if (!wasRecentlyTwoHands) {
+    deactivateGesture();
+  }
+}
+
+// Kích hoạt cử chỉ chắp tay (chống gọi lặp nếu đã active)
+function activateGesture(midX, midY, canvasWidth, canvasHeight, showToastCallback) {
+  if (!state.gestureActive) {
+    state.gestureActive = true;
+    triggerAuraEffects(midX, midY, canvasWidth, canvasHeight, showToastCallback);
+  } else {
+    // Tiếp tục duy trì chắp tay -> rơi nhẹ vài hạt bụi lấp lánh
+    state.continuousSparkleTimer++;
+    if (state.continuousSparkleTimer % 2 === 0) {
+      state.particles.push(
+        new Particle(
+          midX + (Math.random() - 0.5) * 40,
+          midY + (Math.random() - 0.5) * 40,
+          state.activePreset,
+          canvasWidth,
+          canvasHeight
+        )
+      );
     }
+  }
+}
+
+// Tắt cử chỉ chắp tay
+function deactivateGesture() {
+  if (state.gestureActive) {
+    state.gestureActive = false;
+    if (gestureInstruction) gestureInstruction.classList.remove('hidden');
   }
 }

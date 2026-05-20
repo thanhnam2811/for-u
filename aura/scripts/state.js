@@ -22,6 +22,13 @@ export const state = {
   distanceNormalized: 999,
   lastHandsDetected: 0,
 
+  // Bộ theo dõi lịch sử 2 tay (để dự đoán chắp tay khi MediaPipe mất detect 1 tay)
+  lastTwoHandsTime: 0,        // Timestamp lần cuối thấy 2 tay
+  lastTwoHandsDist: 999,       // Khoảng cách chuẩn hoá lần cuối khi thấy 2 tay
+  lastTwoHandsMidX: 0,         // Toạ độ X tâm giữa 2 tay lần cuối
+  lastTwoHandsMidY: 0,         // Toạ độ Y tâm giữa 2 tay lần cuối
+  predictionWindowMs: 500,     // Cửa sổ thời gian cho phép dự đoán (ms)
+
   // Chỉ số đo hiệu năng (FPS)
   lastFrameTime: performance.now(),
   frameCount: 0,
