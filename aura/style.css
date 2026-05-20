@@ -818,6 +818,53 @@ input:checked + .slider.round:before {
   opacity: 1;
 }
 
+/* Thẻ đếm số phước tích lũy */
+.phuoc-badge {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  z-index: 4;
+  background: rgba(18, 18, 28, 0.75);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--theme-color);
+  padding: 10px 18px;
+  border-radius: 30px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: var(--theme-glow), 0 4px 15px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+  pointer-events: none;
+  animation: phuoc-glow-pulse 2s infinite alternate ease-in-out;
+}
+
+.phuoc-badge span.material-icons-round {
+  color: #ff4d7a; /* Trái tim màu hồng đỏ rực rỡ */
+  font-size: 1.2rem;
+  animation: heart-beat 1s infinite alternate ease-in-out;
+}
+
+.phuoc-badge strong {
+  color: var(--theme-color);
+  font-family: monospace;
+  font-size: 1.1rem;
+  margin-left: 2px;
+}
+
+@keyframes phuoc-glow-pulse {
+  from { border-color: rgba(var(--theme-color-rgb), 0.5); box-shadow: 0 0 10px rgba(var(--theme-color-rgb), 0.2); }
+  to { border-color: var(--theme-color); box-shadow: var(--theme-glow), 0 4px 15px rgba(0, 0, 0, 0.2); }
+}
+
+@keyframes heart-beat {
+  from { transform: scale(1); }
+  to { transform: scale(1.15); }
+}
+
 /* RESPONSIVE LAYOUT */
 @media (max-width: 1024px) {
   .main-layout {

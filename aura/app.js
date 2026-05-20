@@ -57,7 +57,15 @@ let currentFps = 0;
 // Hệ thống hạt & sóng
 let particles = [];
 let ripples = [];
+let floatingTexts = [];
 let continuousSparkleTimer = 0;
+
+// Thống kê số phước tích lũy (localStorage)
+let phuocCount = parseInt(localStorage.getItem('phuoc_count') || '0', 10);
+const phuocDisplay = document.getElementById('phuoc-count-display');
+if (phuocDisplay) {
+  phuocDisplay.innerText = phuocCount;
+}
 
 // Bộ tổng hợp âm thanh Web Audio API
 let audioCtx = null;
@@ -290,6 +298,37 @@ class Ripple {
   }
 }
 
+class FloatingText {
+  constructor(x, y, text, color) {
+    this.x = x;
+    this.y = y;
+    this.text = text;
+    this.color = color;
+    this.alpha = 1.0;
+    this.vy = -1.8; // Bay lên trên
+    this.maxLife = 60; // 60 frames (1 giây)
+    this.life = this.maxLife;
+  }
+
+  update() {
+    this.y += this.vy;
+    this.life--;
+    this.alpha = this.life / this.maxLife;
+  }
+
+  draw(context) {
+    context.save();
+    context.globalAlpha = this.alpha;
+    context.fillStyle = this.color;
+    context.font = 'bold 24px "Comfortaa", "Quicksand", sans-serif';
+    context.shadowBlur = 10;
+    context.shadowColor = this.color;
+    context.textAlign = 'center';
+    context.fillText(this.text, this.x, this.y);
+    context.restore();
+  }
+}
+
 // Bắn hiệu ứng hào quang lớn
 function triggerAuraEffects(midX, midY) {
   // 1. Chớp màn hình lóa sáng nhẹ kiểu thức tỉnh
@@ -329,8 +368,18 @@ function triggerAuraEffects(midX, midY) {
   // 5. Phát tiếng chuông thiền
   playZenSound();
 
-  // 6. Hiển thị Toast thông báo
-  showToast("🙏 Hào quang đã kích hoạt thành công! 🙏");
+  // 6. Cộng phước tích lũy (localStorage) & tạo hiệu ứng chữ bay
+  phuocCount++;
+  localStorage.setItem('phuoc_count', phuocCount);
+  if (phuocDisplay) {
+    phuocDisplay.innerText = phuocCount;
+  }
+  
+  const theme = THEME_COLORS[activePreset];
+  floatingTexts.push(new FloatingText(midX, midY - 40, "+1 Phước ✨", theme.primary));
+
+  // 7. Hiển thị Toast thông báo
+  showToast("🙏 Tích phước thành công! Hào quang toả sáng! 🙏");
 }
 
 // Vẽ bộ khung xương tay AI (Landmarks) bằng hiệu ứng neon
@@ -532,6 +581,13 @@ function renderLoop() {
       r.update();
       r.draw(ctx);
       if (r.alpha <= 0 || r.radius >= r.maxRadius) ripples.splice(idx, 1);
+    });
+
+    // 5.5. Cập nhật và Vẽ chữ bay tích phước
+    floatingTexts.forEach((ft, idx) => {
+      ft.update();
+      ft.draw(ctx);
+      if (ft.life <= 0) floatingTexts.splice(idx, 1);
     });
 
     // 6. Vẽ hiệu ứng Hào quang nền (Background Halo) dịu nhẹ sau lưng khi đang chắp tay
