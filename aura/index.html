@@ -29,6 +29,11 @@
       <span>Quay lại</span>
     </a>
 
+    <button id="btn-settings" class="btn-settings" type="button" aria-haspopup="dialog" aria-controls="settings-popup" aria-expanded="false">
+      <span class="material-icons-round">tune</span>
+      <span>Cài đặt</span>
+    </button>
+
     <!-- Màn hình tải mô hình AI ban đầu -->
     <div id="loading-screen" class="loading-screen">
       <div class="loading-card">
@@ -81,11 +86,18 @@
         </div>
       </section>
 
-      <!-- Bảng điều khiển cấu hình bên cạnh (Glassmorphism Sidebar) -->
-      <aside class="controls-sidebar">
+      <div id="settings-backdrop" class="settings-backdrop"></div>
+
+      <!-- Bảng điều khiển cấu hình hiển thị dạng popup -->
+      <aside id="settings-popup" class="controls-sidebar" role="dialog" aria-modal="true" aria-labelledby="settings-title">
         <div class="sidebar-header">
-          <span class="material-icons-round header-icon">tune</span>
-          <h2>Cài Đặt Hiệu Ứng</h2>
+          <div class="sidebar-title">
+            <span class="material-icons-round header-icon">tune</span>
+            <h2 id="settings-title">Cài Đặt Hiệu Ứng</h2>
+          </div>
+          <button id="btn-close-settings" class="btn-close-settings" type="button" aria-label="Đóng cài đặt">
+            <span class="material-icons-round">close</span>
+          </button>
         </div>
 
         <div class="sidebar-content">

@@ -13,6 +13,10 @@ let toggleSkeleton = null;
 let toggleMirror = null;
 let cameraSelect = null;
 let btnScreenshot = null;
+let btnSettings = null;
+let btnCloseSettings = null;
+let settingsPopup = null;
+let settingsBackdrop = null;
 let toastNotification = null;
 let video = null;
 let canvas = null;
@@ -45,9 +49,42 @@ export function setupUI() {
   toggleMirror = document.getElementById('toggle-mirror');
   cameraSelect = document.getElementById('camera-select');
   btnScreenshot = document.getElementById('btn-screenshot');
+  btnSettings = document.getElementById('btn-settings');
+  btnCloseSettings = document.getElementById('btn-close-settings');
+  settingsPopup = document.getElementById('settings-popup');
+  settingsBackdrop = document.getElementById('settings-backdrop');
   toastNotification = document.getElementById('toast-notification');
   video = document.getElementById('webcam');
   canvas = document.getElementById('canvas-overlay');
+
+  const closeSettings = () => {
+    settingsPopup?.classList.remove('open');
+    settingsBackdrop?.classList.remove('open');
+    document.documentElement.classList.remove('settings-lock');
+    btnSettings?.setAttribute('aria-expanded', 'false');
+    btnSettings?.focus();
+  };
+
+  const openSettings = () => {
+    settingsPopup?.classList.add('open');
+    settingsBackdrop?.classList.add('open');
+    document.documentElement.classList.add('settings-lock');
+    btnSettings?.setAttribute('aria-expanded', 'true');
+    btnCloseSettings?.focus();
+  };
+
+  if (btnSettings) {
+    btnSettings.addEventListener('click', () => {
+      if (settingsPopup?.classList.contains('open')) closeSettings();
+      else openSettings();
+    });
+  }
+
+  btnCloseSettings?.addEventListener('click', closeSettings);
+  settingsBackdrop?.addEventListener('click', closeSettings);
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && settingsPopup?.classList.contains('open')) closeSettings();
+  });
 
   // 1. Đổi tông màu hào quang
   colorBtns.forEach(btn => {

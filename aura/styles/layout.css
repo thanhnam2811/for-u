@@ -3,9 +3,9 @@
   flex: 1;
   display: flex;
   padding: 80px 24px 24px 24px;
-  gap: 24px;
-  height: 100%;
-  max-width: 1400px;
+  justify-content: center;
+  min-height: 0;
+  max-width: 1180px;
   width: 100%;
   margin: 0 auto;
 }
@@ -16,13 +16,9 @@
     flex-direction: column;
     padding-top: 80px;
     height: auto;
-    overflow-y: auto;
+    overflow: visible;
   }
-  
-  .controls-sidebar {
-    max-height: none;
-  }
-  
+
   .camera-section {
     flex: none;
   }
@@ -32,10 +28,10 @@
   .app-container {
     height: auto;
     min-height: 100vh;
+    min-height: 100dvh;
   }
   .main-layout {
-    padding: 70px 12px 12px 12px;
-    gap: 16px;
+    padding: 72px 12px 16px 12px;
   }
   
   .loading-card {
@@ -60,10 +56,6 @@
     border-radius: 16px;
   }
   
-  .controls-sidebar {
-    border-radius: 16px;
-  }
-  
   .sidebar-header {
     padding: 16px;
   }
@@ -76,12 +68,22 @@
   .color-presets, .sound-presets {
     grid-template-columns: repeat(2, 1fr);
   }
-  
-  .sparkle-text {
-    font-size: 2rem;
+}
+
+@media (max-width: 420px) {
+  .main-layout {
+    padding-left: 10px;
+    padding-right: 10px;
   }
-  
-  .gesture-instruction p {
-    font-size: 0.85rem;
+
+  .color-presets,
+  .sound-presets {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 900px) and (orientation: landscape) {
+  .main-layout {
+    padding-top: 68px;
   }
 }

@@ -58,16 +58,22 @@ body {
   color: var(--text-primary);
   font-family: var(--font-body);
   min-height: 100vh;
+  min-height: 100dvh;
   overflow-x: hidden;
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
+html.settings-lock {
+  overflow: hidden;
+}
+
 /* Container chính của ứng dụng */
 .app-container {
   width: 100vw;
-  height: 100vh;
+  min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   position: relative;
@@ -78,12 +84,13 @@ body {
 /* Nút quay lại trang chủ */
 .btn-back {
   position: absolute;
-  top: 20px;
-  left: 20px;
+  top: max(16px, env(safe-area-inset-top));
+  left: max(16px, env(safe-area-inset-left));
   z-index: 10;
   display: flex;
   align-items: center;
   gap: 8px;
+  min-height: 44px;
   padding: 10px 18px;
   background: var(--bg-card);
   backdrop-filter: blur(10px);
@@ -111,4 +118,69 @@ body {
 
 .btn-back:hover span.material-icons-round {
   transform: translateX(-2px);
+}
+
+.btn-settings {
+  position: absolute;
+  top: max(16px, env(safe-area-inset-top));
+  right: max(16px, env(safe-area-inset-right));
+  z-index: 10;
+  min-height: 44px;
+  padding: 10px 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-card);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--border-glass);
+  border-radius: 30px;
+  color: var(--text-primary);
+  cursor: pointer;
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  font-weight: 600;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-settings:hover {
+  border-color: var(--theme-color);
+  box-shadow: var(--theme-glow);
+}
+
+.btn-settings span.material-icons-round {
+  color: var(--theme-color);
+  font-size: 1.2rem;
+}
+
+@media (max-width: 600px) {
+  body {
+    align-items: stretch;
+  }
+
+  .btn-back {
+    left: max(12px, env(safe-area-inset-left));
+    padding: 10px 14px;
+    font-size: 0.85rem;
+  }
+
+  .btn-settings {
+    right: max(12px, env(safe-area-inset-right));
+    padding: 10px 14px;
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 380px) {
+  .btn-back span:not(.material-icons-round),
+  .btn-settings span:not(.material-icons-round) {
+    display: none;
+  }
+
+  .btn-back,
+  .btn-settings {
+    width: 44px;
+    justify-content: center;
+    padding: 10px;
+  }
 }
