@@ -164,34 +164,69 @@ export function setupUI() {
 
   // Khởi tạo trạng thái active cho filter gương mặt AR dựa trên cấu hình đã lưu
   const filterItems = document.querySelectorAll('.filter-item');
-  filterItems.forEach(item => {
-    if (item.dataset.filter === state.activeFaceFilter) {
-      filterItems.forEach(i => i.classList.remove('active'));
-      item.classList.add('active');
-    }
-  });
+  const filterTrack = document.getElementById('filter-track');
+  const filterCarousel = document.getElementById('face-filter-carousel');
 
-  // Lắng nghe sự kiện click chọn Filter gương mặt AR
+  // Hàm cập nhật filter dựa trên vị trí cuộn
+  const updateActiveFilterFromScroll = () => {
+    if (!filterTrack) return;
+    
+    const trackRect = filterTrack.getBoundingClientRect();
+    const trackCenter = trackRect.left + trackRect.width / 2;
+    
+    let closestItem = null;
+    let minDistance = Infinity;
+    
+    filterItems.forEach(item => {
+      const itemRect = item.getBoundingClientRect();
+      const itemCenter = itemRect.left + itemRect.width / 2;
+      const distance = Math.abs(trackCenter - itemCenter);
+      
+      if (distance < minDistance) {
+        minDistance = distance;
+        closestItem = item;
+      }
+    });
+    
+    if (closestItem && !closestItem.classList.contains('active')) {
+      filterItems.forEach(i => i.classList.remove('active'));
+      closestItem.classList.add('active');
+      
+      const filterName = closestItem.dataset.filter;
+      if (state.activeFaceFilter !== filterName) {
+        state.activeFaceFilter = filterName;
+        localStorage.setItem('active_face_filter', filterName);
+        initAudio();
+      }
+    }
+  };
+
+  // Cuộn đến item hiện tại lúc khởi tạo
+  if (filterTrack) {
+    const activeItem = Array.from(filterItems).find(i => i.dataset.filter === state.activeFaceFilter);
+    if (activeItem) {
+      setTimeout(() => {
+        activeItem.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'center' });
+      }, 500);
+    }
+
+    let scrollTimeout = null;
+    filterTrack.addEventListener('scroll', () => {
+      filterCarousel?.classList.add('active-scroll');
+      clearTimeout(scrollTimeout);
+      
+      updateActiveFilterFromScroll();
+      
+      scrollTimeout = setTimeout(() => {
+        filterCarousel?.classList.remove('active-scroll');
+      }, 1500);
+    });
+  }
+
+  // Lắng nghe sự kiện click (vẫn giữ để người dùng có thể tap trực tiếp)
   filterItems.forEach(item => {
     item.addEventListener('click', () => {
-      filterItems.forEach(i => i.classList.remove('active'));
-      item.classList.add('active');
-      
-      const filterName = item.dataset.filter;
-      state.activeFaceFilter = filterName;
-      localStorage.setItem('active_face_filter', filterName);
-
-      // Kích hoạt âm thanh thử nhẹ nếu không tắt âm
-      initAudio();
-
-      let label = "Tự Nhiên";
-      if (filterName === "beauty") label = "Làm Đẹp ✨";
-      else if (filterName === "glasses") label = "Kính Râm 😎";
-      else if (filterName === "rabbit") label = "Tai Thỏ Dễ Thương 🐰";
-      else if (filterName === "halo") label = "Vòng Thiên Thần 👼";
-      else if (filterName === "cat") label = "Má Hồng Râu Mèo 🐱";
-
-      showToast(`Đã dán Nhãn dán AR: ${label}`);
+      item.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
     });
   });
 

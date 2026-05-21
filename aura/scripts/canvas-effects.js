@@ -101,90 +101,18 @@ export class Ripple {
   }
 }
 
-class OutlineParticle {
-  constructor(point, center, theme, canvasWidth, canvasHeight) {
-    this.x = point.x;
-    this.y = point.y;
-
-    const dx = point.x - center.x;
-    const dy = point.y - center.y;
-    const length = Math.max(Math.sqrt(dx * dx + dy * dy), 0.001);
-    const angleJitter = (Math.random() - 0.5) * 0.45;
-    const baseAngle = Math.atan2(dy, dx) + angleJitter;
-    const speed = 4 + Math.random() * 7;
-
-    this.vx = Math.cos(baseAngle) * speed;
-    this.vy = Math.sin(baseAngle) * speed - 0.5;
-    this.size = 2 + Math.random() * 6;
-    this.colorList = THEME_COLORS[theme].sparkles;
-    this.color = this.colorList[Math.floor(Math.random() * this.colorList.length)];
-    this.alpha = 1;
-    this.maxLife = 55 + Math.random() * 35;
-    this.life = this.maxLife;
-    this.canvasWidth = canvasWidth;
-    this.canvasHeight = canvasHeight;
-  }
-
-  update() {
-    this.x += this.vx;
-    this.y += this.vy;
-    this.vx *= 1.012;
-    this.vy *= 1.012;
-    this.life--;
-
-    const outsideFrame =
-      this.x < -40 ||
-      this.x > this.canvasWidth + 40 ||
-      this.y < -40 ||
-      this.y > this.canvasHeight + 40;
-
-    if (outsideFrame) this.life = Math.min(this.life, 8);
-    this.alpha = Math.max(0, this.life / this.maxLife);
-    this.size *= 0.985;
-  }
-
-  draw(context) {
-    context.save();
-    context.globalAlpha = this.alpha;
-    context.fillStyle = this.color;
-    context.shadowBlur = this.size * 2.4;
-    context.shadowColor = this.color;
-    context.beginPath();
-    context.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-    context.fill();
-    context.restore();
-  }
-}
-
-export class BodyAuraWave {
+// Lớp đối tượng Sóng xung kích bao quanh người (Aura Body Lines)
+export class AuraLineWave {
   constructor(points, theme, canvasWidth, canvasHeight, delay = 0) {
-    this.points = points.map((point) => ({ x: point.x, y: point.y }));
+    this.points = points.map((p) => ({ x: p.x, y: p.y }));
     this.themeColors = THEME_COLORS[theme];
-    this.canvasWidth = canvasWidth;
-    this.canvasHeight = canvasHeight;
+    this.alpha = 1.0;
+    this.scale = 1.0;
+    this.maxScale = 1.5;
+    this.life = 0;
+    this.maxLife = 60;
     this.delay = delay;
-    this.age = 0;
-    this.maxLife = 86;
-    this.alpha = 1;
     this.done = false;
-
-    const center = this.points.reduce((acc, point) => {
-      acc.x += point.x;
-      acc.y += point.y;
-      return acc;
-    }, { x: 0, y: 0 });
-    this.center = {
-      x: center.x / this.points.length,
-      y: center.y / this.points.length
-    };
-
-    const cornerDistances = [
-      Math.hypot(this.center.x, this.center.y),
-      Math.hypot(canvasWidth - this.center.x, this.center.y),
-      Math.hypot(this.center.x, canvasHeight - this.center.y),
-      Math.hypot(canvasWidth - this.center.x, canvasHeight - this.center.y)
-    ];
-    this.maxSpread = Math.max(...cornerDistances) + 80;
   }
 
   update() {
@@ -192,44 +120,44 @@ export class BodyAuraWave {
       this.delay--;
       return;
     }
-
-    this.age++;
-    const progress = Math.min(1, this.age / this.maxLife);
-    this.alpha = Math.pow(1 - progress, 1.35);
-    this.done = progress >= 1;
+    this.life++;
+    const progress = this.life / this.maxLife;
+    this.scale = 1.0 + progress * 0.5;
+    this.alpha = 1.0 - progress;
+    if (this.life >= this.maxLife) this.done = true;
   }
 
-  draw(context) {
-    if (this.delay > 0 || this.done) return;
+  draw(ctx) {
+    if (this.delay > 0 || this.done || this.points.length < 5) return;
 
-    const progress = Math.min(1, this.age / this.maxLife);
-    const spread = this.maxSpread * (1 - Math.pow(1 - progress, 2.2));
-    const pointSize = 1.8 + 5.2 * (1 - progress);
+    ctx.save();
+    ctx.globalAlpha = this.alpha;
+    ctx.globalCompositeOperation = 'screen';
+    ctx.strokeStyle = this.themeColors.primary;
+    ctx.lineWidth = 4;
+    ctx.shadowBlur = 15;
+    ctx.shadowColor = this.themeColors.primary;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
 
-    context.save();
-    context.globalCompositeOperation = 'screen';
-    context.globalAlpha = this.alpha;
-    context.fillStyle = this.themeColors.primary;
-    context.shadowBlur = 26;
-    context.shadowColor = this.themeColors.primary;
+    // Vẽ silhouette lan tỏa
+    const center = this.points.reduce((acc, p) => ({ x: acc.x + p.x, y: acc.y + p.y }), { x: 0, y: 0 });
+    center.x /= this.points.length;
+    center.y /= this.points.length;
 
-    this.points.forEach((point, index) => {
-      if (index % 2 !== 0 && this.points.length > 150) return;
-
-      const dx = point.x - this.center.x;
-      const dy = point.y - this.center.y;
-      const length = Math.max(Math.sqrt(dx * dx + dy * dy), 0.001);
-      const x = point.x + (dx / length) * spread;
-      const y = point.y + (dy / length) * spread;
-
-      if (x < -40 || x > this.canvasWidth + 40 || y < -40 || y > this.canvasHeight + 40) return;
-
-      context.beginPath();
-      context.arc(x, y, pointSize, 0, Math.PI * 2);
-      context.fill();
+    ctx.beginPath();
+    this.points.forEach((p, i) => {
+      const dx = p.x - center.x;
+      const dy = p.y - center.y;
+      const rx = center.x + dx * this.scale;
+      const ry = center.y + dy * this.scale;
+      
+      if (i === 0) ctx.moveTo(rx, ry);
+      else ctx.lineTo(rx, ry);
     });
-
-    context.restore();
+    ctx.closePath();
+    ctx.stroke();
+    ctx.restore();
   }
 }
 
@@ -241,23 +169,23 @@ export class FloatingText {
     this.text = text;
     this.color = color;
     this.alpha = 1.0;
-    this.vy = -1.8; // Bay lên trên
-    this.maxLife = 60; // 1 giây
+    this.vy = -2.5; 
+    this.maxLife = 50; 
     this.life = this.maxLife;
   }
 
   update() {
     this.y += this.vy;
     this.life--;
-    this.alpha = this.life / this.maxLife;
+    this.alpha = Math.pow(this.life / this.maxLife, 2);
   }
 
   draw(context) {
     context.save();
     context.globalAlpha = this.alpha;
-    context.fillStyle = this.color;
-    context.font = 'bold 24px "Comfortaa", "Quicksand", sans-serif';
-    context.shadowBlur = 10;
+    context.fillStyle = '#ffffff';
+    context.font = 'bold 28px "Comfortaa"';
+    context.shadowBlur = 20;
     context.shadowColor = this.color;
     context.textAlign = 'center';
     context.fillText(this.text, this.x, this.y);
@@ -278,85 +206,37 @@ export function triggerAuraEffects(midX, midY, canvasWidth, canvasHeight, showTo
   // 1. Chớp màn hình lóa sáng nhẹ
   if (flashEffect) {
     flashEffect.classList.add('flash');
-    setTimeout(() => {
-      flashEffect.classList.remove('flash');
-    }, 80);
+    setTimeout(() => flashEffect.classList.remove('flash'), 80);
   }
 
   // 2. Thêm lớp viền phát sáng ở khung camera
-  if (cameraWrapper) {
-    cameraWrapper.classList.add('aura-active');
-  }
-  if (gestureTriggeredMsg) {
-    gestureTriggeredMsg.classList.add('active');
-  }
+  if (cameraWrapper) cameraWrapper.classList.add('aura-active');
+  if (gestureTriggeredMsg) gestureTriggeredMsg.classList.add('active');
   
   setTimeout(() => {
     if (cameraWrapper) cameraWrapper.classList.remove('aura-active');
     if (gestureTriggeredMsg) gestureTriggeredMsg.classList.remove('active');
   }, 2200);
 
+  // 3. Tạo Line Waves thay vì Particles
   if (hasOutline) {
-    const center = outlinePoints.reduce((acc, point) => {
-      acc.x += point.x;
-      acc.y += point.y;
-      return acc;
-    }, { x: 0, y: 0 });
-    center.x /= outlinePoints.length;
-    center.y /= outlinePoints.length;
-
-    state.bodyAuraWaves.push(new BodyAuraWave(outlinePoints, state.activePreset, canvasWidth, canvasHeight));
-    state.bodyAuraWaves.push(new BodyAuraWave(outlinePoints, state.activePreset, canvasWidth, canvasHeight, 14));
-    state.bodyAuraWaves.push(new BodyAuraWave(outlinePoints, state.activePreset, canvasWidth, canvasHeight, 30));
-
-    // Staggered particle creation to avoid FPS spikes
-    const emitParticles = (count, current = 0) => {
-      const batch = 40;
-      const toEmit = Math.min(batch, count - current);
-      for (let i = 0; i < toEmit; i++) {
-        const point = outlinePoints[Math.floor(Math.random() * outlinePoints.length)];
-        state.particles.push(new OutlineParticle(point, center, state.activePreset, canvasWidth, canvasHeight));
-      }
-      if (current + toEmit < count) {
-        requestAnimationFrame(() => emitParticles(count, current + toEmit));
-      }
-    };
-    emitParticles(220);
+    state.bodyAuraWaves.push(new AuraLineWave(outlinePoints, state.activePreset, canvasWidth, canvasHeight, 0));
+    state.bodyAuraWaves.push(new AuraLineWave(outlinePoints, state.activePreset, canvasWidth, canvasHeight, 15));
+    state.bodyAuraWaves.push(new AuraLineWave(outlinePoints, state.activePreset, canvasWidth, canvasHeight, 30));
   } else {
-    // Fallback staggered emission
-    const emitFallback = (count, current = 0) => {
-      const batch = 30;
-      const toEmit = Math.min(batch, count - current);
-      for (let i = 0; i < toEmit; i++) {
-        state.particles.push(new Particle(effectX, midY, state.activePreset, canvasWidth, canvasHeight));
-      }
-      if (current + toEmit < count) {
-        requestAnimationFrame(() => emitFallback(count, current + toEmit));
-      }
-    };
-    emitFallback(200);
-
+    // Fallback Ripples
     state.ripples.push(new Ripple(effectX, midY, state.activePreset, canvasWidth, canvasHeight));
-    setTimeout(() => {
-      state.ripples.push(new Ripple(effectX, midY, state.activePreset, canvasWidth, canvasHeight));
-    }, 200);
-    setTimeout(() => {
-      state.ripples.push(new Ripple(effectX, midY, state.activePreset, canvasWidth, canvasHeight));
-    }, 450);
   }
 
   // 5. Phát tiếng chuông thiền
   playZenSound();
 
-  // 6. Cộng phước tích lũy (localStorage) & tạo hiệu ứng chữ bay
+  // 6. Cộng phước tích lũy
   const newCount = incrementPhuoc();
-  if (phuocDisplay) {
-    phuocDisplay.innerText = newCount;
-  }
+  if (phuocDisplay) phuocDisplay.innerText = newCount;
   
-  state.floatingTexts.push(new FloatingText(effectX, midY - 40, "+1 Phước ✨", theme.primary));
+  state.floatingTexts.push(new FloatingText(effectX, midY - 60, "+1 PHƯỚC ✨", theme.primary));
 
-  // 7. Hiển thị Toast thông báo qua callback để tránh phụ thuộc chéo
   if (showToastCallback) {
     showToastCallback("🙏 Tích phước thành công! Hào quang toả sáng! 🙏");
   }

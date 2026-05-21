@@ -5,126 +5,108 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Trải Nghiệm Hào Quang AI 🌟</title>
   
-  <!-- Font chữ tròn trịa, hiện đại, dễ thương và hỗ trợ 100% tiếng Việt không lỗi hiển thị -->
+  <!-- Font chữ tròn trịa, hiện đại -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@500;700&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@300..700&family=Quicksand:wght@300..700&display=swap" rel="stylesheet">
   
-  <!-- Thư viện Material Icons chất lượng cao -->
+  <!-- Biểu tượng Material Icons Round -->
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
   
+  <!-- CSS Stylesheets -->
   <link rel="stylesheet" href="styles/base.css">
-  <link rel="stylesheet" href="styles/loading.css">
   <link rel="stylesheet" href="styles/layout.css">
   <link rel="stylesheet" href="styles/camera.css">
   <link rel="stylesheet" href="styles/sidebar.css">
   <link rel="stylesheet" href="styles/effects.css">
-  
+  <link rel="stylesheet" href="styles/loading.css">
 </head>
-<body>
+<body class="theme-lotus">
   <div class="app-container">
-    <!-- Nút quay lại trang chủ -->
+    
+    <!-- Thanh điều hướng trên cùng (nếu cần) -->
     <a href="../index.html" class="btn-back">
       <span class="material-icons-round">arrow_back</span>
       <span>Quay lại</span>
     </a>
 
-    <button id="btn-settings" class="btn-settings" type="button" aria-haspopup="dialog" aria-controls="settings-popup" aria-expanded="false">
+    <button id="btn-settings" class="btn-settings" aria-label="Mở cài đặt">
       <span class="material-icons-round">tune</span>
       <span>Cài đặt</span>
     </button>
 
-    <!-- Màn hình tải mô hình AI ban đầu -->
-    <div id="loading-screen" class="loading-screen">
-      <div class="loading-card">
-        <div class="lotus-spinner">
-          <span class="material-icons-round active-lotus">auto_awesome</span>
-        </div>
-        <h2>Đang chuẩn bị công cụ AI...</h2>
-        <p id="loading-status">Đang tải mô hình nhận diện tay của MediaPipe...</p>
-        <div class="progress-bar-container">
-          <div id="progress-bar" class="progress-bar"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Layout chính -->
+    <!-- Nội dung chính -->
     <main class="main-layout">
-      <!-- Vùng hiển thị Camera & Canvas vẽ hiệu ứng -->
+      
+      <!-- Khu vực camera và filter -->
       <section class="camera-section">
-        <div class="camera-wrapper" id="camera-wrapper">
-          <!-- Video ẩn đi hoặc hiển thị làm nền -->
-          <video id="webcam" autoplay playsinline muted></video>
-          
-          <!-- Canvas vẽ hiệu ứng hào quang, xương tay và hạt sáng -->
+        <div id="camera-wrapper" class="camera-wrapper">
+          <video id="webcam" autoplay playsinline></video>
           <canvas id="canvas-overlay"></canvas>
 
-          <!-- Thẻ đếm số phước tích lũy (localStorage) -->
-          <div class="phuoc-badge" id="phuoc-badge">
-            <span class="material-icons-round">volunteer_activism</span>
-            <span>Phước tích lũy: <strong id="phuoc-count-display">0</strong> 🙏</span>
-          </div>
-          
-          <!-- Nút ? hướng dẫn sử dụng -->
-          <button class="btn-help" id="btn-help" type="button" title="Hướng dẫn sử dụng">
-            <span class="material-icons-round">help_outline</span>
-          </button>
-          
-          <!-- Lớp phủ thông báo trạng thái cử chỉ -->
-          <div class="gesture-overlay" id="gesture-overlay">
-            <div class="gesture-triggered-msg" id="gesture-triggered-msg">
-              <h1 class="sparkle-text">HÀO QUANG TOẢ SÁNG!</h1>
-              <p>Hiệu ứng đã được kích hoạt!</p>
+          <div class="gesture-overlay">
+            <div id="gesture-triggered-msg" class="gesture-triggered-msg">
+              <h1 class="sparkle-text">AURA AI 🌟</h1>
+              <p>Hào quang hộ thể!</p>
             </div>
           </div>
 
-          <!-- Thông số kỹ thuật hiển thị góc nhỏ (Techy style) -->
-          <div class="tech-stats">
-            <div class="stat-item"><span class="label">FPS:</span> <span id="stat-fps">0</span></div>
-            <div class="stat-item"><span class="label">Bàn tay:</span> <span id="stat-hands">0/2</span></div>
-            <div class="stat-item"><span class="label">Khoảng cách:</span> <span id="stat-dist">--</span></div>
+          <div id="phuoc-badge" class="phuoc-badge">
+            <span class="material-icons-round">favorite</span>
+            <span>Tích phước: <strong id="phuoc-count-display">0</strong></span>
           </div>
-        </div>
-        
-        <!-- Thanh cuộn ngang chọn Nhãn dán AR dán mặt (Snapchat/TikTok style) -->
-        <div class="face-filter-carousel" id="face-filter-carousel">
-          <div class="filter-track">
-            <button class="filter-item active" data-filter="none" title="Không dán">
-              <div class="filter-icon-container">
-                <span class="material-icons-round">face_retouching_off</span>
-              </div>
-              <span class="filter-label">Tự Nhiên</span>
-            </button>
-            <button class="filter-item" data-filter="beauty" title="Làm Đẹp">
-              <div class="filter-icon-container">
-                <span class="material-icons-round">auto_awesome</span>
-              </div>
-              <span class="filter-label">Làm Đẹp</span>
-            </button>
-            <button class="filter-item" data-filter="glasses" title="Kính Thug Life">
-              <div class="filter-icon-container">
-                <span class="material-icons-round">visibility</span>
-              </div>
-              <span class="filter-label">Kính Râm</span>
-            </button>
-            <button class="filter-item" data-filter="rabbit" title="Tai Thỏ Dễ Thương">
-              <div class="filter-icon-container">
-                <span class="material-icons-round">cruelty_free</span>
-              </div>
-              <span class="filter-label">Tai Thỏ</span>
-            </button>
-            <button class="filter-item" data-filter="halo" title="Vòng Thiên Thần">
-              <div class="filter-icon-container">
-                <span class="material-icons-round">wb_sunny</span>
-              </div>
-              <span class="filter-label">Thiên Thần</span>
-            </button>
-            <button class="filter-item" data-filter="cat" title="Má Hồng Râu Mèo">
-              <div class="filter-icon-container">
-                <span class="material-icons-round">pets</span>
-              </div>
-              <span class="filter-label">Má Mèo</span>
-            </button>
+
+          <div class="tech-stats">
+            <div><span class="label">FPS:</span> <span id="fps-stat">--</span></div>
+            <div><span class="label">Hand:</span> <span id="hands-stat">--</span></div>
+            <div><span class="label">Dist:</span> <span id="dist-stat">--</span></div>
+          </div>
+
+          <button id="btn-help" class="btn-help" title="Hướng dẫn sử dụng">
+            <span class="material-icons-round">help_outline</span>
+          </button>
+
+          <!-- Thanh cuộn ngang chọn Nhãn dán AR (Snapchat/TikTok style) -->
+          <div class="face-filter-carousel" id="face-filter-carousel">
+            <div class="carousel-center-highlight"></div>
+            <div id="filter-track" class="filter-track">
+              <button class="filter-item" data-filter="none" title="Tự nhiên">
+                <div class="filter-icon-container">
+                  <span class="material-icons-round">not_interested</span>
+                </div>
+                <span class="filter-label">Tự Nhiên</span>
+              </button>
+              <button class="filter-item" data-filter="beauty" title="Làm đẹp da">
+                <div class="filter-icon-container">
+                  <span class="material-icons-round">auto_awesome</span>
+                </div>
+                <span class="filter-label">Làm Đẹp</span>
+              </button>
+              <button class="filter-item" data-filter="glasses" title="Kính Thug Life">
+                <div class="filter-icon-container">
+                  <span class="material-icons-round">visibility</span>
+                </div>
+                <span class="filter-label">Kính Râm</span>
+              </button>
+              <button class="filter-item" data-filter="rabbit" title="Tai Thỏ Dễ Thương">
+                <div class="filter-icon-container">
+                  <span class="material-icons-round">cruelty_free</span>
+                </div>
+                <span class="filter-label">Tai Thỏ</span>
+              </button>
+              <button class="filter-item" data-filter="halo" title="Vòng Thiên Thần">
+                <div class="filter-icon-container">
+                  <span class="material-icons-round">wb_sunny</span>
+                </div>
+                <span class="filter-label">Thiên Thần</span>
+              </button>
+              <button class="filter-item" data-filter="cat" title="Má Hồng Râu Mèo">
+                <div class="filter-icon-container">
+                  <span class="material-icons-round">pets</span>
+                </div>
+                <span class="filter-label">Má Mèo</span>
+              </button>
+            </div>
           </div>
         </div>
       </section>
@@ -148,109 +130,91 @@
           <div class="control-group">
             <label for="camera-select">
               <span class="material-icons-round">videocam</span>
-              Chọn thiết bị ghi hình
+              Chọn Camera
             </label>
-            <select id="camera-select" class="custom-select">
-              <option value="">Đang tìm camera...</option>
-            </select>
+            <div class="custom-select-wrapper">
+              <select id="camera-select" class="custom-select">
+                <option value="">Đang tìm thiết bị...</option>
+              </select>
+            </div>
           </div>
 
-          <!-- Kiểu Hào Quang (Màu sắc) -->
+          <!-- Tông màu hào quang -->
           <div class="control-group">
-            <label>
-              <span class="material-icons-round">palette</span>
-              Tông màu Hào Quang
-            </label>
+            <label><span class="material-icons-round">palette</span> Tông Màu Hào Quang</label>
             <div class="color-presets">
-              <button class="color-btn" data-preset="gold" title="Hoàng Kim">
-                <span class="color-dot gold"></span>
-                <span>Hoàng Kim</span>
+              <button class="color-btn theme-gold" data-preset="gold" title="Hoàng Kim">
+                <div class="color-preview" style="background-color: #ffd700;"></div>
+                Vàng
               </button>
-              <button class="color-btn" data-preset="cosmic" title="Tinh Vân">
-                <span class="color-dot cosmic"></span>
-                <span>Tinh Vân</span>
+              <button class="color-btn theme-lotus active" data-preset="lotus" title="Hồng Sen">
+                <div class="color-preview" style="background-color: #ff7ebb;"></div>
+                Hồng
               </button>
-              <button class="color-btn active" data-preset="lotus" title="Hồng Sen">
-                <span class="color-dot lotus"></span>
-                <span>Hồng Sen</span>
+              <button class="color-btn theme-cosmic" data-preset="cosmic" title="Tử Quang">
+                <div class="color-preview" style="background-color: #d05eff;"></div>
+                Tím
               </button>
-              <button class="color-btn" data-preset="emerald" title="Lục Bảo">
-                <span class="color-dot emerald"></span>
-                <span>Lục Bảo</span>
+              <button class="color-btn theme-emerald" data-preset="emerald" title="Lục Bảo">
+                <div class="color-preview" style="background-color: #2effa2;"></div>
+                Xanh
               </button>
             </div>
           </div>
 
-          <!-- Âm thanh giải phóng -->
+          <!-- Kiểu âm thanh -->
           <div class="control-group">
-            <label>
-              <span class="material-icons-round">music_note</span>
-              Âm thanh hiệu ứng
-            </label>
+            <label><span class="material-icons-round">music_note</span> Âm Thanh Thiền Định</label>
             <div class="sound-presets">
-              <button class="sound-btn active" data-sound="gong">
-                <span class="material-icons-round">notifications_active</span>
-                <span>Chuông Đồng</span>
-              </button>
-              <button class="sound-btn" data-sound="chime">
-                <span class="material-icons-round">graphic_eq</span>
-                <span>Chuông Gió</span>
-              </button>
-              <button class="sound-btn" data-sound="bowl">
-                <span class="material-icons-round">waves</span>
-                <span>Chuông Xoay</span>
-              </button>
-              <button class="sound-btn" data-sound="mute">
-                <span class="material-icons-round">volume_off</span>
-                <span>Tắt Âm</span>
-              </button>
+              <button class="sound-btn active" data-sound="gong">Tiếng Chuông</button>
+              <button class="sound-btn" data-sound="zen">Suối Chảy</button>
+              <button class="sound-btn" data-sound="om">Om Chanting</button>
+              <button class="sound-btn" data-sound="mute">Tắt Âm</button>
             </div>
           </div>
 
-          <!-- Slider Âm lượng -->
-          <div class="control-group" id="volume-group">
-            <div class="slider-label">
-              <span class="label-text">
-                <span class="material-icons-round">volume_up</span>
-                Âm lượng âm thanh
-              </span>
-              <span id="volume-val">70%</span>
-            </div>
-            <input type="range" id="volume-slider" min="0" max="100" value="70" class="custom-slider">
-          </div>
-
-          <!-- Slider Độ nhạy cử chỉ -->
+          <!-- Slider âm lượng -->
           <div class="control-group">
             <div class="slider-label">
-              <span class="label-text">
-                <span class="material-icons-round">bolt</span>
-                Độ nhạy chắp tay
-              </span>
-              <span id="sensitivity-val">Khá nhạy</span>
+              <div class="label-left">
+                <span class="material-icons-round">volume_up</span>
+                Âm lượng
+              </div>
+              <span id="volume-val" class="slider-value">70%</span>
             </div>
-            <input type="range" id="sensitivity-slider" min="10" max="30" value="20" class="custom-slider" title="Khoảng cách tối đa để nhận diện chắp tay">
+            <input type="range" id="volume-slider" min="0" max="100" value="70">
           </div>
 
-          <!-- Các nút bật tắt nhanh -->
-          <div class="toggles-group">
-            <!-- Hiện khung xương tay AI -->
+          <!-- Slider Độ nhạy AI -->
+          <div class="control-group">
+            <div class="slider-label">
+              <div class="label-left">
+                <span class="material-icons-round">psychology</span>
+                Độ nhạy AI
+              </div>
+              <span id="sensitivity-val" class="slider-value">Khá nhạy</span>
+            </div>
+            <input type="range" id="sensitivity-slider" min="5" max="40" value="20">
+            <p class="helper-text">Kéo sang trái để yêu cầu chắp tay chính xác hơn.</p>
+          </div>
+
+          <!-- Các công tắc bật tắt -->
+          <div class="toggle-group">
             <div class="toggle-item">
-              <span class="toggle-label">
-                <span class="material-icons-round">grain</span>
-                Khung xương tay AI
-              </span>
+              <label class="toggle-label" for="toggle-skeleton">
+                <span class="material-icons-round">gesture</span>
+                Hiện xương tay AI
+              </label>
               <label class="switch">
                 <input type="checkbox" id="toggle-skeleton" checked>
                 <span class="slider round"></span>
               </label>
             </div>
-
-            <!-- Lật ngược Camera (Mirror) -->
             <div class="toggle-item">
-              <span class="toggle-label">
+              <label class="toggle-label" for="toggle-mirror">
                 <span class="material-icons-round">flip</span>
                 Chế độ gương soi
-              </span>
+              </label>
               <label class="switch">
                 <input type="checkbox" id="toggle-mirror" checked>
                 <span class="slider round"></span>
@@ -258,71 +222,62 @@
             </div>
           </div>
 
-          <!-- Nút Chụp Ảnh Hào Quang (Tạo thêm niềm vui) -->
           <button id="btn-screenshot" class="btn-primary">
             <span class="material-icons-round">photo_camera</span>
-            <span>Chụp Ảnh Lưu Kỷ Niệm</span>
+            Chụp Ảnh Hào Quang
           </button>
         </div>
       </aside>
     </main>
-  </div>
 
-  <!-- Popup Hướng dẫn sử dụng -->
-  <div id="help-backdrop" class="help-popup-backdrop"></div>
-  <div id="help-popup" class="help-popup">
-    <div class="help-popup-header">
-      <h3>
-        <span class="material-icons-round">menu_book</span>
-        Hướng Dẫn Sử Dụng
-      </h3>
-      <button id="btn-close-help" class="btn-close-help" type="button" aria-label="Đóng">
-        <span class="material-icons-round">close</span>
-      </button>
-    </div>
-
-    <div class="help-item">
-      <div class="help-item-icon">
-        <span class="material-icons-round">spa</span>
+    <!-- Popup Hướng dẫn sử dụng -->
+    <div id="help-backdrop" class="help-popup-backdrop"></div>
+    <div id="help-popup" class="help-popup">
+      <div class="help-popup-header">
+        <h3><span class="material-icons-round">lightbulb</span> Hướng dẫn</h3>
+        <button id="btnCloseHelp" class="btn-close-help"><span class="material-icons-round">close</span></button>
       </div>
-      <div class="help-item-text">
-        <h4>🙏 Toả Hào Quang</h4>
-        <p>Chắp hai tay lại trước ngực để kích hoạt hiệu ứng hào quang rực rỡ toả sáng xung quanh cơ thể bạn!</p>
-      </div>
-    </div>
-
-    <div class="help-item">
-      <div class="help-item-icon">
-        <span class="material-icons-round">face_retouching_natural</span>
-      </div>
-      <div class="help-item-text">
-        <h4>✨ Nhãn Dán AR</h4>
-        <p>Vuốt ngang thanh cuộn bên dưới camera để chọn các bộ lọc dán mặt như Kính Râm, Tai Thỏ, Thiên Thần, Má Mèo hoặc Làm Đẹp!</p>
-      </div>
-    </div>
-
-    <div class="help-item">
-      <div class="help-item-icon">
-        <span class="material-icons-round">photo_camera</span>
-      </div>
-      <div class="help-item-text">
-        <h4>📸 Chụp Ảnh Kỷ Niệm</h4>
-        <p>Mở Cài đặt (góc phải trên) để chụp ảnh lưu lại khoảnh khắc với đầy đủ hiệu ứng hào quang và nhãn dán AR!</p>
+      <div class="help-content">
+        <div class="help-item">
+          <div class="help-item-icon"><span class="material-icons-round">front_hand</span></div>
+          <div class="help-item-text">
+            <h4>Chắp tay tích phước</h4>
+            <p>Đưa hai bàn tay lại gần nhau ở trước ngực để kích hoạt hào quang và tích thêm phước đức.</p>
+          </div>
+        </div>
+        <div class="help-item">
+          <div class="help-item-icon"><span class="material-icons-round">face</span></div>
+          <div class="help-item-text">
+            <h4>Nhãn dán AR</h4>
+            <p>Kéo chọn các filter ở dưới để dán trực tiếp lên gương mặt bạn theo thời gian thực.</p>
+          </div>
+        </div>
+        <div class="help-item">
+          <div class="help-item-icon"><span class="material-icons-round">palette</span></div>
+          <div class="help-item-text">
+            <h4>Tùy chỉnh</h4>
+            <p>Mở mục <strong>Cài đặt</strong> để đổi màu hào quang, âm thanh và điều chỉnh độ nhạy AI.</p>
+          </div>
+        </div>
       </div>
     </div>
 
-    <div class="help-item">
-      <div class="help-item-icon">
-        <span class="material-icons-round">tune</span>
-      </div>
-      <div class="help-item-text">
-        <h4>🎨 Tuỳ Chỉnh</h4>
-        <p>Bấm nút Cài đặt để đổi màu hào quang, âm thanh, độ nhạy và nhiều tùy chỉnh khác. Tất cả được lưu tự động!</p>
+    <!-- Màn hình chờ nạp MediaPipe -->
+    <div id="loading-screen" class="loading-screen">
+      <div class="loading-card">
+        <div class="lotus-spinner">
+          <span class="material-icons-round">filter_vintage</span>
+        </div>
+        <h2>Đang khởi tạo AI...</h2>
+        <p>Vui lòng chờ trong giây lát để MediaPipe nạp dữ liệu xử lý gương mặt và bàn tay.</p>
+        <div class="loading-bar-container">
+          <div class="loading-bar"></div>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- Flash Screen flash effect when aura is triggered -->
+  <!-- Lớp phủ hiệu ứng Flash khi chụp ảnh -->
   <div id="flash-effect" class="flash-effect"></div>
 
   <!-- Thông báo nhỏ khi chụp ảnh hoặc có sự kiện -->

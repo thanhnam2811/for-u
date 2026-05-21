@@ -502,51 +502,78 @@
   }
 }
 
-/* Thanh cuộn ngang chọn Nhãn dán AR dán mặt (Snapchat/TikTok style) */
+/* Thanh cuộn ngang chọn Filter (TikTok Center-Selection Style) */
 .face-filter-carousel {
+  position: absolute;
+  bottom: 25px;
+  left: 50%;
+  transform: translateX(-50%);
   width: 100%;
-  margin-top: 15px;
-  background: rgba(18, 18, 28, 0.4);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 28px;
-  padding: 8px 12px;
+  max-width: 500px;
+  height: 110px;
+  z-index: 10;
+  background: transparent;
   overflow: hidden;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-  position: relative;
+  display: flex;
+  align-items: center;
+  pointer-events: auto;
+  opacity: 0.6; /* Mờ đi khi không tương tác */
+  transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Thêm lớp viền mờ ảo cho carousel */
+.face-filter-carousel:hover,
+.face-filter-carousel.active-scroll {
+  opacity: 1; /* Hiện rõ khi rê chuột hoặc đang kéo */
+}
+
+/* Hiệu ứng sương mù hai bên để làm nổi bật filter ở giữa */
 .face-filter-carousel::before,
 .face-filter-carousel::after {
   content: '';
   position: absolute;
   top: 0;
   bottom: 0;
-  width: 40px;
-  z-index: 2;
+  width: 100px;
+  z-index: 5;
   pointer-events: none;
 }
 
 .face-filter-carousel::before {
   left: 0;
-  background: linear-gradient(to right, rgba(18, 18, 28, 0.5), transparent);
+  background: linear-gradient(to right, rgba(10, 10, 15, 0.8), transparent);
 }
 
 .face-filter-carousel::after {
   right: 0;
-  background: linear-gradient(to left, rgba(18, 18, 28, 0.5), transparent);
+  background: linear-gradient(to left, rgba(10, 10, 15, 0.8), transparent);
+}
+
+/* Vùng tâm điểm (Selection ring) */
+.carousel-center-highlight {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 72px;
+  height: 72px;
+  border: 2px solid var(--theme-color);
+  border-radius: 50%;
+  z-index: 4;
+  pointer-events: none;
+  box-shadow: 0 0 20px rgba(var(--theme-color-rgb), 0.4), inset 0 0 10px rgba(var(--theme-color-rgb), 0.2);
 }
 
 .filter-track {
   display: flex;
-  gap: 12px;
+  padding: 0 50%; /* Để item đầu và cuối có thể vào giữa */
+  gap: 20px;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  padding: 12px 20px 16px 20px; /* Padding lớn để chứa shadow và scale */
+  height: 100%;
+  align-items: center;
+  scroll-behavior: smooth;
 }
 
 .filter-track::-webkit-scrollbar {
@@ -554,87 +581,54 @@
 }
 
 .filter-item {
-  flex: 0 0 auto;
+  flex: 0 0 64px;
+  height: 64px;
   scroll-snap-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
   background: none;
   border: none;
   padding: 0;
   cursor: pointer;
   outline: none;
-  width: 68px; /* Cố định chiều rộng để căn chỉnh đẹp */
-  transition: transform 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .filter-icon-container {
-  width: 60px;
-  height: 60px;
+  width: 58px;
+  height: 58px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   display: flex;
   justify-content: center;
   align-items: center;
-  color: var(--text-secondary);
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-  position: relative;
-  overflow: visible;
-}
-
-/* Đốm sáng nhỏ sau icon */
-.filter-icon-container::after {
-  content: '';
-  position: absolute;
-  inset: -2px;
-  border-radius: 50%;
-  border: 2px solid transparent;
+  color: #fff;
   transition: all 0.3s ease;
-}
-
-.filter-item.active .filter-icon-container::after {
-  border-color: var(--theme-color);
-  transform: scale(1.1);
-  box-shadow: 0 0 15px rgba(var(--theme-color-rgb), 0.4);
-}
-
-.filter-icon-container span.material-icons-round {
-  font-size: 1.8rem;
-}
-
-.filter-label {
-  font-family: var(--font-display);
-  font-weight: 600;
-  font-size: 0.75rem;
-  color: var(--text-secondary);
-  transition: all 0.3s ease;
-  white-space: nowrap;
-}
-
-/* Hover & Active */
-.filter-item:hover {
-  transform: translateY(-2px);
-}
-
-.filter-item:hover .filter-icon-container {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(var(--theme-color-rgb), 0.3);
-  color: var(--text-primary);
 }
 
 .filter-item.active .filter-icon-container {
-  background: rgba(var(--theme-color-rgb), 0.15);
+  background: rgba(var(--theme-color-rgb), 0.25);
   border-color: var(--theme-color);
-  color: var(--theme-color);
-  transform: scale(1.08);
+  transform: scale(1.1);
 }
 
-.filter-item.active .filter-label {
-  color: var(--theme-color);
-  font-weight: 700;
-  text-shadow: 0 0 8px rgba(var(--theme-color-rgb), 0.3);
+.filter-label {
+  display: none; /* Ẩn chữ ở mobile để tiết kiệm diện tích, TikTok style */
+}
+
+@media (min-width: 1024px) {
+  .filter-label {
+    display: block;
+    position: absolute;
+    bottom: -20px;
+    font-size: 10px;
+    white-space: nowrap;
+    opacity: 0.7;
+  }
 }
 
 /* Tối ưu hóa Responsive cho thanh cuộn ngang trên điện thoại */
