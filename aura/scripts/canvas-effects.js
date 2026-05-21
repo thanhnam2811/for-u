@@ -1,6 +1,7 @@
 import { state, incrementPhuoc } from "./state.js";
 import { THEME_COLORS } from "./constants.js";
 import { playZenSound } from "./audio.js";
+import { simplex2d } from "./utils/math.js";
 
 // DOM references required for triggers
 let flashEffect = null;
@@ -109,7 +110,7 @@ export class AuraLineWave {
     this.canvasWidth = canvasWidth;
     this.canvasHeight = canvasHeight;
     this.life = 0;
-    this.maxLife = 70; // Tăng thời gian sống một chút để mượt hơn
+    this.maxLife = 75; // Tăng thời gian sống một chút để mượt hơn
     this.delay = delay;
     this.done = false;
 
@@ -134,47 +135,47 @@ export class AuraLineWave {
     if (this.delay > 0 || this.done || this.points.length < 5) return;
 
     // Tiến trình (0 -> 1)
-    const p = this.life / this.maxLife;
+    const progress = this.life / this.maxLife;
+    const time = performance.now() * 0.0015;
     
     // 1. Chậm lúc đầu, nhanh dần ra ngoài (Ease-in logic)
-    const expansionScale = 1.0 + Math.pow(p, 1.8) * 1.5;
+    const expansionScale = 1.0 + Math.pow(progress, 2.2) * 2.5;
     
     // 2. Hiệu ứng "Tròn dần": Morping từ silhouette sang hình tròn
-    // p = 0: giữ nguyên shape gốc, p = 1: 80% là hình tròn
-    const morphToCircle = p * 0.85; 
+    const morphToCircle = Math.pow(progress, 0.7) * 0.95; 
 
     // 3. Sáng dần rồi mờ dần
-    // Sáng nhất ở khoảng 30% hành trình
-    const brightnessAlpha = Math.sin(Math.PI * Math.pow(p, 0.7)); 
-    const finalAlpha = brightnessAlpha * (1 - p);
+    const brightnessAlpha = Math.sin(Math.PI * Math.pow(progress, 0.5)); 
+    const finalAlpha = brightnessAlpha * (1 - progress);
 
     ctx.save();
     ctx.globalAlpha = finalAlpha;
     ctx.globalCompositeOperation = 'screen';
     ctx.strokeStyle = this.themeColors.primary;
-    ctx.lineWidth = 3 + (1 - p) * 5; // Nét vẽ thanh mảnh dần
-    ctx.shadowBlur = 20 * brightnessAlpha;
+    ctx.lineWidth = 1.5 + (1 - progress) * 8; 
+    ctx.shadowBlur = 30 * brightnessAlpha;
     ctx.shadowColor = this.themeColors.primary;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 
     ctx.beginPath();
     this.points.forEach((pt, i) => {
-      // Tọa độ vector từ tâm
       const dx = pt.x - this.center.x;
       const dy = pt.y - this.center.y;
       const dist = Math.hypot(dx, dy);
       
-      // Vector đơn vị
       const ux = dx / (dist || 1);
       const uy = dy / (dist || 1);
 
-      // Mix giữa hình dạng gốc và hình dạng tròn trịa
+      // --- NOISE DISPLACEMENT (Energy Flow) ---
+      const noiseScale = 35 * (1 - progress); 
+      const displacement = simplex2d(pt.x * 0.008 + time, pt.y * 0.008 + progress) * noiseScale;
+
       const targetDist = this.avgRadius; 
       const morphedDist = dist * (1 - morphToCircle) + targetDist * morphToCircle;
       
-      const rx = this.center.x + ux * morphedDist * expansionScale;
-      const ry = this.center.y + uy * morphedDist * expansionScale;
+      const rx = this.center.x + ux * (morphedDist * expansionScale + displacement);
+      const ry = this.center.y + uy * (morphedDist * expansionScale + displacement);
       
       if (i === 0) ctx.moveTo(rx, ry);
       else ctx.lineTo(rx, ry);
@@ -234,8 +235,12 @@ export function triggerAuraEffects(midX, midY, canvasWidth, canvasHeight, showTo
   }
 
   // 2. Thêm lớp viền phát sáng ở khung camera
-  if (cameraWrapper) cameraWrapper.classList.add('aura-active');
-  if (gestureTriggeredMsg) gestureTriggeredMsg.classList.add('active');
+  if (cameraWrapper) {
+    cameraWrapper.classList.add('aura-active');
+  }
+  if (gestureTriggeredMsg) {
+    gestureTriggeredMsg.classList.add('active');
+  }
   
   setTimeout(() => {
     if (cameraWrapper) cameraWrapper.classList.remove('aura-active');
@@ -245,8 +250,9 @@ export function triggerAuraEffects(midX, midY, canvasWidth, canvasHeight, showTo
   // 3. Tạo Line Waves thay vì Particles
   if (hasOutline) {
     state.bodyAuraWaves.push(new AuraLineWave(outlinePoints, state.activePreset, canvasWidth, canvasHeight, 0));
-    state.bodyAuraWaves.push(new AuraLineWave(outlinePoints, state.activePreset, canvasWidth, canvasHeight, 15));
-    state.bodyAuraWaves.push(new AuraLineWave(outlinePoints, state.activePreset, canvasWidth, canvasHeight, 30));
+    state.bodyAuraWaves.push(new AuraLineWave(outlinePoints, state.activePreset, canvasWidth, canvasHeight, 12));
+    state.bodyAuraWaves.push(new AuraLineWave(outlinePoints, state.activePreset, canvasWidth, canvasHeight, 25));
+    state.bodyAuraWaves.push(new AuraLineWave(outlinePoints, state.activePreset, canvasWidth, canvasHeight, 40));
   } else {
     // Fallback Ripples
     state.ripples.push(new Ripple(effectX, midY, state.activePreset, canvasWidth, canvasHeight));
@@ -296,5 +302,3 @@ export function hexToRgb(hex) {
     ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` 
     : '255, 215, 0';
 }
-
-
