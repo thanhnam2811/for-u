@@ -2,7 +2,7 @@
 .main-layout {
   flex: 1;
   display: flex;
-  padding: 80px 24px 24px 24px;
+  padding: clamp(60px, 8vh, 80px) 24px 24px 24px;
   justify-content: center;
   min-height: 0;
   max-width: 1180px;
