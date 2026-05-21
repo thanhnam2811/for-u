@@ -4,9 +4,11 @@
 export const state = {
   // Trạng thái mô hình AI & Camera
   handLandmarker: null,
+  imageSegmenter: null,
   webcamStream: null,
   lastVideoTime: -1,
   isModelLoaded: false,
+  isSegmenterLoaded: false,
   isCameraActive: false,
 
   // Cấu hình người dùng (Mặc định)
@@ -37,8 +39,16 @@ export const state = {
   // Mảng chứa các đối tượng hiệu ứng đang vẽ
   particles: [],
   ripples: [],
+  bodyAuraWaves: [],
   floatingTexts: [],
   continuousSparkleTimer: 0,
+
+  // Mask người dùng để tạo hào quang từ viền cơ thể
+  personOutlinePoints: [],
+  handOutlinePoints: [],
+  lastSegmentationTime: 0,
+  segmentationIntervalMs: 140,
+  isSegmentingFrame: false,
 
   // Điểm Tích Phước (localStorage)
   phuocCount: parseInt(localStorage.getItem('phuoc_count') || '0', 10),

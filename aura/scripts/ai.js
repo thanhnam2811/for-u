@@ -1,5 +1,5 @@
-// Nạp thư viện MediaPipe Hand Landmarker qua CDN ES Module
-import { HandLandmarker, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.8/vision_bundle.mjs";
+// Nạp thư viện MediaPipe qua CDN ES Module
+import { FilesetResolver, HandLandmarker, ImageSegmenter } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.8/vision_bundle.mjs";
 import { state } from "./state.js";
 import { THEME_COLORS } from "./constants.js";
 import { Particle, triggerAuraEffects } from "./canvas-effects.js";
@@ -21,6 +21,24 @@ function initDomRefs() {
   if (!gestureInstruction) gestureInstruction = document.getElementById('gesture-instruction');
 }
 
+async function createHandLandmarker(vision, delegate = "GPU") {
+  const baseOptions = {
+    modelAssetPath: "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task"
+  };
+
+  if (delegate) baseOptions.delegate = delegate;
+
+  return HandLandmarker.createFromOptions(vision, {
+    baseOptions,
+    runningMode: "VIDEO",
+    numHands: 2,
+    // Hạ ngưỡng confidence xuống để detect tốt hơn khi 2 tay gần nhau / chồng lấp
+    minHandDetectionConfidence: 0.3,
+    minHandPresenceConfidence: 0.3,
+    minTrackingConfidence: 0.3
+  });
+}
+
 // Tải mô hình AI từ CDN
 export async function loadHandLandmarkerModel() {
   initDomRefs();
@@ -35,18 +53,30 @@ export async function loadHandLandmarkerModel() {
     if (progressBar) progressBar.style.width = "60%";
     if (loadingStatus) loadingStatus.innerText = "Đang cấu hình mô hình hiệu ứng...";
 
-    state.handLandmarker = await HandLandmarker.createFromOptions(vision, {
-      baseOptions: {
-        modelAssetPath: "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
-        delegate: "GPU"
-      },
-      runningMode: "VIDEO",
-      numHands: 2,
-      // Hạ ngưỡng confidence xuống để detect tốt hơn khi 2 tay gần nhau / chồng lấp
-      minHandDetectionConfidence: 0.3,
-      minHandPresenceConfidence: 0.3,
-      minTrackingConfidence: 0.3
-    });
+    try {
+      state.handLandmarker = await createHandLandmarker(vision, "GPU");
+    } catch (gpuErr) {
+      console.warn("GPU HandLandmarker lỗi, chuyển sang CPU fallback:", gpuErr);
+      state.handLandmarker = await createHandLandmarker(vision, null);
+    }
+
+    if (progressBar) progressBar.style.width = "82%";
+    if (loadingStatus) loadingStatus.innerText = "Đang nạp nhận diện viền người...";
+
+    try {
+      state.imageSegmenter = await ImageSegmenter.createFromOptions(vision, {
+        baseOptions: {
+          modelAssetPath: "https://storage.googleapis.com/mediapipe-models/image_segmenter/selfie_segmenter/float16/latest/selfie_segmenter.tflite"
+        },
+        runningMode: "VIDEO",
+        outputCategoryMask: true,
+        outputConfidenceMasks: false
+      });
+      state.isSegmenterLoaded = true;
+    } catch (segmenterErr) {
+      console.warn("Không thể nạp Image Segmenter, dùng hiệu ứng fallback từ tay:", segmenterErr);
+      state.isSegmenterLoaded = false;
+    }
 
     if (progressBar) progressBar.style.width = "100%";
     if (loadingStatus) loadingStatus.innerText = "Hoàn thành! Đang bắt đầu khởi động...";
@@ -65,6 +95,129 @@ export async function loadHandLandmarkerModel() {
       loadingStatus.innerText = "Lỗi khi nạp mô hình AI. Vui lòng tải lại trang hoặc kiểm tra kết nối mạng.";
     }
     if (progressBar) progressBar.style.backgroundColor = "#ff4d4d";
+  }
+}
+
+function extractPersonOutlinePoints(mask, maskWidth, maskHeight, canvasWidth, canvasHeight) {
+  if (!mask || !maskWidth || !maskHeight) return [];
+
+  const points = [];
+  const step = Math.max(2, Math.floor(Math.min(maskWidth, maskHeight) / 92));
+  const isPerson = (x, y) => mask[y * maskWidth + x] === 1;
+
+  for (let y = step; y < maskHeight - step; y += step) {
+    for (let x = step; x < maskWidth - step; x += step) {
+      if (!isPerson(x, y)) continue;
+
+      const touchesBackground =
+        !isPerson(x - step, y) ||
+        !isPerson(x + step, y) ||
+        !isPerson(x, y - step) ||
+        !isPerson(x, y + step);
+
+      if (!touchesBackground) continue;
+
+      const normalizedX = x / maskWidth;
+      const visualX = state.mirrorCamera ? (1 - normalizedX) * canvasWidth : normalizedX * canvasWidth;
+      points.push({
+        x: visualX,
+        y: (y / maskHeight) * canvasHeight
+      });
+    }
+  }
+
+  if (points.length <= 320) return points;
+
+  const sampled = [];
+  const sampleStep = points.length / 320;
+  for (let i = 0; i < 320; i++) {
+    sampled.push(points[Math.floor(i * sampleStep)]);
+  }
+  return sampled;
+}
+
+function createHandOutlinePoints(hands, canvasWidth, canvasHeight) {
+  const points = hands.flatMap((hand) => {
+    return hand.map((pt) => ({
+      x: state.mirrorCamera ? (1 - pt.x) * canvasWidth : pt.x * canvasWidth,
+      y: pt.y * canvasHeight
+    }));
+  });
+
+  if (points.length < 3) return [];
+
+  const center = points.reduce((acc, point) => {
+    acc.x += point.x;
+    acc.y += point.y;
+    return acc;
+  }, { x: 0, y: 0 });
+  center.x /= points.length;
+  center.y /= points.length;
+
+  const hull = points
+    .map((point) => ({
+      ...point,
+      angle: Math.atan2(point.y - center.y, point.x - center.x),
+      dist: Math.hypot(point.x - center.x, point.y - center.y)
+    }))
+    .sort((a, b) => a.angle - b.angle);
+
+  const buckets = 32;
+  const outline = [];
+  for (let i = 0; i < buckets; i++) {
+    const minAngle = -Math.PI + (i / buckets) * Math.PI * 2;
+    const maxAngle = -Math.PI + ((i + 1) / buckets) * Math.PI * 2;
+    const farthest = hull
+      .filter((point) => point.angle >= minAngle && point.angle < maxAngle)
+      .sort((a, b) => b.dist - a.dist)[0];
+
+    if (farthest) {
+      outline.push({
+        x: farthest.x,
+        y: farthest.y
+      });
+    }
+  }
+
+  // Nội suy thêm điểm giữa để outline tay dày và sóng không bị thưa.
+  const smoothed = [];
+  outline.forEach((point, index) => {
+    const next = outline[(index + 1) % outline.length];
+    smoothed.push(point);
+    if (next) {
+      smoothed.push({
+        x: (point.x + next.x) / 2,
+        y: (point.y + next.y) / 2
+      });
+    }
+  });
+
+  return smoothed;
+}
+
+export function updatePersonSegmentation(video, canvasWidth, canvasHeight, timestamp) {
+  if (!state.isSegmenterLoaded || !state.imageSegmenter || state.isSegmentingFrame) return;
+  if (timestamp - state.lastSegmentationTime < state.segmentationIntervalMs) return;
+
+  state.lastSegmentationTime = timestamp;
+  state.isSegmentingFrame = true;
+
+  try {
+    state.imageSegmenter.segmentForVideo(video, timestamp, (result) => {
+      try {
+        const categoryMask = result?.categoryMask;
+        const mask = categoryMask?.getAsUint8Array?.();
+        const maskWidth = categoryMask?.width || video.videoWidth || canvasWidth;
+        const maskHeight = categoryMask?.height || video.videoHeight || canvasHeight;
+        state.personOutlinePoints = extractPersonOutlinePoints(mask, maskWidth, maskHeight, canvasWidth, canvasHeight);
+        categoryMask?.close?.();
+      } finally {
+        state.isSegmentingFrame = false;
+      }
+    });
+  } catch (err) {
+    state.isSegmentingFrame = false;
+    console.warn("Không thể segment frame hiện tại:", err);
   }
 }
 
@@ -177,6 +330,7 @@ export function analyzeHands(handResults, canvasWidth, canvasHeight, showToastCa
   if (detectedCount >= 2) {
     const hand1 = handResults.landmarks[0];
     const hand2 = handResults.landmarks[1];
+    state.handOutlinePoints = createHandOutlinePoints([hand1, hand2], canvasWidth, canvasHeight);
     const info = computeTwoHandsInfo(hand1, hand2, canvasWidth, canvasHeight);
 
     state.distanceNormalized = info.normalizedDist;
@@ -229,7 +383,7 @@ export function analyzeHands(handResults, canvasWidth, canvasHeight, showToastCa
       if (state.continuousSparkleTimer % 3 === 0) {
         // Dùng vị trí tay detect được hiện tại thay vì vị trí cũ
         const singleHand = handResults.landmarks[0];
-        const hx = singleHand[9].x * canvasWidth;
+        const hx = state.mirrorCamera ? (1 - singleHand[9].x) * canvasWidth : singleHand[9].x * canvasWidth;
         const hy = singleHand[9].y * canvasHeight;
         state.particles.push(
           new Particle(
@@ -252,6 +406,7 @@ export function analyzeHands(handResults, canvasWidth, canvasHeight, showToastCa
   state.distanceNormalized = 999;
   if (statDist) statDist.innerText = "--";
   state.lastHandsDetected = detectedCount;
+  if (detectedCount === 0) state.handOutlinePoints = [];
 
   // Chỉ deactivate nếu đã qua cửa sổ dự đoán (tránh nhấp nháy)
   if (!wasRecentlyTwoHands) {
@@ -261,6 +416,8 @@ export function analyzeHands(handResults, canvasWidth, canvasHeight, showToastCa
 
 // Kích hoạt cử chỉ chắp tay (chống gọi lặp nếu đã active)
 function activateGesture(midX, midY, canvasWidth, canvasHeight, showToastCallback) {
+  const effectX = state.mirrorCamera ? canvasWidth - midX : midX;
+
   if (!state.gestureActive) {
     state.gestureActive = true;
     triggerAuraEffects(midX, midY, canvasWidth, canvasHeight, showToastCallback);
@@ -270,7 +427,7 @@ function activateGesture(midX, midY, canvasWidth, canvasHeight, showToastCallbac
     if (state.continuousSparkleTimer % 2 === 0) {
       state.particles.push(
         new Particle(
-          midX + (Math.random() - 0.5) * 40,
+          effectX + (Math.random() - 0.5) * 40,
           midY + (Math.random() - 0.5) * 40,
           state.activePreset,
           canvasWidth,

@@ -1,7 +1,7 @@
 import { state } from "./state.js";
 import { setupUI, showToast } from "./ui.js";
 import { setupWebcam, getCameraDevices } from "./camera.js";
-import { loadHandLandmarkerModel, drawHandSkeleton, analyzeHands } from "./ai.js";
+import { loadHandLandmarkerModel, drawHandSkeleton, analyzeHands, updatePersonSegmentation } from "./ai.js";
 import { drawAmbientHalo } from "./canvas-effects.js";
 import { initAudio } from "./audio.js";
 
@@ -59,6 +59,7 @@ function renderLoop() {
         
         try {
           const results = state.handLandmarker.detectForVideo(video, timestamp);
+          updatePersonSegmentation(video, canvas.width, canvas.height, timestamp);
           
           // Phân tích và phát hiện cử chỉ chắp tay
           analyzeHands(results, canvas.width, canvas.height, showToast);
@@ -94,6 +95,12 @@ function renderLoop() {
       r.update();
       r.draw(ctx);
       if (r.alpha <= 0 || r.radius >= r.maxRadius) state.ripples.splice(idx, 1);
+    });
+
+    state.bodyAuraWaves.forEach((wave, idx) => {
+      wave.update();
+      wave.draw(ctx);
+      if (wave.done) state.bodyAuraWaves.splice(idx, 1);
     });
 
     // 5.5. Cập nhật và Vẽ chữ bay tích phước
