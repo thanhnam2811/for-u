@@ -182,6 +182,14 @@ export function setupUI() {
       const itemCenter = itemRect.left + itemRect.width / 2;
       const distance = Math.abs(trackCenter - itemCenter);
       
+      // Hiệu ứng "Fisheye": Càng xa tâm càng nhỏ và mờ
+      const maxDistance = 150; // Khoảng cách bắt đầu thu nhỏ tối đa
+      const scale = Math.max(0.7, 1.1 - (distance / maxDistance) * 0.4);
+      const opacity = Math.max(0.4, 1.0 - (distance / maxDistance) * 0.6);
+      
+      item.style.transform = `scale(${scale})`;
+      item.style.opacity = opacity;
+
       if (distance < minDistance) {
         minDistance = distance;
         closestItem = item;

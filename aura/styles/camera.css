@@ -502,71 +502,71 @@
   }
 }
 
-/* Thanh cuộn ngang chọn Filter (TikTok Center-Selection Style) */
+/* Thanh cuộn ngang chọn Filter (TikTok Center-Selection Style - Minimalist) */
 .face-filter-carousel {
   position: absolute;
-  bottom: 25px;
+  bottom: 15px; /* Đẩy sát xuống dưới hơn */
   left: 50%;
   transform: translateX(-50%);
   width: 100%;
-  max-width: 500px;
-  height: 110px;
+  max-width: 480px;
+  height: 90px; /* Thu hẹp chiều cao */
   z-index: 10;
-  background: transparent;
+  background: transparent; /* Bỏ background */
   overflow: hidden;
   display: flex;
   align-items: center;
   pointer-events: auto;
-  opacity: 0.6; /* Mờ đi khi không tương tác */
-  transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: 0.6;
+  transition: opacity 0.4s ease;
 }
 
 .face-filter-carousel:hover,
 .face-filter-carousel.active-scroll {
-  opacity: 1; /* Hiện rõ khi rê chuột hoặc đang kéo */
+  opacity: 1;
 }
 
-/* Hiệu ứng sương mù hai bên để làm nổi bật filter ở giữa */
+/* Bỏ sương mù gradient màu tối, dùng mờ dần trong suốt */
 .face-filter-carousel::before,
 .face-filter-carousel::after {
   content: '';
   position: absolute;
   top: 0;
   bottom: 0;
-  width: 100px;
+  width: 80px;
   z-index: 5;
   pointer-events: none;
 }
 
 .face-filter-carousel::before {
   left: 0;
-  background: linear-gradient(to right, rgba(10, 10, 15, 0.8), transparent);
+  background: linear-gradient(to right, rgba(10, 10, 15, 0.4), transparent);
 }
 
 .face-filter-carousel::after {
   right: 0;
-  background: linear-gradient(to left, rgba(10, 10, 15, 0.8), transparent);
+  background: linear-gradient(to left, rgba(10, 10, 15, 0.4), transparent);
 }
 
-/* Vùng tâm điểm (Selection ring) */
+/* Vùng tâm điểm mảnh mai hơn */
 .carousel-center-highlight {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 72px;
-  height: 72px;
-  border: 2px solid var(--theme-color);
+  width: 66px;
+  height: 66px;
+  border: 1.5px solid var(--theme-color);
   border-radius: 50%;
   z-index: 4;
   pointer-events: none;
-  box-shadow: 0 0 20px rgba(var(--theme-color-rgb), 0.4), inset 0 0 10px rgba(var(--theme-color-rgb), 0.2);
+  box-shadow: 0 0 15px rgba(var(--theme-color-rgb), 0.3);
 }
 
 .filter-track {
   display: flex;
-  padding: 0 50%; /* Để item đầu và cuối có thể vào giữa */
-  gap: 20px;
+  padding: 0 50%; 
+  gap: 15px; /* Thu hẹp gap */
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
@@ -576,13 +576,9 @@
   scroll-behavior: smooth;
 }
 
-.filter-track::-webkit-scrollbar {
-  display: none;
-}
-
 .filter-item {
-  flex: 0 0 64px;
-  height: 64px;
+  flex: 0 0 54px; /* Nhỏ hơn mặc định */
+  height: 54px;
   scroll-snap-align: center;
   display: flex;
   flex-direction: column;
@@ -593,27 +589,27 @@
   padding: 0;
   cursor: pointer;
   outline: none;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.25s ease, opacity 0.25s ease;
+  opacity: 0.5; /* Mờ mặc định */
+  transform: scale(0.75); /* Nhỏ mặc định */
+}
+
+.filter-item.active {
+  opacity: 1;
+  transform: scale(1.1); /* To khi ở giữa */
 }
 
 .filter-icon-container {
-  width: 58px;
-  height: 58px;
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   justify-content: center;
   align-items: center;
   color: #fff;
-  transition: all 0.3s ease;
-}
-
-.filter-item.active .filter-icon-container {
-  background: rgba(var(--theme-color-rgb), 0.25);
-  border-color: var(--theme-color);
-  transform: scale(1.1);
 }
 
 .filter-label {
