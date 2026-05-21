@@ -106,13 +106,19 @@ export class AuraLineWave {
   constructor(points, theme, canvasWidth, canvasHeight, delay = 0) {
     this.points = points.map((p) => ({ x: p.x, y: p.y }));
     this.themeColors = THEME_COLORS[theme];
-    this.alpha = 1.0;
-    this.scale = 1.0;
-    this.maxScale = 1.5;
+    this.canvasWidth = canvasWidth;
+    this.canvasHeight = canvasHeight;
     this.life = 0;
-    this.maxLife = 60;
+    this.maxLife = 70; // Tăng thời gian sống một chút để mượt hơn
     this.delay = delay;
     this.done = false;
+
+    // Tính toán tâm của silhouette
+    const center = this.points.reduce((acc, p) => ({ x: acc.x + p.x, y: acc.y + p.y }), { x: 0, y: 0 });
+    this.center = { x: center.x / this.points.length, y: center.y / this.points.length };
+    
+    // Tính bán kính trung bình để dùng cho hiệu ứng "tròn dần"
+    this.avgRadius = this.points.reduce((acc, p) => acc + Math.hypot(p.x - this.center.x, p.y - this.center.y), 0) / this.points.length;
   }
 
   update() {
@@ -121,36 +127,54 @@ export class AuraLineWave {
       return;
     }
     this.life++;
-    const progress = this.life / this.maxLife;
-    this.scale = 1.0 + progress * 0.5;
-    this.alpha = 1.0 - progress;
     if (this.life >= this.maxLife) this.done = true;
   }
 
   draw(ctx) {
     if (this.delay > 0 || this.done || this.points.length < 5) return;
 
+    // Tiến trình (0 -> 1)
+    const p = this.life / this.maxLife;
+    
+    // 1. Chậm lúc đầu, nhanh dần ra ngoài (Ease-in logic)
+    const expansionScale = 1.0 + Math.pow(p, 1.8) * 1.5;
+    
+    // 2. Hiệu ứng "Tròn dần": Morping từ silhouette sang hình tròn
+    // p = 0: giữ nguyên shape gốc, p = 1: 80% là hình tròn
+    const morphToCircle = p * 0.85; 
+
+    // 3. Sáng dần rồi mờ dần
+    // Sáng nhất ở khoảng 30% hành trình
+    const brightnessAlpha = Math.sin(Math.PI * Math.pow(p, 0.7)); 
+    const finalAlpha = brightnessAlpha * (1 - p);
+
     ctx.save();
-    ctx.globalAlpha = this.alpha;
+    ctx.globalAlpha = finalAlpha;
     ctx.globalCompositeOperation = 'screen';
     ctx.strokeStyle = this.themeColors.primary;
-    ctx.lineWidth = 4;
-    ctx.shadowBlur = 15;
+    ctx.lineWidth = 3 + (1 - p) * 5; // Nét vẽ thanh mảnh dần
+    ctx.shadowBlur = 20 * brightnessAlpha;
     ctx.shadowColor = this.themeColors.primary;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 
-    // Vẽ silhouette lan tỏa
-    const center = this.points.reduce((acc, p) => ({ x: acc.x + p.x, y: acc.y + p.y }), { x: 0, y: 0 });
-    center.x /= this.points.length;
-    center.y /= this.points.length;
-
     ctx.beginPath();
-    this.points.forEach((p, i) => {
-      const dx = p.x - center.x;
-      const dy = p.y - center.y;
-      const rx = center.x + dx * this.scale;
-      const ry = center.y + dy * this.scale;
+    this.points.forEach((pt, i) => {
+      // Tọa độ vector từ tâm
+      const dx = pt.x - this.center.x;
+      const dy = pt.y - this.center.y;
+      const dist = Math.hypot(dx, dy);
+      
+      // Vector đơn vị
+      const ux = dx / (dist || 1);
+      const uy = dy / (dist || 1);
+
+      // Mix giữa hình dạng gốc và hình dạng tròn trịa
+      const targetDist = this.avgRadius; 
+      const morphedDist = dist * (1 - morphToCircle) + targetDist * morphToCircle;
+      
+      const rx = this.center.x + ux * morphedDist * expansionScale;
+      const ry = this.center.y + uy * morphedDist * expansionScale;
       
       if (i === 0) ctx.moveTo(rx, ry);
       else ctx.lineTo(rx, ry);
