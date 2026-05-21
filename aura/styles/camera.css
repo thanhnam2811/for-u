@@ -505,14 +505,14 @@
 /* Thanh cuộn ngang chọn Filter (TikTok Center-Selection Style - Minimalist) */
 .face-filter-carousel {
   position: absolute;
-  bottom: 15px; /* Đẩy sát xuống dưới hơn */
+  bottom: 15px; 
   left: 50%;
   transform: translateX(-50%);
   width: 100%;
   max-width: 480px;
-  height: 90px; /* Thu hẹp chiều cao */
+  height: 90px;
   z-index: 10;
-  background: transparent; /* Bỏ background */
+  background: transparent !important; /* Đảm bảo không có nền */
   overflow: hidden;
   display: flex;
   align-items: center;
@@ -526,26 +526,10 @@
   opacity: 1;
 }
 
-/* Bỏ sương mù gradient màu tối, dùng mờ dần trong suốt */
+/* Loại bỏ hoàn toàn mây mù/background hai bên */
 .face-filter-carousel::before,
 .face-filter-carousel::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 80px;
-  z-index: 5;
-  pointer-events: none;
-}
-
-.face-filter-carousel::before {
-  left: 0;
-  background: linear-gradient(to right, rgba(10, 10, 15, 0.4), transparent);
-}
-
-.face-filter-carousel::after {
-  right: 0;
-  background: linear-gradient(to left, rgba(10, 10, 15, 0.4), transparent);
+  content: none !important;
 }
 
 /* Vùng tâm điểm mảnh mai hơn */
@@ -566,7 +550,7 @@
 .filter-track {
   display: flex;
   padding: 0 50%; 
-  gap: 15px; /* Thu hẹp gap */
+  gap: 15px; 
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
@@ -574,24 +558,27 @@
   height: 100%;
   align-items: center;
   scroll-behavior: smooth;
+  background: transparent !important;
 }
 
 .filter-item {
-  flex: 0 0 54px; /* Nhỏ hơn mặc định */
+  flex: 0 0 54px; 
   height: 54px;
   scroll-snap-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: none;
+  background: none !important;
   border: none;
   padding: 0;
   cursor: pointer;
   outline: none;
-  transition: transform 0.25s ease, opacity 0.25s ease;
-  opacity: 0.5; /* Mờ mặc định */
-  transform: scale(0.75); /* Nhỏ mặc định */
+  /* Tắt transition cho transform/opacity để JS update liên tục không bị giật (Conflict animation) */
+  transition: none !important; 
+  opacity: 0.5;
+  transform: scale(0.75);
+  will-change: transform, opacity; /* Tối ưu hóa GPU render */
 }
 
 .filter-item.active {

@@ -167,7 +167,8 @@ export function setupUI() {
   const filterTrack = document.getElementById('filter-track');
   const filterCarousel = document.getElementById('face-filter-carousel');
 
-  // Hàm cập nhật filter dựa trên vị trí cuộn
+  // Hàm cập nhật filter dựa trên vị trí cuộn (Throttled with requestAnimationFrame)
+  let isScrolling = false;
   const updateActiveFilterFromScroll = () => {
     if (!filterTrack) return;
     
@@ -183,8 +184,8 @@ export function setupUI() {
       const distance = Math.abs(trackCenter - itemCenter);
       
       // Hiệu ứng "Fisheye": Càng xa tâm càng nhỏ và mờ
-      const maxDistance = 150; // Khoảng cách bắt đầu thu nhỏ tối đa
-      const scale = Math.max(0.7, 1.1 - (distance / maxDistance) * 0.4);
+      const maxDistance = 140; 
+      const scale = Math.max(0.7, 1.15 - (distance / maxDistance) * 0.45);
       const opacity = Math.max(0.4, 1.0 - (distance / maxDistance) * 0.6);
       
       item.style.transform = `scale(${scale})`;
@@ -207,6 +208,7 @@ export function setupUI() {
         initAudio();
       }
     }
+    isScrolling = false;
   };
 
   // Cuộn đến item hiện tại lúc khởi tạo
@@ -215,6 +217,8 @@ export function setupUI() {
     if (activeItem) {
       setTimeout(() => {
         activeItem.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'center' });
+        // Cập nhật scale lần đầu
+        updateActiveFilterFromScroll();
       }, 500);
     }
 
@@ -223,12 +227,16 @@ export function setupUI() {
       filterCarousel?.classList.add('active-scroll');
       clearTimeout(scrollTimeout);
       
-      updateActiveFilterFromScroll();
+      // Throttling bằng requestAnimationFrame để tránh giật lag (Layout Thrashing)
+      if (!isScrolling) {
+        isScrolling = true;
+        requestAnimationFrame(updateActiveFilterFromScroll);
+      }
       
       scrollTimeout = setTimeout(() => {
         filterCarousel?.classList.remove('active-scroll');
       }, 1500);
-    });
+    }, { passive: true });
   }
 
   // Lắng nghe sự kiện click (vẫn giữ để người dùng có thể tap trực tiếp)
