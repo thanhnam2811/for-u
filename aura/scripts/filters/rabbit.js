@@ -1,60 +1,71 @@
-// FILTER 2: Tai Thỏ Hồng Xinh Xắn Chi Tiết (Có cử động) 🐰💕
+// FILTER 2: Tai Thỏ Hữu Cơ (Bezier Curves + Squash & Stretch) 🐰💕
 export function drawRabbit(ctx, landmarks, metrics, canvasWidth, canvasHeight) {
   const { eyeDist, angle, noseX, noseY, fhX, fhY } = metrics;
-  const time = performance.now();
+  const time = performance.now() * 0.005;
 
   ctx.save();
 
   // =============================================
-  // 1. TAI THỎ trên trán (translate + rotate theo góc nghiêng đầu)
+  // 1. TAI THỎ (Organic Bezier Motion)
   // =============================================
   ctx.save();
   ctx.translate(fhX, fhY);
   ctx.rotate(angle);
 
-  // --- Hàm vẽ một tai thỏ với gradient bên trong ---
-  function drawEar(xDir, tiltAngle) {
-    const earX = xDir * eyeDist * 0.45; // Đẩy tai ra xa nhau hơn một chút
-    const earY = -eyeDist * 1.2;        // Đẩy tai lên cao hơn (xa trán hơn)
-    
-    // Hiệu ứng tai vẫy/rung nhẹ nhàng tự nhiên
-    const wiggle = Math.sin(time / 400 + (xDir > 0 ? 0 : Math.PI)) * 0.08;
-    const finalTilt = tiltAngle + wiggle;
+  function drawOrganicEar(xDir, baseOffset) {
+    const wiggle = Math.sin(time + (xDir > 0 ? 0 : Math.PI)) * 15; // Biên độ rung
+    const squash = 1 + Math.cos(time * 1.5) * 0.05; // Tỷ lệ co giãn y
 
     ctx.save();
-    ctx.translate(earX, earY);
-    ctx.rotate(finalTilt);
-
-    // Hiệu ứng "nhún" tai (co giãn nhẹ)
-    const squash = 1 + Math.sin(time / 600) * 0.03;
+    ctx.translate(xDir * eyeDist * 0.45, -eyeDist * 0.3);
     ctx.scale(1, squash);
 
-    // Phần tai ngoài: lông trắng mịn
-    ctx.fillStyle = '#ffffff';
-    ctx.strokeStyle = 'rgba(180, 180, 180, 0.5)';
-    ctx.lineWidth = eyeDist * 0.015;
+    // Vẽ tai ngoài bằng Bezier cho mềm mại
     ctx.beginPath();
-    ctx.ellipse(0, 0, eyeDist * 0.35, eyeDist * 0.95, 0, 0, Math.PI * 2); // Tăng kích thước ellipse
+    ctx.moveTo(-eyeDist * 0.15, 0);
+    // Điểm kiểm soát curve thay đổi dựa trên wiggle tạo cảm giác tai bị bẻ cong
+    ctx.bezierCurveTo(
+      -eyeDist * 0.35, -eyeDist * 0.5 + wiggle,
+      -eyeDist * 0.1, -eyeDist * 1.1 + wiggle,
+      0, -eyeDist * 1.3 + wiggle * 0.5
+    );
+    ctx.bezierCurveTo(
+      eyeDist * 0.1, -eyeDist * 1.1 + wiggle,
+      eyeDist * 0.35, -eyeDist * 0.5 + wiggle,
+      eyeDist * 0.15, 0
+    );
+    ctx.closePath();
+    
+    ctx.fillStyle = "#ffffff";
+    ctx.strokeStyle = "rgba(200, 200, 200, 0.4)";
+    ctx.lineWidth = eyeDist * 0.02;
     ctx.fill();
     ctx.stroke();
 
-    // Phần tai trong: gradient hồng tỏa sáng
-    const innerGrad = ctx.createRadialGradient(0, 0, eyeDist * 0.02, 0, 0, eyeDist * 0.5);
-    innerGrad.addColorStop(0, '#ff69b4');
-    innerGrad.addColorStop(0.7, '#ffb3d9');
-    innerGrad.addColorStop(1, 'rgba(255, 179, 217, 0.3)');
-    ctx.fillStyle = innerGrad;
+    // Vẽ lòng tai màu hồng (phiên bản thu nhỏ)
     ctx.beginPath();
-    ctx.ellipse(0, 0, eyeDist * 0.18, eyeDist * 0.65, 0, 0, Math.PI * 2); // Tăng kích thước ellipse trong
+    ctx.moveTo(-eyeDist * 0.08, -eyeDist * 0.05);
+    ctx.bezierCurveTo(
+      -eyeDist * 0.2, -eyeDist * 0.4 + wiggle,
+      -eyeDist * 0.05, -eyeDist * 0.8 + wiggle,
+      0, -eyeDist * 0.9 + wiggle * 0.5
+    );
+    ctx.bezierCurveTo(
+      eyeDist * 0.05, -eyeDist * 0.8 + wiggle,
+      eyeDist * 0.2, -eyeDist * 0.4 + wiggle,
+      eyeDist * 0.08, -eyeDist * 0.05
+    );
+    const innerGrad = ctx.createRadialGradient(0, -eyeDist * 0.4, 0, 0, -eyeDist * 0.4, eyeDist * 0.6);
+    innerGrad.addColorStop(0, '#ffb3d9');
+    innerGrad.addColorStop(1, '#ff69b4');
+    ctx.fillStyle = innerGrad;
     ctx.fill();
 
     ctx.restore();
   }
 
-  // Tai trái nghiêng vào trong nhẹ, tai phải đối xứng
-  drawEar(-1, -0.15);
-  drawEar(1, 0.15);
-
+  drawOrganicEar(-1);
+  drawOrganicEar(1);
   ctx.restore();
 
   // =============================================

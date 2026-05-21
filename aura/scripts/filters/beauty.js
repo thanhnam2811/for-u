@@ -15,74 +15,68 @@ export function drawBeauty(ctx, landmarks, metrics, canvasWidth, canvasHeight) {
   const faceCY = (leY + reY) / 2;
 
   // =============================================
-  // 1. CINEMATIC OVERLAY (Lớp phủ màu điện ảnh)
+  // 1. CINEMATIC SOFT-LIGHT (Lớp phủ màu điện ảnh)
   // =============================================
   ctx.save();
   ctx.globalCompositeOperation = 'soft-light';
-  ctx.fillStyle = 'rgba(255, 200, 150, 0.15)'; // Màu vàng nắng ấm
+  const cinematicGrad = ctx.createRadialGradient(faceCX, faceCY, eyeDist * 0.5, faceCX, faceCY, canvasWidth);
+  cinematicGrad.addColorStop(0, 'rgba(255, 200, 100, 0.25)');
+  cinematicGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+  ctx.fillStyle = cinematicGrad;
   ctx.fillRect(0, 0, canvasWidth, canvasHeight);
   ctx.restore();
 
   // =============================================
-  // 2. SOFT FOCUS GLOW (Mạnh mẽ hơn, rộng hơn)
+  // 2. AURA GLOW (Gia lập Blur vùng chữ T)
   // =============================================
   ctx.save();
   ctx.globalCompositeOperation = 'screen';
-  const softGlow = ctx.createRadialGradient(faceCX, faceCY, eyeDist * 0.8, faceCX, faceCY, eyeDist * 4);
-  softGlow.addColorStop(0, 'rgba(255, 255, 255, 0.25)');
-  softGlow.addColorStop(0.5, hexToRgba(theme.primary, 0.12));
-  softGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
-  ctx.fillStyle = softGlow;
-  ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+  const auraGrad = ctx.createRadialGradient(faceCX, faceCY, eyeDist * 0.8, faceCX, faceCY, eyeDist * 4);
+  auraGrad.addColorStop(0, 'rgba(255, 255, 255, 0.25)');
+  auraGrad.addColorStop(0.5, hexToRgba(theme.primary, 0.12));
+  auraGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+  ctx.fillStyle = auraGrad;
+  ctx.beginPath();
+  ctx.ellipse(faceCX, faceCY, eyeDist * 2, eyeDist * 3, angle, 0, Math.PI * 2);
+  ctx.fill();
   ctx.restore();
 
   // =============================================
-  // 3. DYNAMIC SPARKLES (Rộng hơn)
+  // 3. DYNAMIC SPARKLES (TikTok Style)
   // =============================================
   ctx.save();
-  const sparkleCount = 15; // Tăng số lượng hạt
+  const sparkleCount = 15;
   for (let i = 0; i < sparkleCount; i++) {
     const orbitAngle = (i / sparkleCount) * Math.PI * 2 + time / 2500;
-    const orbitR = eyeDist * (1.5 + Math.sin(time / 1200 + i) * 0.5); // Quỹ đạo rộng hơn
+    const orbitR = eyeDist * (1.5 + Math.sin(time / 1200 + i) * 0.5);
     const sx = faceCX + Math.cos(orbitAngle) * orbitR;
     const sy = faceCY + Math.sin(orbitAngle) * orbitR * 0.7;
 
     const size = eyeDist * (0.05 + Math.sin(time / 400 + i * 1.5) * 0.02);
-    ctx.globalAlpha = 0.6 + Math.sin(time / 300 + i) * 0.3;
-    ctx.fillStyle = '#ffffff';
-    ctx.shadowBlur = 15;
-    ctx.shadowColor = theme.primary;
+    const rotation = time / 1000 + i;
     
-    drawStar(ctx, sx, sy, 4, size, size / 2.5);
+    drawSparkle(ctx, sx, sy, size, rotation, theme.primary);
   }
-  ctx.restore();
-
   ctx.restore();
 }
 
-// Hàm vẽ ngôi sao đa năng
-function drawStar(ctx, cx, cy, spikes, outerRadius, innerRadius) {
-  let rot = Math.PI / 2 * 3;
-  let x = cx;
-  let y = cy;
-  let step = Math.PI / spikes;
-
+// Hàm vẽ ngôi sao 4 cánh chuyên nghiệp
+function drawSparkle(ctx, cx, cy, size, rotation, glowColor) {
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(rotation);
   ctx.beginPath();
-  ctx.moveTo(cx, cy - outerRadius);
-  for (let i = 0; i < spikes; i++) {
-    x = cx + Math.cos(rot) * outerRadius;
-    y = cy + Math.sin(rot) * outerRadius;
-    ctx.lineTo(x, y);
-    rot += step;
-
-    x = cx + Math.cos(rot) * innerRadius;
-    y = cy + Math.sin(rot) * innerRadius;
-    ctx.lineTo(x, y);
-    rot += step;
+  for (let i = 0; i < 4; i++) {
+      ctx.lineTo(0, size);
+      ctx.lineTo(size * 0.2, size * 0.2);
+      ctx.rotate(Math.PI / 2);
   }
-  ctx.lineTo(cx, cy - outerRadius);
   ctx.closePath();
+  ctx.fillStyle = '#ffffff';
+  ctx.shadowBlur = 15;
+  ctx.shadowColor = glowColor;
   ctx.fill();
+  ctx.restore();
 }
 
 function hexToRgba(hex, alpha) {

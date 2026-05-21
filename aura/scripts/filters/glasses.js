@@ -30,34 +30,31 @@ export function drawGlasses(ctx, landmarks, metrics, canvasWidth, canvasHeight) 
 
   function drawLensWithEffects(cx, cy, isRight) {
     ctx.save();
+    
+    // Đổ bóng (Drop Shadow) cho tròng kính tạo độ sâu 3D
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+    ctx.shadowBlur = 20;
+    ctx.shadowOffsetX = 10;
+    ctx.shadowOffsetY = 10;
+
     drawAviatorLens(cx, cy);
     
-    // Gradient kính râm
-    const grad = ctx.createLinearGradient(cx, cy - lensH * 0.45, cx, cy + lensH * 0.5);
-    grad.addColorStop(0, '#0a0a1a');
-    grad.addColorStop(0.6, '#1a1a2e');
-    grad.addColorStop(1, '#2d2d44');
+    // Gradient kính râm động
+    const grad = ctx.createLinearGradient(cx - lensW, cy - lensH, cx + lensW + Math.sin(time * 0.003) * 50, cy + lensH);
+    grad.addColorStop(0, 'rgba(10, 15, 30, 0.95)');
+    grad.addColorStop(0.5 + Math.sin(time * 0.003) * 0.1, 'rgba(30, 50, 100, 0.95)');
+    grad.addColorStop(0.6 + Math.sin(time * 0.003) * 0.1, 'rgba(255, 255, 255, 0.4)');
+    grad.addColorStop(0.7 + Math.sin(time * 0.003) * 0.1, 'rgba(10, 15, 30, 0.95)');
     ctx.fillStyle = grad;
     ctx.fill();
 
-    // Viền khung kim loại
+    // Tắt shadow để vẽ viền kim loại sáng
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
     ctx.strokeStyle = '#aaaaaa';
     ctx.lineWidth = eyeDist * 0.025;
     ctx.stroke();
-
-    // Hiệu ứng phản quang động (vệt sáng chạy qua)
-    const scanPos = (time % 3000) / 3000;
-    const scanGrad = ctx.createLinearGradient(
-      cx - lensW + scanPos * lensW * 4, cy - lensH,
-      cx - lensW * 0.5 + scanPos * lensW * 4, cy + lensH
-    );
-    scanGrad.addColorStop(0, 'rgba(255,255,255,0)');
-    scanGrad.addColorStop(0.5, 'rgba(255,255,255,0.15)');
-    scanGrad.addColorStop(1, 'rgba(255,255,255,0)');
-    
-    ctx.globalCompositeOperation = 'screen';
-    ctx.fillStyle = scanGrad;
-    ctx.fill();
 
     // Điểm lóe sáng (Sparkle)
     if (Math.sin(time / 500 + (isRight ? 1 : 0)) > 0.8) {

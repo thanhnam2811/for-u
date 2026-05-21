@@ -57,19 +57,21 @@ export function drawHalo(ctx, landmarks, metrics, canvasWidth, canvasHeight) {
   }
   ctx.restore();
 
-  // 3. MAIN RING (Neon sáng rực)
+  // 3. MAIN RING (Neon Bloom Effect)
   ctx.save();
-  ctx.shadowBlur = 40;
   ctx.shadowColor = theme.primary;
-  ctx.strokeStyle = '#ffffff';
-  ctx.lineWidth = eyeDist * 0.08;
+  ctx.strokeStyle = "#ffffff";
+
+  // Lớp 1: Lớp phát sáng nhòe diện rộng (Neon Aura)
+  ctx.shadowBlur = 45;
+  ctx.lineWidth = eyeDist * 0.15;
   ctx.beginPath();
-  ctx.ellipse(0, 0, haloRX, haloRY, 0, 0, Math.PI * 2);
+  ctx.ellipse(0, 0, haloRX, haloRY, 0, 0, 2 * Math.PI);
   ctx.stroke();
-  
-  // Viền trong lấp lánh
-  ctx.lineWidth = eyeDist * 0.02;
-  ctx.strokeStyle = theme.secondary;
+
+  // Lớp 2: Lõi sáng sắc nét ở giữa
+  ctx.shadowBlur = 15;
+  ctx.lineWidth = eyeDist * 0.05;
   ctx.stroke();
   ctx.restore();
 
