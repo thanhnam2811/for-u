@@ -20,6 +20,10 @@ let settingsBackdrop = null;
 let toastNotification = null;
 let video = null;
 let canvas = null;
+let btnHelp = null;
+let btnCloseHelp = null;
+let helpPopup = null;
+let helpBackdrop = null;
 
 let toastTimer = null;
 
@@ -56,6 +60,10 @@ export function setupUI() {
   toastNotification = document.getElementById('toast-notification');
   video = document.getElementById('webcam');
   canvas = document.getElementById('canvas-overlay');
+  btnHelp = document.getElementById('btn-help');
+  btnCloseHelp = document.getElementById('btn-close-help');
+  helpPopup = document.getElementById('help-popup');
+  helpBackdrop = document.getElementById('help-backdrop');
 
   // Đồng bộ hóa trạng thái giao diện (UI) từ state đã nạp từ localStorage
   if (colorBtns) {
@@ -133,8 +141,26 @@ export function setupUI() {
   btnCloseSettings?.addEventListener('click', closeSettings);
   settingsBackdrop?.addEventListener('click', closeSettings);
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && settingsPopup?.classList.contains('open')) closeSettings();
+    if (e.key === 'Escape') {
+      if (helpPopup?.classList.contains('open')) closeHelp();
+      else if (settingsPopup?.classList.contains('open')) closeSettings();
+    }
   });
+
+  // Popup Hướng dẫn sử dụng (nút ?)
+  const closeHelp = () => {
+    helpPopup?.classList.remove('open');
+    helpBackdrop?.classList.remove('open');
+  };
+
+  const openHelp = () => {
+    helpPopup?.classList.add('open');
+    helpBackdrop?.classList.add('open');
+  };
+
+  btnHelp?.addEventListener('click', openHelp);
+  btnCloseHelp?.addEventListener('click', closeHelp);
+  helpBackdrop?.addEventListener('click', closeHelp);
 
   // Khởi tạo trạng thái active cho filter gương mặt AR dựa trên cấu hình đã lưu
   const filterItems = document.querySelectorAll('.filter-item');
@@ -159,7 +185,8 @@ export function setupUI() {
       initAudio();
 
       let label = "Tự Nhiên";
-      if (filterName === "glasses") label = "Kính Thug Life 😎";
+      if (filterName === "beauty") label = "Làm Đẹp ✨";
+      else if (filterName === "glasses") label = "Kính Râm 😎";
       else if (filterName === "rabbit") label = "Tai Thỏ Dễ Thương 🐰";
       else if (filterName === "halo") label = "Vòng Thiên Thần 👼";
       else if (filterName === "cat") label = "Má Hồng Râu Mèo 🐱";

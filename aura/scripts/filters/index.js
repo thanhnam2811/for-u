@@ -2,6 +2,7 @@ import { drawGlasses } from "./glasses.js";
 import { drawRabbit } from "./rabbit.js";
 import { drawHalo } from "./halo.js";
 import { drawCat } from "./cat.js";
+import { drawBeauty } from "./beauty.js";
 
 // Hàm vẽ bộ lọc gương mặt AR (Stickers) dựa trên toạ độ mốc MediaPipe FaceLandmarker
 export function drawFaceFilter(ctx, landmarks, filterName, canvasWidth, canvasHeight) {
@@ -71,6 +72,9 @@ export function drawFaceFilter(ctx, landmarks, filterName, canvasWidth, canvasHe
       break;
     case 'cat':
       drawCat(ctx, landmarks, metrics, canvasWidth, canvasHeight);
+      break;
+    case 'beauty':
+      drawBeauty(ctx, landmarks, metrics, canvasWidth, canvasHeight);
       break;
     default:
       break;

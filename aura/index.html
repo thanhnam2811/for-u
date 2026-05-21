@@ -65,12 +65,13 @@
             <span>Phước tích lũy: <strong id="phuoc-count-display">0</strong> 🙏</span>
           </div>
           
-          <!-- Lớp phủ thông tin trạng thái cử chỉ -->
+          <!-- Nút ? hướng dẫn sử dụng -->
+          <button class="btn-help" id="btn-help" type="button" title="Hướng dẫn sử dụng">
+            <span class="material-icons-round">help_outline</span>
+          </button>
+          
+          <!-- Lớp phủ thông báo trạng thái cử chỉ -->
           <div class="gesture-overlay" id="gesture-overlay">
-            <div class="gesture-instruction" id="gesture-instruction">
-              <span class="material-icons-round pray-icon">spa</span>
-              <p>🙏 Chắp hai tay trước ngực để toả Hào Quang 🙏</p>
-            </div>
             <div class="gesture-triggered-msg" id="gesture-triggered-msg">
               <h1 class="sparkle-text">HÀO QUANG TOẢ SÁNG!</h1>
               <p>Hiệu ứng đã được kích hoạt!</p>
@@ -94,11 +95,17 @@
               </div>
               <span class="filter-label">Tự Nhiên</span>
             </button>
+            <button class="filter-item" data-filter="beauty" title="Làm Đẹp">
+              <div class="filter-icon-container">
+                <span class="material-icons-round">auto_awesome</span>
+              </div>
+              <span class="filter-label">Làm Đẹp</span>
+            </button>
             <button class="filter-item" data-filter="glasses" title="Kính Thug Life">
               <div class="filter-icon-container">
-                <span class="material-icons-round">sunglasses</span>
+                <span class="material-icons-round">visibility</span>
               </div>
-              <span class="filter-label">Kính Ngầu</span>
+              <span class="filter-label">Kính Râm</span>
             </button>
             <button class="filter-item" data-filter="rabbit" title="Tai Thỏ Dễ Thương">
               <div class="filter-icon-container">
@@ -259,6 +266,60 @@
         </div>
       </aside>
     </main>
+  </div>
+
+  <!-- Popup Hướng dẫn sử dụng -->
+  <div id="help-backdrop" class="help-popup-backdrop"></div>
+  <div id="help-popup" class="help-popup">
+    <div class="help-popup-header">
+      <h3>
+        <span class="material-icons-round">menu_book</span>
+        Hướng Dẫn Sử Dụng
+      </h3>
+      <button id="btn-close-help" class="btn-close-help" type="button" aria-label="Đóng">
+        <span class="material-icons-round">close</span>
+      </button>
+    </div>
+
+    <div class="help-item">
+      <div class="help-item-icon">
+        <span class="material-icons-round">spa</span>
+      </div>
+      <div class="help-item-text">
+        <h4>🙏 Toả Hào Quang</h4>
+        <p>Chắp hai tay lại trước ngực để kích hoạt hiệu ứng hào quang rực rỡ toả sáng xung quanh cơ thể bạn!</p>
+      </div>
+    </div>
+
+    <div class="help-item">
+      <div class="help-item-icon">
+        <span class="material-icons-round">face_retouching_natural</span>
+      </div>
+      <div class="help-item-text">
+        <h4>✨ Nhãn Dán AR</h4>
+        <p>Vuốt ngang thanh cuộn bên dưới camera để chọn các bộ lọc dán mặt như Kính Râm, Tai Thỏ, Thiên Thần, Má Mèo hoặc Làm Đẹp!</p>
+      </div>
+    </div>
+
+    <div class="help-item">
+      <div class="help-item-icon">
+        <span class="material-icons-round">photo_camera</span>
+      </div>
+      <div class="help-item-text">
+        <h4>📸 Chụp Ảnh Kỷ Niệm</h4>
+        <p>Mở Cài đặt (góc phải trên) để chụp ảnh lưu lại khoảnh khắc với đầy đủ hiệu ứng hào quang và nhãn dán AR!</p>
+      </div>
+    </div>
+
+    <div class="help-item">
+      <div class="help-item-icon">
+        <span class="material-icons-round">tune</span>
+      </div>
+      <div class="help-item-text">
+        <h4>🎨 Tuỳ Chỉnh</h4>
+        <p>Bấm nút Cài đặt để đổi màu hào quang, âm thanh, độ nhạy và nhiều tùy chỉnh khác. Tất cả được lưu tự động!</p>
+      </div>
+    </div>
   </div>
 
   <!-- Flash Screen flash effect when aura is triggered -->

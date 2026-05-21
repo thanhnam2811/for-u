@@ -18,10 +18,6 @@
     height: auto;
     overflow: visible;
   }
-
-  .camera-section {
-    flex: none;
-  }
 }
 
 @media (max-width: 600px) {
@@ -50,19 +46,6 @@
   
   .loading-card h2 {
     font-size: 1.3rem;
-  }
-  
-  .camera-wrapper {
-    border-radius: 16px;
-  }
-  
-  .sidebar-header {
-    padding: 16px;
-  }
-  
-  .sidebar-content {
-    padding: 16px;
-    gap: 16px;
   }
   
   .color-presets, .sound-presets {

@@ -2,8 +2,9 @@
 .camera-section {
   flex: 1;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
+  justify-content: center;
   min-height: 0;
   min-width: 0;
   width: 100%;
@@ -53,7 +54,7 @@
   pointer-events: none;
 }
 
-/* Lớp phủ hướng dẫn & trigger thông báo */
+/* Lớp phủ trigger thông báo khi chắp tay */
 .gesture-overlay {
   position: absolute;
   top: 0;
@@ -67,44 +68,162 @@
   align-items: center;
 }
 
-.gesture-instruction {
-  background: rgba(10, 10, 15, 0.75);
-  backdrop-filter: blur(8px);
+/* Nút ? hướng dẫn nhỏ gọn nằm góc dưới trái camera */
+.btn-help {
+  position: absolute;
+  bottom: 15px;
+  left: 15px;
+  z-index: 5;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
   border: 1px solid var(--border-glass);
-  width: min(90%, 520px);
-  padding: 16px 24px;
-  border-radius: 40px;
+  background: rgba(10, 10, 15, 0.6);
+  backdrop-filter: blur(8px);
+  color: var(--text-secondary);
   display: flex;
   align-items: center;
-  gap: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  transform: translateY(min(120px, 16vh));
-  transition: opacity 0.5s ease, transform 0.5s ease;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-.gesture-instruction.hidden {
-  opacity: 0;
-  transform: translateY(min(150px, 20vh));
-}
-
-.gesture-instruction p {
-  font-family: var(--font-display);
-  font-weight: 600;
-  font-size: 1rem;
-  letter-spacing: 0;
-  color: var(--text-primary);
-  line-height: 1.45;
-}
-
-.pray-icon {
+.btn-help:hover {
+  background: rgba(var(--theme-color-rgb), 0.15);
+  border-color: var(--theme-color);
   color: var(--theme-color);
-  animation: pray-pulse 1.5s infinite alternate ease-in-out;
-  font-size: 1.5rem;
+  transform: scale(1.1);
+  box-shadow: 0 0 16px rgba(var(--theme-color-rgb), 0.3);
 }
 
-@keyframes pray-pulse {
-  from { transform: scale(1); filter: drop-shadow(0 0 2px rgba(var(--theme-color-rgb), 0.4)); }
-  to { transform: scale(1.25); filter: drop-shadow(0 0 10px rgba(var(--theme-color-rgb), 0.9)); }
+.btn-help .material-icons-round {
+  font-size: 1.2rem;
+}
+
+/* Popup hướng dẫn sử dụng */
+.help-popup-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  background: rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.help-popup-backdrop.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.help-popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.92);
+  z-index: 71;
+  width: min(420px, calc(100vw - 32px));
+  max-height: min(80dvh, 560px);
+  background: rgba(18, 18, 28, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-glass);
+  border-radius: 24px;
+  padding: 24px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 30px rgba(var(--theme-color-rgb), 0.1);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  overflow-y: auto;
+}
+
+.help-popup.open {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.help-popup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.help-popup-header h3 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.15rem;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.help-popup-header h3 .material-icons-round {
+  color: var(--theme-color);
+  font-size: 1.3rem;
+}
+
+.btn-close-help {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--border-glass);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-close-help:hover {
+  background: rgba(255, 80, 80, 0.2);
+  color: #ff6b6b;
+}
+
+.help-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.help-item:last-child {
+  border-bottom: none;
+}
+
+.help-item-icon {
+  flex: 0 0 auto;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: rgba(var(--theme-color-rgb), 0.1);
+  border: 1px solid rgba(var(--theme-color-rgb), 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--theme-color);
+  font-size: 1.2rem;
+}
+
+.help-item-text h4 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.help-item-text p {
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
 }
 
 .gesture-triggered-msg {
@@ -215,42 +334,43 @@
 }
 
 @media (max-width: 1024px) {
+  .camera-section {
+    flex: 0 0 auto;
+  }
+
   .camera-wrapper {
-    max-height: none;
+    max-height: calc(100dvh - 240px);
   }
 }
 
 @media (max-width: 600px) {
   .camera-wrapper {
     border-radius: 16px;
+    max-height: calc(100dvh - 210px);
   }
 
-  .gesture-overlay {
-    align-items: flex-end;
-    padding: 0 10px 18px;
+  .btn-help {
+    bottom: 10px;
+    left: 10px;
+    width: 36px;
+    height: 36px;
   }
 
-  .gesture-instruction {
-    width: 100%;
-    justify-content: center;
-    padding: 12px 14px;
-    border-radius: 18px;
-    gap: 8px;
-    transform: none;
+  .btn-help .material-icons-round {
+    font-size: 1.05rem;
   }
 
-  .gesture-instruction.hidden {
-    transform: translateY(24px);
+  .help-popup {
+    width: calc(100vw - 24px);
+    padding: 20px;
+    border-radius: 20px;
+    max-height: min(80dvh, 500px);
   }
 
-  .gesture-instruction p {
-    font-size: 0.88rem;
-    text-align: center;
-  }
-
-  .pray-icon {
-    flex: 0 0 auto;
-    font-size: 1.25rem;
+  .help-item-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
   }
 
   .phuoc-badge,
@@ -299,15 +419,7 @@
 @media (max-width: 900px) and (orientation: landscape) {
   .camera-wrapper {
     aspect-ratio: 16/9;
-  }
-
-  .gesture-overlay {
-    align-items: flex-end;
-    padding-bottom: 12px;
-  }
-
-  .gesture-instruction {
-    transform: none;
+    max-height: calc(100dvh - 160px);
   }
 }
 

@@ -5,14 +5,12 @@ import { playZenSound } from "./audio.js";
 // DOM references required for triggers
 let flashEffect = null;
 let cameraWrapper = null;
-let gestureInstruction = null;
 let gestureTriggeredMsg = null;
 let phuocDisplay = null;
 
 function initDomRefs() {
   if (!flashEffect) flashEffect = document.getElementById('flash-effect');
   if (!cameraWrapper) cameraWrapper = document.getElementById('camera-wrapper');
-  if (!gestureInstruction) gestureInstruction = document.getElementById('gesture-instruction');
   if (!gestureTriggeredMsg) gestureTriggeredMsg = document.getElementById('gesture-triggered-msg');
   if (!phuocDisplay) phuocDisplay = document.getElementById('phuoc-count-display');
 }
@@ -289,9 +287,6 @@ export function triggerAuraEffects(midX, midY, canvasWidth, canvasHeight, showTo
   if (cameraWrapper) {
     cameraWrapper.classList.add('aura-active');
   }
-  if (gestureInstruction) {
-    gestureInstruction.classList.add('hidden');
-  }
   if (gestureTriggeredMsg) {
     gestureTriggeredMsg.classList.add('active');
   }
@@ -299,10 +294,6 @@ export function triggerAuraEffects(midX, midY, canvasWidth, canvasHeight, showTo
   setTimeout(() => {
     if (cameraWrapper) cameraWrapper.classList.remove('aura-active');
     if (gestureTriggeredMsg) gestureTriggeredMsg.classList.remove('active');
-    // Chỉ hiển thị lại hướng dẫn nếu không còn giữ tay chắp
-    if (!state.gestureActive && gestureInstruction) {
-      gestureInstruction.classList.remove('hidden');
-    }
   }, 2200);
 
   if (hasOutline) {
