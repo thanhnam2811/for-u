@@ -167,28 +167,31 @@ export function setupUI() {
   const filterTrack = document.getElementById('filter-track');
   const filterCarousel = document.getElementById('face-filter-carousel');
 
-  // Hàm cập nhật filter dựa trên vị trí cuộn (Throttled with requestAnimationFrame)
+  // Hàm cập nhật filter dựa trên vị trí cuộn (Tối ưu hóa triệt để để tránh giật lag)
   let isScrolling = false;
   const updateActiveFilterFromScroll = () => {
     if (!filterTrack) return;
     
-    const trackRect = filterTrack.getBoundingClientRect();
-    const trackCenter = trackRect.left + trackRect.width / 2;
+    // Đọc layout 1 lần duy nhất bên ngoài loop (Tránh Layout Thrashing)
+    const trackWidth = filterTrack.clientWidth;
+    const trackScrollLeft = filterTrack.scrollLeft;
+    const centerPoint = trackScrollLeft + trackWidth / 2;
     
     let closestItem = null;
     let minDistance = Infinity;
     
     filterItems.forEach(item => {
-      const itemRect = item.getBoundingClientRect();
-      const itemCenter = itemRect.left + itemRect.width / 2;
-      const distance = Math.abs(trackCenter - itemCenter);
+      // Dùng offsetLeft (ổn định) thay vì getBoundingClientRect (gây reflow)
+      const itemCenter = item.offsetLeft + item.offsetWidth / 2;
+      const distance = Math.abs(centerPoint - itemCenter);
       
       // Hiệu ứng "Fisheye": Càng xa tâm càng nhỏ và mờ
       const maxDistance = 140; 
       const scale = Math.max(0.7, 1.15 - (distance / maxDistance) * 0.45);
       const opacity = Math.max(0.4, 1.0 - (distance / maxDistance) * 0.6);
       
-      item.style.transform = `scale(${scale})`;
+      // Gán style trực tiếp (Sử dụng transform3d để ép dùng GPU)
+      item.style.transform = `scale3d(${scale}, ${scale}, 1)`;
       item.style.opacity = opacity;
 
       if (distance < minDistance) {
@@ -197,6 +200,7 @@ export function setupUI() {
       }
     });
     
+    // Cập nhật trạng thái Active nếu tìm thấy item gần tâm nhất
     if (closestItem && !closestItem.classList.contains('active')) {
       filterItems.forEach(i => i.classList.remove('active'));
       closestItem.classList.add('active');
