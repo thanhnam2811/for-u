@@ -1,59 +1,67 @@
-// FILTER 4: Mèo Xinh Má Hồng Toàn Diện 🐱✨
+// FILTER 4: Mèo Xinh Má Hồng Toàn Diện (Có cử động) 🐱✨
 export function drawCat(ctx, landmarks, metrics, canvasWidth, canvasHeight) {
   const { leX, leY, reX, reY, eyeDist, angle, noseX, noseY, fhX, fhY } = metrics;
+  const time = performance.now();
 
   ctx.save();
 
   // =============================================
-  // 1. TAI MÈO tam giác nhọn trên đỉnh đầu
+  // 1. TAI MÈO (Có nhúc nhích)
   // =============================================
   ctx.save();
   ctx.translate(fhX, fhY);
   ctx.rotate(angle);
 
-  // --- Hàm vẽ một tai mèo (tam giác ngoài + tam giác hồng trong) ---
   function drawCatEar(xDir) {
     const baseX = xDir * eyeDist * 0.45;
     const topY = -eyeDist * 0.75;
+    
+    // Tai nhúc nhích nhẹ
+    const wiggle = Math.sin(time / 500 + xDir) * 0.05;
 
-    // Tai ngoài: tam giác đậm màu lông mèo
+    ctx.save();
+    ctx.translate(baseX, 0);
+    ctx.rotate(wiggle);
+
+    // Tai ngoài
     ctx.fillStyle = '#3d3d3d';
     ctx.beginPath();
-    ctx.moveTo(baseX, -eyeDist * 0.15);                       // Gốc trong
-    ctx.lineTo(baseX + xDir * eyeDist * 0.45, -eyeDist * 0.1); // Gốc ngoài
-    ctx.lineTo(baseX + xDir * eyeDist * 0.12, topY);           // Đỉnh tai
+    ctx.moveTo(0, -eyeDist * 0.15);
+    ctx.lineTo(xDir * eyeDist * 0.45, -eyeDist * 0.1);
+    ctx.lineTo(xDir * eyeDist * 0.12, topY);
     ctx.closePath();
     ctx.fill();
 
-    // Tai trong: tam giác hồng nhỏ hơn ở bên trong
+    // Tai trong
     ctx.fillStyle = '#ff85a2';
     ctx.beginPath();
-    ctx.moveTo(baseX + xDir * eyeDist * 0.05, -eyeDist * 0.18);
-    ctx.lineTo(baseX + xDir * eyeDist * 0.35, -eyeDist * 0.15);
-    ctx.lineTo(baseX + xDir * eyeDist * 0.12, topY + eyeDist * 0.12);
+    ctx.moveTo(xDir * eyeDist * 0.05, -eyeDist * 0.18);
+    ctx.lineTo(xDir * eyeDist * 0.35, -eyeDist * 0.15);
+    ctx.lineTo(xDir * eyeDist * 0.12, topY + eyeDist * 0.12);
     ctx.closePath();
     ctx.fill();
+
+    ctx.restore();
   }
 
-  drawCatEar(-1); // Tai trái
-  drawCatEar(1);  // Tai phải
+  drawCatEar(-1);
+  drawCatEar(1);
 
-  ctx.restore(); // Kết thúc phần tai
+  ctx.restore();
 
   // =============================================
-  // 2. MÁ HỒNG LỚN mềm mại (phủ rộng để che khuyết điểm)
+  // 2. MÁ HỒNG LỚN (Lấp lánh)
   // =============================================
   ctx.save();
-  ctx.shadowBlur = 20;
-  ctx.shadowColor = 'rgba(255, 140, 190, 0.5)';
-  ctx.fillStyle = 'rgba(255, 140, 190, 0.4)';
+  const cheekAlpha = 0.35 + Math.sin(time / 800) * 0.1;
+  ctx.shadowBlur = 25;
+  ctx.shadowColor = `rgba(255, 140, 190, ${cheekAlpha})`;
+  ctx.fillStyle = `rgba(255, 140, 190, ${cheekAlpha})`;
 
-  // Má trái - bán kính lớn + shadow blur mạnh tạo viền mờ mộng mơ
   ctx.beginPath();
   ctx.arc(noseX - eyeDist * 0.58, noseY, eyeDist * 0.32, 0, Math.PI * 2);
   ctx.fill();
 
-  // Má phải
   ctx.beginPath();
   ctx.arc(noseX + eyeDist * 0.58, noseY, eyeDist * 0.32, 0, Math.PI * 2);
   ctx.fill();
@@ -61,12 +69,12 @@ export function drawCat(ctx, landmarks, metrics, canvasWidth, canvasHeight) {
   ctx.restore();
 
   // =============================================
-  // 3. MŨI MÈO tam giác hồng chúc xuống
+  // 3. MŨI MÈO (Chóp mũi lấp lánh)
   // =============================================
   ctx.save();
-  ctx.fillStyle = '#ff6b9d';
+  const noseBrightness = 180 + Math.sin(time / 300) * 40;
+  ctx.fillStyle = `rgb(255, ${noseBrightness}, 157)`;
   ctx.beginPath();
-  // Tam giác nhỏ chúc xuống đặt tại đầu mũi
   ctx.moveTo(noseX - eyeDist * 0.06, noseY - eyeDist * 0.02);
   ctx.lineTo(noseX + eyeDist * 0.06, noseY - eyeDist * 0.02);
   ctx.lineTo(noseX, noseY + eyeDist * 0.06);
@@ -75,45 +83,70 @@ export function drawCat(ctx, landmarks, metrics, canvasWidth, canvasHeight) {
   ctx.restore();
 
   // =============================================
-  // 4. RÂU MÈO CONG bằng đường cong Bezier (không thẳng!)
+  // 4. RÂU MÈO (Rung rinh)
   // =============================================
   ctx.save();
   ctx.strokeStyle = '#555555';
   ctx.lineWidth = eyeDist * 0.03;
   ctx.lineCap = 'round';
 
-  // Toạ độ gốc râu hai bên mũi
   const whiskerStartX = eyeDist * 0.18;
   const whiskerBaseY = noseY + eyeDist * 0.03;
+  const whiskerWiggle = Math.sin(time / 200) * 0.02;
 
-  // Cấu hình 3 râu mỗi bên: [góc Y offset, độ cong control point]
   const whiskerConfigs = [
-    { yOff: -eyeDist * 0.06, cpY: -eyeDist * 0.12 },  // Râu trên
-    { yOff: 0,                cpY: -eyeDist * 0.02 },  // Râu giữa
-    { yOff: eyeDist * 0.06,   cpY: eyeDist * 0.08 },   // Râu dưới
+    { yOff: -eyeDist * 0.06, cpY: -eyeDist * 0.12 },
+    { yOff: 0,                cpY: -eyeDist * 0.02 },
+    { yOff: eyeDist * 0.06,   cpY: eyeDist * 0.08 },
   ];
 
-  whiskerConfigs.forEach(({ yOff, cpY }) => {
-    // Râu trái: cong ra ngoài trái
+  whiskerConfigs.forEach(({ yOff, cpY }, i) => {
+    const individualWiggle = Math.sin(time / (150 + i * 50)) * 0.03;
+    
+    // Râu trái
     ctx.beginPath();
     ctx.moveTo(noseX - whiskerStartX, whiskerBaseY + yOff);
     ctx.quadraticCurveTo(
-      noseX - eyeDist * 0.55, whiskerBaseY + cpY,
-      noseX - eyeDist * 0.85, whiskerBaseY + yOff - eyeDist * 0.02
+      noseX - eyeDist * 0.6, whiskerBaseY + cpY + individualWiggle * eyeDist,
+      noseX - eyeDist * 1.1, whiskerBaseY + yOff - eyeDist * 0.02 + individualWiggle * eyeDist // Râu dài hơn
     );
     ctx.stroke();
 
-    // Râu phải: cong ra ngoài phải (đối xứng)
+    // Râu phải
     ctx.beginPath();
     ctx.moveTo(noseX + whiskerStartX, whiskerBaseY + yOff);
     ctx.quadraticCurveTo(
-      noseX + eyeDist * 0.55, whiskerBaseY + cpY,
-      noseX + eyeDist * 0.85, whiskerBaseY + yOff - eyeDist * 0.02
+      noseX + eyeDist * 0.6, whiskerBaseY + cpY + individualWiggle * eyeDist,
+      noseX + eyeDist * 1.1, whiskerBaseY + yOff - eyeDist * 0.02 + individualWiggle * eyeDist // Râu dài hơn
     );
     ctx.stroke();
   });
 
   ctx.restore();
+
+  // =============================================
+  // 5. HIỆU ỨNG SPARKLES (Bay quanh má)
+  // =============================================
+  ctx.save();
+  const starCount = 6;
+  for (let i = 0; i < starCount; i++) {
+    const angle = (time / 1000) + (i * Math.PI * 2 / starCount);
+    const dist = eyeDist * (0.5 + Math.sin(time / 500 + i) * 0.1);
+    const sx = noseX + Math.cos(angle) * dist * (i % 2 === 0 ? 1 : -1) * 1.5;
+    const sy = noseY + Math.sin(angle) * dist * 0.8;
+    
+    const size = eyeDist * (0.02 + Math.sin(time / 300 + i) * 0.01);
+    ctx.fillStyle = '#ffffff';
+    ctx.shadowBlur = 10;
+    ctx.shadowColor = '#ff85a2';
+    ctx.beginPath();
+    ctx.arc(sx, sy, size, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+
+  ctx.restore();
+}
 
   // =============================================
   // 5. ÁNH LONG LANH MẮT kiểu anime (sparkle trắng phát sáng)
@@ -143,6 +176,14 @@ export function drawCat(ctx, landmarks, metrics, canvasWidth, canvasHeight) {
   ctx.fill();
   ctx.beginPath();
   ctx.arc(reX + eyeDist * 0.1, reY - eyeDist * 0.03, miniR, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
+
+  ctx.restore();
+}
+}
+ eyeDist * 0.03, miniR, 0, Math.PI * 2);
   ctx.fill();
 
   ctx.restore();
