@@ -13,8 +13,8 @@ export function drawCat(ctx, landmarks, metrics, canvasWidth, canvasHeight) {
   ctx.rotate(angle);
 
   function drawCatEar(xDir) {
-    const baseX = xDir * eyeDist * 0.45;
-    const topY = -eyeDist * 0.75;
+    const baseX = xDir * eyeDist * 0.55; // Tăng khoảng cách tai
+    const topY = -eyeDist * 0.95;       // Tăng chiều cao tai
     
     // Tai nhúc nhích nhẹ
     const wiggle = Math.sin(time / 500 + xDir) * 0.05;
@@ -27,17 +27,17 @@ export function drawCat(ctx, landmarks, metrics, canvasWidth, canvasHeight) {
     ctx.fillStyle = '#3d3d3d';
     ctx.beginPath();
     ctx.moveTo(0, -eyeDist * 0.15);
-    ctx.lineTo(xDir * eyeDist * 0.45, -eyeDist * 0.1);
-    ctx.lineTo(xDir * eyeDist * 0.12, topY);
+    ctx.lineTo(xDir * eyeDist * 0.55, -eyeDist * 0.1); // Tăng độ rộng gốc tai
+    ctx.lineTo(xDir * eyeDist * 0.15, topY);           // Đỉnh tai nhọn hơn
     ctx.closePath();
     ctx.fill();
 
     // Tai trong
     ctx.fillStyle = '#ff85a2';
     ctx.beginPath();
-    ctx.moveTo(xDir * eyeDist * 0.05, -eyeDist * 0.18);
-    ctx.lineTo(xDir * eyeDist * 0.35, -eyeDist * 0.15);
-    ctx.lineTo(xDir * eyeDist * 0.12, topY + eyeDist * 0.12);
+    ctx.moveTo(xDir * eyeDist * 0.08, -eyeDist * 0.18);
+    ctx.lineTo(xDir * eyeDist * 0.4, -eyeDist * 0.15);
+    ctx.lineTo(xDir * eyeDist * 0.15, topY + eyeDist * 0.15);
     ctx.closePath();
     ctx.fill();
 
@@ -54,16 +54,16 @@ export function drawCat(ctx, landmarks, metrics, canvasWidth, canvasHeight) {
   // =============================================
   ctx.save();
   const cheekAlpha = 0.35 + Math.sin(time / 800) * 0.1;
-  ctx.shadowBlur = 25;
+  ctx.shadowBlur = 30;
   ctx.shadowColor = `rgba(255, 140, 190, ${cheekAlpha})`;
   ctx.fillStyle = `rgba(255, 140, 190, ${cheekAlpha})`;
 
   ctx.beginPath();
-  ctx.arc(noseX - eyeDist * 0.58, noseY, eyeDist * 0.32, 0, Math.PI * 2);
+  ctx.arc(noseX - eyeDist * 0.65, noseY + eyeDist * 0.05, eyeDist * 0.38, 0, Math.PI * 2);
   ctx.fill();
 
   ctx.beginPath();
-  ctx.arc(noseX + eyeDist * 0.58, noseY, eyeDist * 0.32, 0, Math.PI * 2);
+  ctx.arc(noseX + eyeDist * 0.65, noseY + eyeDist * 0.05, eyeDist * 0.38, 0, Math.PI * 2);
   ctx.fill();
 
   ctx.restore();
@@ -92,7 +92,6 @@ export function drawCat(ctx, landmarks, metrics, canvasWidth, canvasHeight) {
 
   const whiskerStartX = eyeDist * 0.18;
   const whiskerBaseY = noseY + eyeDist * 0.03;
-  const whiskerWiggle = Math.sin(time / 200) * 0.02;
 
   const whiskerConfigs = [
     { yOff: -eyeDist * 0.06, cpY: -eyeDist * 0.12 },
@@ -130,10 +129,10 @@ export function drawCat(ctx, landmarks, metrics, canvasWidth, canvasHeight) {
   ctx.save();
   const starCount = 6;
   for (let i = 0; i < starCount; i++) {
-    const angle = (time / 1000) + (i * Math.PI * 2 / starCount);
+    const angleRad = (time / 1000) + (i * Math.PI * 2 / starCount);
     const dist = eyeDist * (0.5 + Math.sin(time / 500 + i) * 0.1);
-    const sx = noseX + Math.cos(angle) * dist * (i % 2 === 0 ? 1 : -1) * 1.5;
-    const sy = noseY + Math.sin(angle) * dist * 0.8;
+    const sx = noseX + Math.cos(angleRad) * dist * (i % 2 === 0 ? 1 : -1) * 1.5;
+    const sy = noseY + Math.sin(angleRad) * dist * 0.8;
     
     const size = eyeDist * (0.02 + Math.sin(time / 300 + i) * 0.01);
     ctx.fillStyle = '#ffffff';
@@ -145,11 +144,8 @@ export function drawCat(ctx, landmarks, metrics, canvasWidth, canvasHeight) {
   }
   ctx.restore();
 
-  ctx.restore();
-}
-
   // =============================================
-  // 5. ÁNH LONG LANH MẮT kiểu anime (sparkle trắng phát sáng)
+  // 6. ÁNH LONG LANH MẮT kiểu anime
   // =============================================
   ctx.save();
   ctx.fillStyle = '#ffffff';
@@ -159,31 +155,20 @@ export function drawCat(ctx, landmarks, metrics, canvasWidth, canvasHeight) {
   const sparkleR = eyeDist * 0.035;
 
   // Lấp lánh ở góc trên-phải mỗi mắt
-  // Mắt trái
   ctx.beginPath();
   ctx.arc(leX + eyeDist * 0.06, leY - eyeDist * 0.06, sparkleR, 0, Math.PI * 2);
   ctx.fill();
-
-  // Mắt phải
   ctx.beginPath();
   ctx.arc(reX + eyeDist * 0.06, reY - eyeDist * 0.06, sparkleR, 0, Math.PI * 2);
   ctx.fill();
 
-  // Sparkle phụ nhỏ hơn bên cạnh mỗi sparkle chính
+  // Sparkle phụ nhỏ
   const miniR = sparkleR * 0.5;
   ctx.beginPath();
   ctx.arc(leX + eyeDist * 0.1, leY - eyeDist * 0.03, miniR, 0, Math.PI * 2);
   ctx.fill();
   ctx.beginPath();
   ctx.arc(reX + eyeDist * 0.1, reY - eyeDist * 0.03, miniR, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.restore();
-
-  ctx.restore();
-}
-}
- eyeDist * 0.03, miniR, 0, Math.PI * 2);
   ctx.fill();
 
   ctx.restore();

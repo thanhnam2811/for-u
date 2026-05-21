@@ -113,7 +113,7 @@ export function drawGlasses(ctx, landmarks, metrics, canvasWidth, canvasHeight) 
   ctx.quadraticCurveTo(lensOffX + lensW * 1.3, lensY - lensH * 0.15, lensOffX + lensW * 1.5, lensY + lensH * 0.1);
   ctx.stroke();
 
-  // === HIỆU ỨNG CHỮ "THUG LIFE" (Bay lên khi chớp mắt hoặc định kỳ) ===
+  // === HIỆU ỨNG CHỮ "THUG LIFE" ===
   if (Math.floor(time / 5000) % 2 === 0) {
     const textAlpha = Math.max(0, Math.min(1, Math.sin(time / 1000) * 2));
     ctx.save();
@@ -127,9 +127,6 @@ export function drawGlasses(ctx, landmarks, metrics, canvasWidth, canvasHeight) 
     ctx.strokeText("THUG LIFE", 0, -lensH * 1.5);
     ctx.restore();
   }
-
-  ctx.restore();
-}
 
   ctx.restore();
 }
