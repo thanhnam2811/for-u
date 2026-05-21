@@ -309,15 +309,32 @@ export function triggerAuraEffects(midX, midY, canvasWidth, canvasHeight, showTo
     state.bodyAuraWaves.push(new BodyAuraWave(outlinePoints, state.activePreset, canvasWidth, canvasHeight, 14));
     state.bodyAuraWaves.push(new BodyAuraWave(outlinePoints, state.activePreset, canvasWidth, canvasHeight, 30));
 
-    for (let i = 0; i < 220; i++) {
-      const point = outlinePoints[Math.floor(Math.random() * outlinePoints.length)];
-      state.particles.push(new OutlineParticle(point, center, state.activePreset, canvasWidth, canvasHeight));
-    }
+    // Staggered particle creation to avoid FPS spikes
+    const emitParticles = (count, current = 0) => {
+      const batch = 40;
+      const toEmit = Math.min(batch, count - current);
+      for (let i = 0; i < toEmit; i++) {
+        const point = outlinePoints[Math.floor(Math.random() * outlinePoints.length)];
+        state.particles.push(new OutlineParticle(point, center, state.activePreset, canvasWidth, canvasHeight));
+      }
+      if (current + toEmit < count) {
+        requestAnimationFrame(() => emitParticles(count, current + toEmit));
+      }
+    };
+    emitParticles(220);
   } else {
-    // Fallback cuối cùng khi chưa có mask người hoặc outline tay.
-    for (let i = 0; i < 200; i++) {
-      state.particles.push(new Particle(effectX, midY, state.activePreset, canvasWidth, canvasHeight));
-    }
+    // Fallback staggered emission
+    const emitFallback = (count, current = 0) => {
+      const batch = 30;
+      const toEmit = Math.min(batch, count - current);
+      for (let i = 0; i < toEmit; i++) {
+        state.particles.push(new Particle(effectX, midY, state.activePreset, canvasWidth, canvasHeight));
+      }
+      if (current + toEmit < count) {
+        requestAnimationFrame(() => emitFallback(count, current + toEmit));
+      }
+    };
+    emitFallback(200);
 
     state.ripples.push(new Ripple(effectX, midY, state.activePreset, canvasWidth, canvasHeight));
     setTimeout(() => {

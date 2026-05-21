@@ -27,17 +27,20 @@ export function drawBeauty(ctx, landmarks, metrics, canvasWidth, canvasHeight) {
   ctx.restore();
 
   // =============================================
-  // 2. AURA GLOW (Gia lập Blur vùng chữ T)
+  // 2. AURA GLOW (Wrap-around Face Mask)
   // =============================================
   ctx.save();
   ctx.globalCompositeOperation = 'screen';
-  const auraGrad = ctx.createRadialGradient(faceCX, faceCY, eyeDist * 0.8, faceCX, faceCY, eyeDist * 4);
-  auraGrad.addColorStop(0, 'rgba(255, 255, 255, 0.25)');
-  auraGrad.addColorStop(0.5, hexToRgba(theme.primary, 0.12));
+  // Mở rộng bán kính gradient để bao phủ toàn bộ vùng mặt và lan ra một chút
+  const auraGrad = ctx.createRadialGradient(faceCX, faceCY, eyeDist * 1.2, faceCX, faceCY, eyeDist * 5);
+  auraGrad.addColorStop(0, 'rgba(255, 255, 255, 0.3)');
+  auraGrad.addColorStop(0.4, hexToRgba(theme.primary, 0.15));
   auraGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
   ctx.fillStyle = auraGrad;
+  
+  // Vẽ hình Oval lớn bao quanh toàn bộ khuôn mặt
   ctx.beginPath();
-  ctx.ellipse(faceCX, faceCY, eyeDist * 2, eyeDist * 3, angle, 0, Math.PI * 2);
+  ctx.ellipse(faceCX, faceCY, eyeDist * 3, eyeDist * 4.5, angle, 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
 

@@ -63,8 +63,8 @@ export const state = {
   audioCtx: null
 };
 
-// Cập nhật ngưỡng độ nhạy ban đầu từ slider val
-state.sensitivityThreshold = 0.35 + (state.sensitivitySliderVal / 100);
+// Cập nhật ngưỡng độ nhạy ban đầu từ slider val (Đã điều chỉnh khó hơn một chút)
+state.sensitivityThreshold = 0.25 + (state.sensitivitySliderVal / 100);
 
 // Hàm cập nhật và lưu phước đức vào localStorage
 export function incrementPhuoc() {

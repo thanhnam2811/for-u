@@ -249,7 +249,7 @@ export function setupUI() {
     sensitivitySlider.addEventListener('input', (e) => {
       const val = parseInt(e.target.value, 10);
       state.sensitivitySliderVal = val;
-      state.sensitivityThreshold = 0.35 + (val / 100);
+      state.sensitivityThreshold = 0.25 + (val / 100); // Công thức mới: khó chắp hơn
       localStorage.setItem('sensitivity_slider_val', val);
       
       let label = "Bình thường";
