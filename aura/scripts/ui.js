@@ -162,93 +162,76 @@ export function setupUI() {
   btnCloseHelp?.addEventListener('click', closeHelp);
   helpBackdrop?.addEventListener('click', closeHelp);
 
-  // Khởi tạo trạng thái active cho filter gương mặt AR dựa trên cấu hình đã lưu
-  const filterItems = document.querySelectorAll('.filter-item');
-  const filterTrack = document.getElementById('filter-track');
+  // --- KHỞI TẠO SWIPER.JS CHO FILTER CAROUSEL ---
+  let filterSwiper = null;
   const filterCarousel = document.getElementById('face-filter-carousel');
 
-  // Hàm cập nhật filter dựa trên vị trí cuộn (Tối ưu hóa triệt để để tránh giật lag)
-  let isScrolling = false;
-  const updateActiveFilterFromScroll = () => {
-    if (!filterTrack) return;
-    
-    // Đọc layout 1 lần duy nhất bên ngoài loop (Tránh Layout Thrashing)
-    const trackWidth = filterTrack.clientWidth;
-    const trackScrollLeft = filterTrack.scrollLeft;
-    const centerPoint = trackScrollLeft + trackWidth / 2;
-    
-    let closestItem = null;
-    let minDistance = Infinity;
-    
-    filterItems.forEach(item => {
-      // Dùng offsetLeft (ổn định) thay vì getBoundingClientRect (gây reflow)
-      const itemCenter = item.offsetLeft + item.offsetWidth / 2;
-      const distance = Math.abs(centerPoint - itemCenter);
-      
-      // Hiệu ứng "Fisheye": Càng xa tâm càng nhỏ và mờ
-      const maxDistance = 140; 
-      const scale = Math.max(0.7, 1.15 - (distance / maxDistance) * 0.45);
-      const opacity = Math.max(0.4, 1.0 - (distance / maxDistance) * 0.6);
-      
-      // Gán style trực tiếp (Sử dụng transform3d để ép dùng GPU)
-      item.style.transform = `scale3d(${scale}, ${scale}, 1)`;
-      item.style.opacity = opacity;
-
-      if (distance < minDistance) {
-        minDistance = distance;
-        closestItem = item;
+  if (filterCarousel && typeof Swiper !== 'undefined') {
+    filterSwiper = new Swiper('#face-filter-carousel', {
+      slidesPerView: 'auto',
+      centeredSlides: true,
+      spaceBetween: 20,
+      grabCursor: true,
+      slideToClickedSlide: true,
+      watchSlidesProgress: true,
+      resistanceRatio: 0.7,
+      on: {
+        init: function() {
+          // Cuộn đến filter đã lưu
+          const slides = this.slides;
+          for (let i = 0; i < slides.length; i++) {
+            if (slides[i].dataset.filter === state.activeFaceFilter) {
+              this.slideTo(i, 0);
+              break;
+            }
+          }
+        },
+        progress: function() {
+          // Hiệu ứng Fisheye (To ở giữa, nhỏ dần sang hai bên)
+          this.slides.forEach(slide => {
+            const progress = slide.progress; // -1 (trái), 0 (giữa), 1 (phải)
+            const absProgress = Math.abs(progress);
+            
+            const scale = Math.max(0.7, 1.15 - absProgress * 0.4);
+            const opacity = Math.max(0.4, 1.0 - absProgress * 0.6);
+            
+            const container = slide.querySelector('.filter-icon-container');
+            if (container) {
+              container.style.transform = `scale3d(${scale}, ${scale}, 1)`;
+              container.style.opacity = opacity;
+            }
+          });
+        },
+        setTransition: function(speed) {
+          this.slides.forEach(slide => {
+            const container = slide.querySelector('.filter-icon-container');
+            if (container) {
+              container.style.transition = `${speed}ms ease`;
+            }
+          });
+        },
+        slideChange: function() {
+          const activeSlide = this.slides[this.activeIndex];
+          if (!activeSlide) return;
+          
+          const filterName = activeSlide.dataset.filter;
+          if (state.activeFaceFilter !== filterName) {
+            state.activeFaceFilter = filterName;
+            localStorage.setItem('active_face_filter', filterName);
+            initAudio();
+          }
+        },
+        sliderMove: function() {
+          filterCarousel.classList.add('active-scroll');
+        },
+        touchEnd: function() {
+          setTimeout(() => {
+            filterCarousel.classList.remove('active-scroll');
+          }, 1500);
+        }
       }
     });
-    
-    // Cập nhật trạng thái Active nếu tìm thấy item gần tâm nhất
-    if (closestItem && !closestItem.classList.contains('active')) {
-      filterItems.forEach(i => i.classList.remove('active'));
-      closestItem.classList.add('active');
-      
-      const filterName = closestItem.dataset.filter;
-      if (state.activeFaceFilter !== filterName) {
-        state.activeFaceFilter = filterName;
-        localStorage.setItem('active_face_filter', filterName);
-        initAudio();
-      }
-    }
-    isScrolling = false;
-  };
-
-  // Cuộn đến item hiện tại lúc khởi tạo
-  if (filterTrack) {
-    const activeItem = Array.from(filterItems).find(i => i.dataset.filter === state.activeFaceFilter);
-    if (activeItem) {
-      setTimeout(() => {
-        activeItem.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'center' });
-        // Cập nhật scale lần đầu
-        updateActiveFilterFromScroll();
-      }, 500);
-    }
-
-    let scrollTimeout = null;
-    filterTrack.addEventListener('scroll', () => {
-      filterCarousel?.classList.add('active-scroll');
-      clearTimeout(scrollTimeout);
-      
-      // Throttling bằng requestAnimationFrame để tránh giật lag (Layout Thrashing)
-      if (!isScrolling) {
-        isScrolling = true;
-        requestAnimationFrame(updateActiveFilterFromScroll);
-      }
-      
-      scrollTimeout = setTimeout(() => {
-        filterCarousel?.classList.remove('active-scroll');
-      }, 1500);
-    }, { passive: true });
   }
-
-  // Lắng nghe sự kiện click (vẫn giữ để người dùng có thể tap trực tiếp)
-  filterItems.forEach(item => {
-    item.addEventListener('click', () => {
-      item.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-    });
-  });
 
   // 1. Đổi tông màu hào quang
   colorBtns.forEach(btn => {

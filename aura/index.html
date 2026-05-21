@@ -13,6 +13,9 @@
   <!-- Biểu tượng Material Icons Round -->
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
   
+  <!-- Swiper.js CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+
   <!-- CSS Stylesheets -->
   <link rel="stylesheet" href="styles/base.css">
   <link rel="stylesheet" href="styles/layout.css">
@@ -66,46 +69,46 @@
             <span class="material-icons-round">help_outline</span>
           </button>
 
-          <!-- Thanh cuộn ngang chọn Nhãn dán AR (Snapchat/TikTok style) -->
-          <div class="face-filter-carousel" id="face-filter-carousel">
+          <!-- Thanh cuộn ngang chọn Nhãn dán AR (Swiper.js Pro Style) -->
+          <div class="face-filter-carousel swiper" id="face-filter-carousel">
             <div class="carousel-center-highlight"></div>
-            <div id="filter-track" class="filter-track">
-              <button class="filter-item" data-filter="none" title="Tự nhiên">
+            <div class="swiper-wrapper">
+              <div class="swiper-slide filter-item" data-filter="none" title="Tự nhiên">
                 <div class="filter-icon-container">
                   <span class="material-icons-round">not_interested</span>
                 </div>
                 <span class="filter-label">Tự Nhiên</span>
-              </button>
-              <button class="filter-item" data-filter="beauty" title="Làm đẹp da">
+              </div>
+              <div class="swiper-slide filter-item" data-filter="beauty" title="Làm đẹp da">
                 <div class="filter-icon-container">
                   <span class="material-icons-round">auto_awesome</span>
                 </div>
                 <span class="filter-label">Làm Đẹp</span>
-              </button>
-              <button class="filter-item" data-filter="glasses" title="Kính Thug Life">
+              </div>
+              <div class="swiper-slide filter-item" data-filter="glasses" title="Kính Thug Life">
                 <div class="filter-icon-container">
                   <span class="material-icons-round">visibility</span>
                 </div>
                 <span class="filter-label">Kính Râm</span>
-              </button>
-              <button class="filter-item" data-filter="rabbit" title="Tai Thỏ Dễ Thương">
+              </div>
+              <div class="swiper-slide filter-item" data-filter="rabbit" title="Tai Thỏ Dễ Thương">
                 <div class="filter-icon-container">
                   <span class="material-icons-round">cruelty_free</span>
                 </div>
                 <span class="filter-label">Tai Thỏ</span>
-              </button>
-              <button class="filter-item" data-filter="halo" title="Vòng Thiên Thần">
+              </div>
+              <div class="swiper-slide filter-item" data-filter="halo" title="Vòng Thiên Thần">
                 <div class="filter-icon-container">
                   <span class="material-icons-round">wb_sunny</span>
                 </div>
                 <span class="filter-label">Thiên Thần</span>
-              </button>
-              <button class="filter-item" data-filter="cat" title="Má Hồng Râu Mèo">
+              </div>
+              <div class="swiper-slide filter-item" data-filter="cat" title="Má Hồng Râu Mèo">
                 <div class="filter-icon-container">
                   <span class="material-icons-round">pets</span>
                 </div>
                 <span class="filter-label">Má Mèo</span>
-              </button>
+              </div>
             </div>
           </div>
         </div>
@@ -282,6 +285,9 @@
 
   <!-- Thông báo nhỏ khi chụp ảnh hoặc có sự kiện -->
   <div id="toast-notification" class="toast-notification"></div>
+
+  <!-- Swiper.js JS -->
+  <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
   <!-- Scripts -->
   <script type="module" src="scripts/main.js"></script>
