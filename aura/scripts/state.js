@@ -11,13 +11,19 @@ export const state = {
   isSegmenterLoaded: false,
   isCameraActive: false,
 
-  // Cấu hình người dùng (Mặc định)
-  activePreset: 'gold',     // gold, cosmic, lotus, emerald
-  activeSound: 'gong',      // gong, chime, bowl, mute
-  volume: 0.7,              // 0.0 -> 1.0
-  sensitivityThreshold: 0.55, // Ngưỡng khoảng cách chắp tay sau khi chuẩn hóa theo kích thước bàn tay
-  showSkeleton: true,
-  mirrorCamera: true,
+  // Cấu hình người dùng (Mặc định được tải từ localStorage hoặc mặc định ban đầu)
+  activePreset: localStorage.getItem('active_preset') || 'lotus',     // Mặc định Hồng Sen cho người yêu USER
+  activeSound: localStorage.getItem('active_sound') || 'gong',
+  volume: localStorage.getItem('volume') !== null ? parseFloat(localStorage.getItem('volume')) : 0.7,
+  sensitivitySliderVal: localStorage.getItem('sensitivity_slider_val') !== null ? parseInt(localStorage.getItem('sensitivity_slider_val'), 10) : 20,
+  sensitivityThreshold: 0.55, // Ngưỡng khoảng cách chắp tay sau khi chuẩn hóa theo kích thước bàn tay (sẽ được cập nhật từ sensitivitySliderVal bên dưới)
+  showSkeleton: localStorage.getItem('show_skeleton') !== null ? localStorage.getItem('show_skeleton') === 'true' : true,
+  mirrorCamera: localStorage.getItem('mirror_camera') !== null ? localStorage.getItem('mirror_camera') === 'true' : true,
+  activeFaceFilter: localStorage.getItem('active_face_filter') || 'none', // none, glasses, rabbit, halo, cat
+  faceLandmarker: null,
+  faceLandmarks: null, // Lưu toạ độ gương mặt AR phát hiện được
+  handResults: null,   // Lưu kết quả nhận diện tay của MediaPipe
+
 
   // Trạng thái nhận diện cử chỉ hiện tại
   gestureActive: false,
@@ -57,9 +63,13 @@ export const state = {
   audioCtx: null
 };
 
+// Cập nhật ngưỡng độ nhạy ban đầu từ slider val
+state.sensitivityThreshold = 0.35 + (state.sensitivitySliderVal / 100);
+
 // Hàm cập nhật và lưu phước đức vào localStorage
 export function incrementPhuoc() {
   state.phuocCount++;
   localStorage.setItem('phuoc_count', state.phuocCount);
   return state.phuocCount;
 }
+

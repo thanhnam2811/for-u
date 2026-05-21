@@ -57,6 +57,56 @@ export function setupUI() {
   video = document.getElementById('webcam');
   canvas = document.getElementById('canvas-overlay');
 
+  // Đồng bộ hóa trạng thái giao diện (UI) từ state đã nạp từ localStorage
+  if (colorBtns) {
+    colorBtns.forEach(btn => {
+      if (btn.dataset.preset === state.activePreset) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
+  }
+  if (soundBtns) {
+    soundBtns.forEach(btn => {
+      if (btn.dataset.sound === state.activeSound) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
+  }
+  if (volumeSlider) {
+    volumeSlider.value = Math.round(state.volume * 100);
+  }
+  if (volumeVal) {
+    volumeVal.innerText = `${Math.round(state.volume * 100)}%`;
+  }
+  if (sensitivitySlider) {
+    sensitivitySlider.value = state.sensitivitySliderVal;
+  }
+  if (sensitivityVal) {
+    let label = "Bình thường";
+    const val = state.sensitivitySliderVal;
+    if (val < 15) label = "Khó chắp";
+    else if (val >= 15 && val <= 22) label = "Khá nhạy";
+    else label = "Cực kỳ nhạy";
+    sensitivityVal.innerText = label;
+  }
+  if (toggleSkeleton) {
+    toggleSkeleton.checked = state.showSkeleton;
+  }
+  if (toggleMirror) {
+    toggleMirror.checked = state.mirrorCamera;
+  }
+  if (video) {
+    if (state.mirrorCamera) {
+      video.classList.remove('no-mirror');
+    } else {
+      video.classList.add('no-mirror');
+    }
+  }
+
   const closeSettings = () => {
     settingsPopup?.classList.remove('open');
     settingsBackdrop?.classList.remove('open');
@@ -86,6 +136,38 @@ export function setupUI() {
     if (e.key === 'Escape' && settingsPopup?.classList.contains('open')) closeSettings();
   });
 
+  // Khởi tạo trạng thái active cho filter gương mặt AR dựa trên cấu hình đã lưu
+  const filterItems = document.querySelectorAll('.filter-item');
+  filterItems.forEach(item => {
+    if (item.dataset.filter === state.activeFaceFilter) {
+      filterItems.forEach(i => i.classList.remove('active'));
+      item.classList.add('active');
+    }
+  });
+
+  // Lắng nghe sự kiện click chọn Filter gương mặt AR
+  filterItems.forEach(item => {
+    item.addEventListener('click', () => {
+      filterItems.forEach(i => i.classList.remove('active'));
+      item.classList.add('active');
+      
+      const filterName = item.dataset.filter;
+      state.activeFaceFilter = filterName;
+      localStorage.setItem('active_face_filter', filterName);
+
+      // Kích hoạt âm thanh thử nhẹ nếu không tắt âm
+      initAudio();
+
+      let label = "Tự Nhiên";
+      if (filterName === "glasses") label = "Kính Thug Life 😎";
+      else if (filterName === "rabbit") label = "Tai Thỏ Dễ Thương 🐰";
+      else if (filterName === "halo") label = "Vòng Thiên Thần 👼";
+      else if (filterName === "cat") label = "Má Hồng Râu Mèo 🐱";
+
+      showToast(`Đã dán Nhãn dán AR: ${label}`);
+    });
+  });
+
   // 1. Đổi tông màu hào quang
   colorBtns.forEach(btn => {
     btn.addEventListener('click', () => {
@@ -94,6 +176,7 @@ export function setupUI() {
       
       const preset = btn.dataset.preset;
       state.activePreset = preset;
+      localStorage.setItem('active_preset', preset);
       
       // Đổi class theme ở thẻ body
       document.body.className = '';
@@ -109,7 +192,9 @@ export function setupUI() {
       soundBtns.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       
-      state.activeSound = btn.dataset.sound;
+      const sound = btn.dataset.sound;
+      state.activeSound = sound;
+      localStorage.setItem('active_sound', sound);
       
       // Kích hoạt thử âm thanh
       initAudio();
@@ -127,6 +212,7 @@ export function setupUI() {
     volumeSlider.addEventListener('input', (e) => {
       const val = e.target.value;
       state.volume = val / 100;
+      localStorage.setItem('volume', state.volume);
       if (volumeVal) volumeVal.innerText = `${val}%`;
     });
   }
@@ -134,9 +220,10 @@ export function setupUI() {
   // 4. Slider Độ nhạy AI
   if (sensitivitySlider) {
     sensitivitySlider.addEventListener('input', (e) => {
-      const val = e.target.value;
-      // Slider càng cao càng dễ chạm -> Ngưỡng khoảng cách cho phép càng rộng.
+      const val = parseInt(e.target.value, 10);
+      state.sensitivitySliderVal = val;
       state.sensitivityThreshold = 0.35 + (val / 100);
+      localStorage.setItem('sensitivity_slider_val', val);
       
       let label = "Bình thường";
       if (val < 15) label = "Khó chắp";
@@ -151,6 +238,7 @@ export function setupUI() {
   if (toggleSkeleton) {
     toggleSkeleton.addEventListener('change', (e) => {
       state.showSkeleton = e.target.checked;
+      localStorage.setItem('show_skeleton', state.showSkeleton);
       showToast(state.showSkeleton ? "Bật bộ xương tay AI" : "Ẩn bộ xương tay AI");
     });
   }
@@ -159,6 +247,7 @@ export function setupUI() {
   if (toggleMirror) {
     toggleMirror.addEventListener('change', (e) => {
       state.mirrorCamera = e.target.checked;
+      localStorage.setItem('mirror_camera', state.mirrorCamera);
       if (video) {
         if (state.mirrorCamera) {
           video.classList.remove('no-mirror');

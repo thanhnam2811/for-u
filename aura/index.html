@@ -84,6 +84,42 @@
             <div class="stat-item"><span class="label">Khoảng cách:</span> <span id="stat-dist">--</span></div>
           </div>
         </div>
+        
+        <!-- Thanh cuộn ngang chọn Nhãn dán AR dán mặt (Snapchat/TikTok style) -->
+        <div class="face-filter-carousel" id="face-filter-carousel">
+          <div class="filter-track">
+            <button class="filter-item active" data-filter="none" title="Không dán">
+              <div class="filter-icon-container">
+                <span class="material-icons-round">face_retouching_off</span>
+              </div>
+              <span class="filter-label">Tự Nhiên</span>
+            </button>
+            <button class="filter-item" data-filter="glasses" title="Kính Thug Life">
+              <div class="filter-icon-container">
+                <span class="material-icons-round">sunglasses</span>
+              </div>
+              <span class="filter-label">Kính Ngầu</span>
+            </button>
+            <button class="filter-item" data-filter="rabbit" title="Tai Thỏ Dễ Thương">
+              <div class="filter-icon-container">
+                <span class="material-icons-round">cruelty_free</span>
+              </div>
+              <span class="filter-label">Tai Thỏ</span>
+            </button>
+            <button class="filter-item" data-filter="halo" title="Vòng Thiên Thần">
+              <div class="filter-icon-container">
+                <span class="material-icons-round">wb_sunny</span>
+              </div>
+              <span class="filter-label">Thiên Thần</span>
+            </button>
+            <button class="filter-item" data-filter="cat" title="Má Hồng Râu Mèo">
+              <div class="filter-icon-container">
+                <span class="material-icons-round">pets</span>
+              </div>
+              <span class="filter-label">Má Mèo</span>
+            </button>
+          </div>
+        </div>
       </section>
 
       <div id="settings-backdrop" class="settings-backdrop"></div>
@@ -119,7 +155,7 @@
               Tông màu Hào Quang
             </label>
             <div class="color-presets">
-              <button class="color-btn active" data-preset="gold" title="Hoàng Kim">
+              <button class="color-btn" data-preset="gold" title="Hoàng Kim">
                 <span class="color-dot gold"></span>
                 <span>Hoàng Kim</span>
               </button>
@@ -127,7 +163,7 @@
                 <span class="color-dot cosmic"></span>
                 <span>Tinh Vân</span>
               </button>
-              <button class="color-btn" data-preset="lotus" title="Hồng Sen">
+              <button class="color-btn active" data-preset="lotus" title="Hồng Sen">
                 <span class="color-dot lotus"></span>
                 <span>Hồng Sen</span>
               </button>

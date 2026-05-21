@@ -1,5 +1,5 @@
 // Nạp thư viện MediaPipe qua CDN ES Module
-import { FilesetResolver, HandLandmarker, ImageSegmenter } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.8/vision_bundle.mjs";
+import { FilesetResolver, HandLandmarker, ImageSegmenter, FaceLandmarker } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.8/vision_bundle.mjs";
 import { state } from "./state.js";
 import { THEME_COLORS } from "./constants.js";
 import { Particle, triggerAuraEffects } from "./canvas-effects.js";
@@ -39,20 +39,36 @@ async function createHandLandmarker(vision, delegate = "GPU") {
   });
 }
 
+async function createFaceLandmarker(vision, delegate = "GPU") {
+  const baseOptions = {
+    modelAssetPath: "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task"
+  };
+
+  if (delegate) baseOptions.delegate = delegate;
+
+  return FaceLandmarker.createFromOptions(vision, {
+    baseOptions,
+    runningMode: "VIDEO",
+    outputFaceBlendshapes: false,
+    outputFacialTransformationMatrixes: false
+  });
+}
+
 // Tải mô hình AI từ CDN
 export async function loadHandLandmarkerModel() {
   initDomRefs();
   if (loadingStatus) loadingStatus.innerText = "Đang tải thư viện nhận diện AI...";
-  if (progressBar) progressBar.style.width = "30%";
+  if (progressBar) progressBar.style.width = "20%";
 
   try {
     const vision = await FilesetResolver.forVisionTasks(
       "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.8/wasm"
     );
     
-    if (progressBar) progressBar.style.width = "60%";
-    if (loadingStatus) loadingStatus.innerText = "Đang cấu hình mô hình hiệu ứng...";
+    if (progressBar) progressBar.style.width = "40%";
+    if (loadingStatus) loadingStatus.innerText = "Đang cấu hình mô hình tay...";
 
+    // 1. Nạp HandLandmarker
     try {
       state.handLandmarker = await createHandLandmarker(vision, "GPU");
     } catch (gpuErr) {
@@ -60,9 +76,25 @@ export async function loadHandLandmarkerModel() {
       state.handLandmarker = await createHandLandmarker(vision, null);
     }
 
-    if (progressBar) progressBar.style.width = "82%";
+    if (progressBar) progressBar.style.width = "60%";
+    if (loadingStatus) loadingStatus.innerText = "Đang nạp mô hình gương mặt AR...";
+
+    // 2. Nạp FaceLandmarker
+    try {
+      state.faceLandmarker = await createFaceLandmarker(vision, "GPU");
+    } catch (faceGpuErr) {
+      console.warn("GPU FaceLandmarker lỗi, chuyển sang CPU fallback:", faceGpuErr);
+      try {
+        state.faceLandmarker = await createFaceLandmarker(vision, null);
+      } catch (faceErr) {
+        console.error("Không thể nạp FaceLandmarker:", faceErr);
+      }
+    }
+
+    if (progressBar) progressBar.style.width = "80%";
     if (loadingStatus) loadingStatus.innerText = "Đang nạp nhận diện viền người...";
 
+    // 3. Nạp Image Segmenter
     try {
       state.imageSegmenter = await ImageSegmenter.createFromOptions(vision, {
         baseOptions: {
@@ -80,7 +112,7 @@ export async function loadHandLandmarkerModel() {
 
     if (progressBar) progressBar.style.width = "100%";
     if (loadingStatus) loadingStatus.innerText = "Hoàn thành! Đang bắt đầu khởi động...";
-    console.log("Khởi tạo MediaPipe HandLandmarker thành công!");
+    console.log("Khởi tạo các mô hình MediaPipe thành công!");
     
     state.isModelLoaded = true;
     

@@ -3,6 +3,7 @@ import { setupUI, showToast } from "./ui.js";
 import { setupWebcam, getCameraDevices } from "./camera.js";
 import { loadHandLandmarkerModel, drawHandSkeleton, analyzeHands, updatePersonSegmentation } from "./ai.js";
 import { drawAmbientHalo } from "./canvas-effects.js";
+import { drawFaceFilter } from "./filters/index.js";
 import { initAudio } from "./audio.js";
 
 // DOM references and rendering Contexts
@@ -51,33 +52,58 @@ function renderLoop() {
     }
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-    // 2. Chạy AI dò bàn tay nếu mô hình đã sẵn sàng
-    if (state.isModelLoaded && state.handLandmarker) {
+    // 2. Chạy AI dò bàn tay & gương mặt nếu mô hình đã sẵn sàng
+    if (state.isModelLoaded) {
       let timestamp = performance.now();
       if (video.currentTime !== state.lastVideoTime) {
         state.lastVideoTime = video.currentTime;
         
-        try {
-          const results = state.handLandmarker.detectForVideo(video, timestamp);
-          updatePersonSegmentation(video, canvas.width, canvas.height, timestamp);
-          
-          // Phân tích và phát hiện cử chỉ chắp tay
-          analyzeHands(results, canvas.width, canvas.height, showToast);
-
-          // Vẽ khung xương tay AI (Nếu cấu hình bật)
-          if (state.showSkeleton && results.landmarks) {
-            results.landmarks.forEach((landmarks, index) => {
-              // Phân biệt tay trái/tay phải từ metadata nếu có
-              const isRight = results.handednesses && results.handednesses[index] 
-                ? results.handednesses[index][0].categoryName === "Right" 
-                : index === 0;
-              drawHandSkeleton(ctx, landmarks, isRight, canvas.width, canvas.height);
-            });
+        // Chạy HandLandmarker dò tay
+        if (state.handLandmarker) {
+          try {
+            const results = state.handLandmarker.detectForVideo(video, timestamp);
+            updatePersonSegmentation(video, canvas.width, canvas.height, timestamp);
+            
+            // Phân tích và phát hiện cử chỉ chắp tay
+            analyzeHands(results, canvas.width, canvas.height, showToast);
+            
+            state.handResults = results;
+          } catch (err) {
+            console.error("Lỗi khi nhận diện tay:", err);
           }
-        } catch (err) {
-          console.error("Lỗi khi chạy nhận diện AI:", err);
+        }
+
+        // Chạy FaceLandmarker dò gương mặt nếu người dùng bật nhãn dán AR
+        if (state.activeFaceFilter !== 'none' && state.faceLandmarker) {
+          try {
+            const faceResults = state.faceLandmarker.detectForVideo(video, timestamp);
+            if (faceResults && faceResults.faceLandmarks && faceResults.faceLandmarks.length > 0) {
+              state.faceLandmarks = faceResults.faceLandmarks[0];
+            } else {
+              state.faceLandmarks = null;
+            }
+          } catch (err) {
+            console.error("Lỗi khi nhận diện gương mặt:", err);
+          }
+        } else {
+          state.faceLandmarks = null;
         }
       }
+    }
+
+    // Vẽ khung xương tay AI (Nếu cấu hình bật và đã nhận diện được)
+    if (state.showSkeleton && state.handResults && state.handResults.landmarks) {
+      state.handResults.landmarks.forEach((landmarks, index) => {
+        const isRight = state.handResults.handednesses && state.handResults.handednesses[index] 
+          ? state.handResults.handednesses[index][0].categoryName === "Right" 
+          : index === 0;
+        drawHandSkeleton(ctx, landmarks, isRight, canvas.width, canvas.height);
+      });
+    }
+
+    // Vẽ Nhãn dán AR (Sticker) bám theo gương mặt
+    if (state.activeFaceFilter !== 'none' && state.faceLandmarks) {
+      drawFaceFilter(ctx, state.faceLandmarks, state.activeFaceFilter, canvas.width, canvas.height);
     }
 
     // 3. Khôi phục context vẽ hiệu ứng (Particles & Ripples sẽ tự động lật gương theo)
