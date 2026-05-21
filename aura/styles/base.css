@@ -171,16 +171,21 @@ html.settings-lock {
   }
 }
 
-@media (max-width: 380px) {
-  .btn-back span:not(.material-icons-round),
-  .btn-settings span:not(.material-icons-round) {
-    display: none;
-  }
-
+@media (max-width: 900px) and (orientation: landscape) {
   .btn-back,
   .btn-settings {
-    width: 44px;
-    justify-content: center;
-    padding: 10px;
+    top: 10px;
+    padding: 8px 12px;
+    min-height: 38px;
+    font-size: 0.8rem;
+    border-radius: 20px;
+  }
+
+  .btn-back {
+    left: 10px;
+  }
+
+  .btn-settings {
+    right: 10px;
   }
 }

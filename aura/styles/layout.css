@@ -67,6 +67,11 @@
 
 @media (max-width: 900px) and (orientation: landscape) {
   .main-layout {
-    padding-top: 68px;
+    padding: 12px;
+    flex-direction: row;
+    align-items: stretch;
+    gap: 12px;
+    height: 100dvh;
+    max-width: none;
   }
 }
