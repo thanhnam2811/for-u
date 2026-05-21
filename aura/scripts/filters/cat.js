@@ -50,22 +50,20 @@ export function drawCat(ctx, landmarks, metrics, canvasWidth, canvasHeight) {
   ctx.restore();
 
   // =============================================
-  // 2. MÁ HỒNG LỚN (Lấp lánh)
+  // 2. MÁ HỒNG (Breathing effect & Large spread)
   // =============================================
   ctx.save();
-  const cheekAlpha = 0.35 + Math.sin(time / 800) * 0.1;
-  ctx.shadowBlur = 30;
-  ctx.shadowColor = `rgba(255, 140, 190, ${cheekAlpha})`;
-  ctx.fillStyle = `rgba(255, 140, 190, ${cheekAlpha})`;
+  const breathingAlpha = 0.25 + Math.sin(time / 1000) * 0.15;
+  ctx.shadowBlur = 35;
+  ctx.shadowColor = `rgba(255, 140, 190, ${breathingAlpha})`;
+  ctx.fillStyle = `rgba(255, 140, 190, ${breathingAlpha})`;
 
   ctx.beginPath();
   ctx.arc(noseX - eyeDist * 0.65, noseY + eyeDist * 0.05, eyeDist * 0.38, 0, Math.PI * 2);
   ctx.fill();
-
   ctx.beginPath();
   ctx.arc(noseX + eyeDist * 0.65, noseY + eyeDist * 0.05, eyeDist * 0.38, 0, Math.PI * 2);
   ctx.fill();
-
   ctx.restore();
 
   // =============================================
@@ -83,44 +81,35 @@ export function drawCat(ctx, landmarks, metrics, canvasWidth, canvasHeight) {
   ctx.restore();
 
   // =============================================
-  // 4. RÂU MÈO (Rung rinh)
+  // 4. RÂU MÈO (Spring/Inertia Physics)
   // =============================================
   ctx.save();
-  ctx.strokeStyle = '#555555';
-  ctx.lineWidth = eyeDist * 0.03;
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.85)";
+  ctx.lineWidth = eyeDist * 0.035;
   ctx.lineCap = 'round';
 
   const whiskerStartX = eyeDist * 0.18;
   const whiskerBaseY = noseY + eyeDist * 0.03;
 
-  const whiskerConfigs = [
-    { yOff: -eyeDist * 0.06, cpY: -eyeDist * 0.12 },
-    { yOff: 0,                cpY: -eyeDist * 0.02 },
-    { yOff: eyeDist * 0.06,   cpY: eyeDist * 0.08 },
-  ];
+  function drawSpringWhiskers(startX, startY, isLeft) {
+    const dir = isLeft ? -1 : 1;
+    for (let i = 0; i < 3; i++) {
+        const angleOffset = (i - 1) * 15; 
+        const dynamicWiggle = Math.sin(time / 150 + i * 0.5) * 12; // Rung lệch pha độc lập
+        
+        ctx.beginPath();
+        ctx.moveTo(startX, startY);
+        // Control point tạo độ cong cho râu với inertia giả lập
+        ctx.quadraticCurveTo(
+            startX + (eyeDist * 0.5 * dir), startY + angleOffset - 10,
+            startX + (eyeDist * 1.1 * dir), startY + angleOffset + dynamicWiggle
+        );
+        ctx.stroke();
+    }
+  }
 
-  whiskerConfigs.forEach(({ yOff, cpY }, i) => {
-    const individualWiggle = Math.sin(time / (150 + i * 50)) * 0.03;
-    
-    // Râu trái
-    ctx.beginPath();
-    ctx.moveTo(noseX - whiskerStartX, whiskerBaseY + yOff);
-    ctx.quadraticCurveTo(
-      noseX - eyeDist * 0.6, whiskerBaseY + cpY + individualWiggle * eyeDist,
-      noseX - eyeDist * 1.1, whiskerBaseY + yOff - eyeDist * 0.02 + individualWiggle * eyeDist // Râu dài hơn
-    );
-    ctx.stroke();
-
-    // Râu phải
-    ctx.beginPath();
-    ctx.moveTo(noseX + whiskerStartX, whiskerBaseY + yOff);
-    ctx.quadraticCurveTo(
-      noseX + eyeDist * 0.6, whiskerBaseY + cpY + individualWiggle * eyeDist,
-      noseX + eyeDist * 1.1, whiskerBaseY + yOff - eyeDist * 0.02 + individualWiggle * eyeDist // Râu dài hơn
-    );
-    ctx.stroke();
-  });
-
+  drawSpringWhiskers(noseX - whiskerStartX, whiskerBaseY, true);
+  drawSpringWhiskers(noseX + whiskerStartX, whiskerBaseY, false);
   ctx.restore();
 
   // =============================================
