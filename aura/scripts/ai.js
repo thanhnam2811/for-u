@@ -116,32 +116,47 @@ export function drawHandSkeleton(ctx, landmarks, isRightHand, canvasWidth, canva
 
 // === HELPER: Tính khoảng cách và thông tin giữa 2 bàn tay ===
 function computeTwoHandsInfo(hand1, hand2, canvasWidth, canvasHeight) {
-  // Tính kích thước lòng bàn tay để chuẩn hóa tỷ lệ xa/gần
-  const getHandScale = (hand) => {
-    const dx = hand[9].x - hand[0].x;
-    const dy = hand[9].y - hand[0].y;
-    return Math.sqrt(dx * dx + dy * dy);
-  };
-  const scale = (getHandScale(hand1) + getHandScale(hand2)) / 2;
-
-  // Tính khoảng cách giữa các điểm khớp quan trọng
   const getDistance = (pt1, pt2) => {
     const dx = pt1.x - pt2.x;
     const dy = pt1.y - pt2.y;
     return Math.sqrt(dx * dx + dy * dy);
   };
 
-  const distWrist = getDistance(hand1[0], hand2[0]);
-  const distIndex = getDistance(hand1[5], hand2[5]);
-  const distPinky = getDistance(hand1[17], hand2[17]);
-  const avgDistance = (distWrist + distIndex + distPinky) / 3;
+  const getHandScale = (hand) => {
+    const palmHeight = getDistance(hand[0], hand[9]);
+    const palmWidth = getDistance(hand[5], hand[17]);
+    return Math.max(palmHeight, palmWidth, 0.001);
+  };
 
-  // Khoảng cách chuẩn hoá
-  const normalizedDist = scale > 0 ? avgDistance / scale : 999;
+  const getPalmCenter = (hand) => {
+    const anchors = [0, 5, 9, 13, 17];
+    const sum = anchors.reduce((acc, index) => {
+      acc.x += hand[index].x;
+      acc.y += hand[index].y;
+      return acc;
+    }, { x: 0, y: 0 });
+    return { x: sum.x / anchors.length, y: sum.y / anchors.length };
+  };
+
+  const scale = (getHandScale(hand1) + getHandScale(hand2)) / 2;
+  const center1 = getPalmCenter(hand1);
+  const center2 = getPalmCenter(hand2);
+  const centerDist = getDistance(center1, center2);
+
+  // Khi chắp tay, hai bàn tay thường bị MediaPipe lật hoặc mất một phần landmark.
+  // Vì vậy lấy các cặp gần nhất giữa cụm lòng bàn tay thay vì so cùng index cứng.
+  const palmAnchors = [0, 1, 5, 9, 13, 17];
+  const nearestDistances = palmAnchors.map((index1) => {
+    return Math.min(...palmAnchors.map((index2) => getDistance(hand1[index1], hand2[index2])));
+  }).sort((a, b) => a - b);
+  const closePalmDist = nearestDistances.slice(0, 3).reduce((sum, value) => sum + value, 0) / 3;
+
+  // Điểm gần tay: center giữ ổn định, closePalm giúp nhận chắp tay trước khi 1 tay bị mất detect.
+  const normalizedDist = scale > 0 ? ((centerDist * 0.65) + (closePalmDist * 0.35)) / scale : 999;
 
   // Tâm giữa 2 bàn tay (pixel)
-  const midX = ((hand1[9].x + hand2[9].x) / 2) * canvasWidth;
-  const midY = ((hand1[9].y + hand2[9].y) / 2) * canvasHeight;
+  const midX = ((center1.x + center2.x) / 2) * canvasWidth;
+  const midY = ((center1.y + center2.y) / 2) * canvasHeight;
 
   return { normalizedDist, midX, midY };
 }
@@ -189,7 +204,7 @@ export function analyzeHands(handResults, canvasWidth, canvasHeight, showToastCa
   // ============================================================
   const timeSinceLastTwoHands = now - state.lastTwoHandsTime;
   const wasRecentlyTwoHands = timeSinceLastTwoHands < state.predictionWindowMs;
-  const wereHandsClose = state.lastTwoHandsDist < (state.sensitivityThreshold + 0.15);
+  const wereHandsClose = state.lastTwoHandsDist < (state.sensitivityThreshold + 0.25);
 
   if (detectedCount === 1 && wasRecentlyTwoHands && wereHandsClose) {
     // ĐÂY LÀ TÌNH HUỐNG CHÍNH CẦN XỬ LÝ:

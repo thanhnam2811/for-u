@@ -13,7 +13,7 @@ export const state = {
   activePreset: 'gold',     // gold, cosmic, lotus, emerald
   activeSound: 'gong',      // gong, chime, bowl, mute
   volume: 0.7,              // 0.0 -> 1.0
-  sensitivityThreshold: 0.28, // Ngưỡng khoảng cách chắp tay (0.12 -> 0.28)
+  sensitivityThreshold: 0.55, // Ngưỡng khoảng cách chắp tay sau khi chuẩn hóa theo kích thước bàn tay
   showSkeleton: true,
   mirrorCamera: true,
 
@@ -27,7 +27,7 @@ export const state = {
   lastTwoHandsDist: 999,       // Khoảng cách chuẩn hoá lần cuối khi thấy 2 tay
   lastTwoHandsMidX: 0,         // Toạ độ X tâm giữa 2 tay lần cuối
   lastTwoHandsMidY: 0,         // Toạ độ Y tâm giữa 2 tay lần cuối
-  predictionWindowMs: 500,     // Cửa sổ thời gian cho phép dự đoán (ms)
+  predictionWindowMs: 900,     // Cửa sổ thời gian cho phép dự đoán (ms)
 
   // Chỉ số đo hiệu năng (FPS)
   lastFrameTime: performance.now(),

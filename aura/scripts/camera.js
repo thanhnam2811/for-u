@@ -1,13 +1,20 @@
 import { state } from "./state.js";
 
 let video = null;
+let cameraWrapper = null;
 let cameraSelect = null;
 let loadingStatus = null;
 
 function initDomRefs() {
   if (!video) video = document.getElementById('webcam');
+  if (!cameraWrapper) cameraWrapper = document.getElementById('camera-wrapper');
   if (!cameraSelect) cameraSelect = document.getElementById('camera-select');
   if (!loadingStatus) loadingStatus = document.getElementById('loading-status');
+}
+
+function syncCameraAspectRatio() {
+  if (!video || !cameraWrapper || !video.videoWidth || !video.videoHeight) return;
+  cameraWrapper.style.setProperty('--camera-aspect-ratio', `${video.videoWidth} / ${video.videoHeight}`);
 }
 
 // Khởi động Webcam và cấp quyền trình duyệt
@@ -32,6 +39,7 @@ export async function setupWebcam(deviceId = null, showToastCallback) {
     // Đợi luồng webcam nạp dữ liệu xong
     await new Promise((resolve) => {
       video.onloadedmetadata = () => {
+        syncCameraAspectRatio();
         resolve();
       };
     });

@@ -135,8 +135,8 @@ export function setupUI() {
   if (sensitivitySlider) {
     sensitivitySlider.addEventListener('input', (e) => {
       const val = e.target.value;
-      // Slider càng cao càng dễ chạm -> Ngưỡng khoảng cách cho phép càng rộng (0.10 -> 0.30)
-      state.sensitivityThreshold = 0.08 + (val / 100);
+      // Slider càng cao càng dễ chạm -> Ngưỡng khoảng cách cho phép càng rộng.
+      state.sensitivityThreshold = 0.35 + (val / 100);
       
       let label = "Bình thường";
       if (val < 15) label = "Khó chắp";

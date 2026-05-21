@@ -13,7 +13,7 @@
   position: relative;
   width: 100%;
   max-width: 100%;
-  aspect-ratio: 4/3;
+  aspect-ratio: var(--camera-aspect-ratio, 4/3);
   max-height: calc(100vh - 130px);
   max-height: calc(100dvh - 130px);
   background: #0f0f18;
@@ -282,10 +282,6 @@
 }
 
 @media (max-width: 420px) {
-  .camera-wrapper {
-    aspect-ratio: 3/4;
-  }
-
   .phuoc-badge {
     max-width: calc(100% - 86px);
   }
