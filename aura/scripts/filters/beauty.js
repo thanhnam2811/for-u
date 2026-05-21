@@ -58,6 +58,8 @@ export function drawBeauty(ctx, landmarks, metrics, canvasWidth, canvasHeight) {
     drawSparkle(ctx, sx, sy, size, rotation, theme.primary);
   }
   ctx.restore();
+
+  ctx.restore(); // Final Restore to balance the initial Save
 }
 
 // Hàm vẽ ngôi sao 4 cánh chuyên nghiệp
