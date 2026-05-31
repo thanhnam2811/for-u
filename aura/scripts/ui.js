@@ -89,31 +89,14 @@ export function setupUI() {
 				}
 			});
 		}
-	} catch(e) { console.error("Lỗi parse hoa đăng:", e); }
+	} catch (e) { console.error("Lỗi parse hoa đăng:", e); }
 
-	// Xử lý Popover hướng dẫn thả hoa đăng (Bỏ sessionStorage để test thoải mái)
-	const phuocBadge = document.getElementById('phuoc-badge');
+	// Xử lý Popover hướng dẫn thả hoa đăng (Đã bị loại bỏ vì chuyển sang nút Shop riêng)
 	const phuocPopover = document.getElementById('phuoc-popover');
-	let popoverTimer = null;
-	let popoverShowCount = 0;
-	let isHintDismissed = false;
-	
-	if (phuocBadge && phuocPopover && !isHintDismissed) {
-		const showPopover = () => {
-			if (isHintDismissed) return;
-			popoverShowCount++;
-			phuocPopover.classList.add('show');
-			
-			setTimeout(() => {
-				phuocPopover.classList.remove('show');
-				if (popoverShowCount < 3 && !isHintDismissed) {
-					popoverTimer = setTimeout(showPopover, 25000); // Ngủ 25s rồi hiện lại
-				}
-			}, 4000); // Hiện trong 4s
-		};
-		// Đợi 2 giây sau khi load trang rồi hiện lần đầu
-		popoverTimer = setTimeout(showPopover, 2000);
+	if (phuocPopover) {
+		phuocPopover.style.display = 'none';
 	}
+
 
 	// Đồng bộ hóa trạng thái giao diện (UI) từ state đã nạp từ localStorage
 	if (colorBtns) {
@@ -393,12 +376,9 @@ export function setupUI() {
 	const shopBackdrop = document.getElementById('shop-backdrop');
 	const btnCloseShop = document.getElementById('btn-close-shop');
 	const shopItemsContainer = document.getElementById('shop-items-container');
-	
+
 	const openShop = () => {
-		if (phuocPopover) {
-			phuocPopover.classList.remove('show');
-			isHintDismissed = true;
-		}
+
 		shopPopup.classList.add('open');
 		shopBackdrop.classList.add('show');
 	};
@@ -410,7 +390,8 @@ export function setupUI() {
 
 	if (btnCloseShop) btnCloseShop.addEventListener('click', closeShop);
 	if (shopBackdrop) shopBackdrop.addEventListener('click', closeShop);
-	if (phuocBadge) phuocBadge.addEventListener('click', openShop);
+	const btnShop = document.getElementById('btn-shop');
+	if (btnShop) btnShop.addEventListener('click', openShop);
 
 	// Render danh sách mặt hàng
 	if (shopItemsContainer) {
@@ -440,18 +421,18 @@ export function setupUI() {
 		shopItemsContainer.addEventListener('click', (e) => {
 			const btn = e.target.closest('.btn-buy');
 			if (!btn || isBuying) return;
-			
+
 			const typeKey = btn.dataset.type;
 			const price = parseInt(btn.dataset.price, 10);
 			const itemConfig = LANTERN_TYPES[typeKey];
-			
+
 			if (!itemConfig) return;
 
 			if (state.phuocCount >= price) {
 				// Đủ tiền -> Mua
 				isBuying = true;
 				spendPhuoc(price);
-				
+
 				// Lấy tọa độ nút bấm
 				const rect = btn.getBoundingClientRect();
 				const startX = rect.left + rect.width / 2;
@@ -462,17 +443,17 @@ export function setupUI() {
 					if (state.lanterns.length >= MAX_LANTERNS) {
 						state.lanterns[0].startFadeOut();
 					}
-					
+
 					const lantern = new LotusLantern({
 						type: typeKey,
-						startX, 
-						startY, 
-						canvasWidth: canvas.width, 
+						startX,
+						startY,
+						canvasWidth: canvas.width,
 						canvasHeight: canvas.height
 					});
 					state.lanterns.push(lantern);
 					saveLanternsState();
-					
+
 					// Chống click đúp (cooldown 300ms)
 					setTimeout(() => { isBuying = false; }, 300);
 				});
