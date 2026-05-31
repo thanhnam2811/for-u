@@ -63,6 +63,11 @@ export const state = {
 	engine: {
 		frameId: 0,
 		lastDt: 16.67,
+		performance: {
+			averageFps: 60,
+			fogQuality: 'high',
+			effectQuality: 'high'
+		},
 		tasks: {
 			handDetect: {
 				lastRunAt: 0,

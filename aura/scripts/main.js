@@ -1,14 +1,15 @@
 import { state, saveLanternsState } from "./state.js";
 import { setupUI, showToast } from "./ui.js";
 import { setupWebcam, getCameraDevices } from "./camera.js";
-import { loadHandLandmarkerModel, drawHandSkeleton, analyzeHands } from "./ai.js";
+import { loadHandLandmarkerModel, drawHandSkeleton } from "./ai.js";
 import { initDarkVeil, updateDarkVeil, drawDarkVeil, triggerVeilClear } from "./dark-veil.js";
 import { drawFaceFilter } from "./filters/index.js";
 import { initAudio } from "./audio.js";
 import { createGameLoop, shouldRunTask } from "./game-loop.js";
+import { updateTracking } from "./runtime/tracking-system.js";
+import { updatePerformanceState } from "./runtime/perf-system.js";
+import { updateLanterns, renderLanterns } from "./runtime/lantern-system.js";
 
-const HAND_DETECT_INTERVAL_MS = 33;
-const FACE_DETECT_INTERVAL_MS = 66;
 const LANTERN_SAVE_INTERVAL_MS = 500;
 
 // DOM references
@@ -139,50 +140,11 @@ function beginFrame(frame) {
 
 function updateFrame(frame) {
 	const now = frame.now;
-
-	// FPS counter
-	state.frameCount++;
-	if (now > state.lastFrameTime + 1000) {
-		state.currentFps = Math.round((state.frameCount * 1000) / (now - state.lastFrameTime));
-		if (statFps) statFps.innerText = state.currentFps;
-		state.frameCount = 0;
-		state.lastFrameTime = now;
-	}
+	updatePerformanceState(frame, statFps);
 
 	if (!frame.videoReady) return;
 
-	if (state.isModelLoaded) {
-		const timestamp = frame.now;
-		const handTask = state.engine.tasks.handDetect;
-		const faceTask = state.engine.tasks.faceDetect;
-
-		const hasNewHandVideoFrame = video.currentTime !== handTask.lastVideoTime;
-		if (state.handLandmarker && shouldRunTask(frame, handTask, HAND_DETECT_INTERVAL_MS, hasNewHandVideoFrame)) {
-			handTask.lastVideoTime = video.currentTime;
-			try {
-				const results = state.handLandmarker.detectForVideo(video, timestamp);
-				state.handResults = analyzeHands(results, frame.canvasWidth, frame.canvasHeight) || results;
-			} catch (err) {
-				console.error("[AuraApp] Lỗi nhận diện tay:", err);
-			}
-		}
-
-		if (state.activeFaceFilter !== 'none' && state.faceLandmarker) {
-			const hasNewFaceVideoFrame = video.currentTime !== faceTask.lastVideoTime;
-			if (shouldRunTask(frame, faceTask, FACE_DETECT_INTERVAL_MS, hasNewFaceVideoFrame)) {
-				faceTask.lastVideoTime = video.currentTime;
-				try {
-					const faceResults = state.faceLandmarker.detectForVideo(video, timestamp);
-					state.faceLandmarks = faceResults?.faceLandmarks?.[0] ?? null;
-				} catch (err) {
-					console.error("[AuraApp] Lỗi nhận diện gương mặt:", err);
-				}
-			}
-		} else {
-			state.faceLandmarks = null;
-			faceTask.lastVideoTime = -1;
-		}
-	}
+	updateTracking(frame, video);
 
 	for (let i = state.particles.length - 1; i >= 0; i--) {
 		state.particles[i].update();
@@ -194,13 +156,7 @@ function updateFrame(frame) {
 		if (state.prayerAuras[i].done) state.prayerAuras.splice(i, 1);
 	}
 
-	for (let i = state.lanterns.length - 1; i >= 0; i--) {
-		state.lanterns[i].update(frame.canvasWidth, frame.canvasHeight);
-		if (state.lanterns[i].phase === 'DONE') {
-			state.lanterns.splice(i, 1);
-			state.engine.dirtyFlags.lanterns = true;
-		}
-	}
+	updateLanterns(frame);
 
 	updateDarkVeil(now);
 }
@@ -237,9 +193,7 @@ function renderFrame(frame) {
 		state.prayerAuras[i].draw(ctx);
 	}
 
-	for (let i = state.lanterns.length - 1; i >= 0; i--) {
-		state.lanterns[i].draw(ctx);
-	}
+	renderLanterns(ctx, frame);
 
 	drawDarkVeil(ctx, frame.canvasWidth, frame.canvasHeight, frame.now);
 }

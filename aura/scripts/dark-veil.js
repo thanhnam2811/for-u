@@ -125,6 +125,9 @@ export function triggerVeilClear(centerX, centerY) {
 // ─────────────────────────────────────────────────────────────────────────────
 export function drawDarkVeil(ctx, canvasWidth, canvasHeight, now = performance.now()) {
 	if (state.darkOpacity < 0.005) return;
+	const fogQuality = state.engine.performance?.fogQuality || 'high';
+	const isLowQuality = fogQuality === 'low';
+	const isMediumQuality = fogQuality === 'medium';
 
 	// Đồng bộ kích thước offscreen canvas
 	if (darkCanvas && (darkCanvas.width !== canvasWidth || darkCanvas.height !== canvasHeight)) {
@@ -314,42 +317,48 @@ export function drawDarkVeil(ctx, canvasWidth, canvasHeight, now = performance.n
 
 	darkCtx.fillStyle = baseFog;
 	darkCtx.fillRect(0, 0, canvasWidth, canvasHeight);
-	darkCtx.fillStyle = stormCeiling;
-	darkCtx.fillRect(0, 0, canvasWidth, canvasHeight);
 	darkCtx.fillStyle = mistLayer;
-	darkCtx.fillRect(0, 0, canvasWidth, canvasHeight);
-	darkCtx.fillStyle = mistLayerSoft;
-	darkCtx.fillRect(0, 0, canvasWidth, canvasHeight);
-	darkCtx.fillStyle = cloudBankLeft;
-	darkCtx.fillRect(0, 0, canvasWidth, canvasHeight);
-	darkCtx.fillStyle = cloudBankRight;
 	darkCtx.fillRect(0, 0, canvasWidth, canvasHeight);
 	darkCtx.fillStyle = sideFog;
 	darkCtx.fillRect(0, 0, canvasWidth, canvasHeight);
 	darkCtx.fillStyle = hazeBand;
 	darkCtx.fillRect(0, 0, canvasWidth, canvasHeight);
-	darkCtx.fillStyle = lowMistBand;
-	darkCtx.fillRect(0, 0, canvasWidth, canvasHeight);
-	darkCtx.fillStyle = rollingCloudA;
-	darkCtx.fillRect(0, 0, canvasWidth, canvasHeight);
-	darkCtx.fillStyle = rollingCloudB;
-	darkCtx.fillRect(0, 0, canvasWidth, canvasHeight);
-	darkCtx.fillStyle = curlShadowA;
-	darkCtx.fillRect(0, 0, canvasWidth, canvasHeight);
-	darkCtx.fillStyle = curlShadowB;
-	darkCtx.fillRect(0, 0, canvasWidth, canvasHeight);
-	darkCtx.save();
-	darkCtx.globalCompositeOperation = 'multiply';
-	darkCtx.fillStyle = shadowSpine;
-	darkCtx.fillRect(0, 0, canvasWidth, canvasHeight);
-	darkCtx.fillStyle = murkRibbon;
-	darkCtx.fillRect(0, 0, canvasWidth, canvasHeight);
-	darkCtx.restore();
-	darkCtx.save();
-	darkCtx.globalCompositeOperation = 'screen';
-	darkCtx.fillStyle = swirlBand;
-	darkCtx.fillRect(0, 0, canvasWidth, canvasHeight);
-	darkCtx.restore();
+
+	if (!isLowQuality) {
+		darkCtx.fillStyle = mistLayerSoft;
+		darkCtx.fillRect(0, 0, canvasWidth, canvasHeight);
+		darkCtx.fillStyle = cloudBankLeft;
+		darkCtx.fillRect(0, 0, canvasWidth, canvasHeight);
+		darkCtx.fillStyle = cloudBankRight;
+		darkCtx.fillRect(0, 0, canvasWidth, canvasHeight);
+		darkCtx.fillStyle = lowMistBand;
+		darkCtx.fillRect(0, 0, canvasWidth, canvasHeight);
+		darkCtx.fillStyle = rollingCloudA;
+		darkCtx.fillRect(0, 0, canvasWidth, canvasHeight);
+	}
+
+	if (!isLowQuality && !isMediumQuality) {
+		darkCtx.fillStyle = stormCeiling;
+		darkCtx.fillRect(0, 0, canvasWidth, canvasHeight);
+		darkCtx.fillStyle = rollingCloudB;
+		darkCtx.fillRect(0, 0, canvasWidth, canvasHeight);
+		darkCtx.fillStyle = curlShadowA;
+		darkCtx.fillRect(0, 0, canvasWidth, canvasHeight);
+		darkCtx.fillStyle = curlShadowB;
+		darkCtx.fillRect(0, 0, canvasWidth, canvasHeight);
+		darkCtx.save();
+		darkCtx.globalCompositeOperation = 'multiply';
+		darkCtx.fillStyle = shadowSpine;
+		darkCtx.fillRect(0, 0, canvasWidth, canvasHeight);
+		darkCtx.fillStyle = murkRibbon;
+		darkCtx.fillRect(0, 0, canvasWidth, canvasHeight);
+		darkCtx.restore();
+		darkCtx.save();
+		darkCtx.globalCompositeOperation = 'screen';
+		darkCtx.fillStyle = swirlBand;
+		darkCtx.fillRect(0, 0, canvasWidth, canvasHeight);
+		darkCtx.restore();
+	}
 
 	// "Đục lỗ" tại vùng hào quang đã xóa (nếu đang clearing)
 	if (state.darkClearRadius > 5) {
@@ -381,7 +390,8 @@ export function drawDarkVeil(ctx, canvasWidth, canvasHeight, now = performance.n
 
 			// Bán kính sáng đục sương phụ thuộc vào độ sáng thực tại và loại hoa đăng
 			const typeConfig = LANTERN_TYPES[lantern.type] || LANTERN_TYPES['basic'];
-			const radius = 120 * lantern.scale * lantern.alpha * typeConfig.fogClearRadius;
+			const lanternRadiusQuality = isLowQuality ? 0.75 : isMediumQuality ? 0.88 : 1;
+			const radius = 120 * lantern.scale * lantern.alpha * typeConfig.fogClearRadius * lanternRadiusQuality;
 			if (radius < 5) return;
 
 			const clearGrad = darkCtx.createRadialGradient(

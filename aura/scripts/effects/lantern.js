@@ -11,6 +11,25 @@ Object.keys(LANTERN_ASSETS).forEach(key => {
 // Bộ nhớ đệm (Cache) canvas riêng biệt cho từng loại hoa đăng
 const lanternCaches = {};
 
+function hashString(input) {
+	let hash = 2166136261;
+	for (let index = 0; index < input.length; index++) {
+		hash ^= input.charCodeAt(index);
+		hash = Math.imul(hash, 16777619);
+	}
+	return hash >>> 0;
+}
+
+function createSeededRandom(seedText) {
+	let seed = hashString(seedText) || 1;
+	return () => {
+		seed = (seed + 0x6D2B79F5) | 0;
+		let value = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+		value ^= value + Math.imul(value ^ (value >>> 7), 61 | value);
+		return ((value ^ (value >>> 14)) >>> 0) / 4294967296;
+	};
+}
+
 function getLanternCache(type) {
 	if (lanternCaches[type]) return lanternCaches[type];
 
@@ -82,7 +101,6 @@ export class LotusLantern {
 			this.spawnedAt = config.spawnedAt;
 			this.xRatio = config.xRatio;
 			this.baseYRatio = config.baseYRatio;
-			this.phaseSeed = config.phaseSeed;
 			
 			this.startX = config.startX || (this.canvasWidth / 2);
 			this.startY = config.startY || (this.canvasHeight / 2);
@@ -90,26 +108,33 @@ export class LotusLantern {
 		} else {
 			this.id = `ltn_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 			this.spawnedAt = Date.now();
-			this.phaseSeed = Math.random() * Math.PI * 2;
 			
 			this.startX = config.startX;
 			this.startY = config.startY;
-			
-			this.targetX = 60 + Math.random() * (this.canvasWidth - 120); 
-			this.targetY = this.canvasHeight * (0.75 + Math.random() * 0.2);
-			
-			this.xRatio = this.targetX / this.canvasWidth;
-			this.baseYRatio = this.targetY / this.canvasHeight;
 			this.phase = 'SPAWNING';
 		}
 
-		const r1 = (this.phaseSeed * 13.37) % 1;
-		const r2 = (this.phaseSeed * 42.19) % 1;
-		const r3 = (this.phaseSeed * 73.11) % 1;
+		const seededRandom = createSeededRandom(this.id);
+		this.phaseSeed = seededRandom() * Math.PI * 2;
+		const horizontalMargin = 60;
+		const safeWidth = Math.max(120, this.canvasWidth - horizontalMargin * 2);
+		const seededXRatio = (horizontalMargin + seededRandom() * safeWidth) / this.canvasWidth;
+		const seededBaseYRatio = 0.75 + seededRandom() * 0.2;
+
+		if (!Number.isFinite(this.xRatio)) this.xRatio = seededXRatio;
+		if (!Number.isFinite(this.baseYRatio)) this.baseYRatio = seededBaseYRatio;
+
+		this.targetX = this.xRatio * this.canvasWidth;
+		this.targetY = this.baseYRatio * this.canvasHeight;
+
+		const r1 = seededRandom();
+		const r2 = seededRandom();
+		const r3 = seededRandom();
+		const r4 = seededRandom();
 
 		this.bobAmplitude = 8 + r1 * 8;
 		this.bobSpeed = 0.001 + r2 * 0.0012; 
-		this.driftSpeedX = 0.01 + r3 * 0.02;
+		this.driftSpeedX = (0.01 + r3 * 0.02) * (r4 > 0.5 ? 1 : -1);
 		
 		this.sineOffsetX = Math.sin(this.phaseSeed) * 15;
 		this.sineOffsetY = Math.sin(this.phaseSeed) * this.bobAmplitude;
@@ -124,14 +149,15 @@ export class LotusLantern {
 		}
 	}
 
-	update(currentCanvasWidth, currentCanvasHeight) {
+	update(now, currentCanvasWidth, currentCanvasHeight, quality = 'high') {
 		if (currentCanvasWidth && currentCanvasHeight) {
 			this.canvasWidth = currentCanvasWidth;
 			this.canvasHeight = currentCanvasHeight;
 		}
 
-		const timeAlive = Date.now() - this.spawnedAt;
+		const timeAlive = Math.max(0, now - this.spawnedAt);
 		const lifeProgress = timeAlive / LANTERN_LIFESPAN_MS;
+		const bobAmplitudeMultiplier = quality === 'low' ? 0.72 : quality === 'medium' ? 0.86 : 1;
 
 		if (lifeProgress >= 1) {
 			this.phase = 'DONE';
@@ -166,7 +192,7 @@ export class LotusLantern {
 			rawX = ((rawX + 100) % wrapWidth + wrapWidth) % wrapWidth - 100;
 			
 			this.x = rawX + Math.sin(floatTime * this.bobSpeed * 0.5 + this.phaseSeed) * 15 - this.sineOffsetX;
-			this.y = this.baseY + Math.sin(floatTime * this.bobSpeed + this.phaseSeed) * this.bobAmplitude - this.sineOffsetY;
+			this.y = this.baseY + Math.sin(floatTime * this.bobSpeed + this.phaseSeed) * (this.bobAmplitude * bobAmplitudeMultiplier) - this.sineOffsetY;
 			
 			if (this.phase === 'FLOATING') {
 				this.alpha = baseAlpha;
@@ -183,18 +209,17 @@ export class LotusLantern {
 		}
 	}
 
-	draw(ctx) {
+	draw(ctx, now = performance.now(), quality = 'high') {
 		if (this.alpha <= 0) return;
 		const cache = getLanternCache(this.type);
 		if (!cache) return; // Chờ ảnh SVG tải xong
 		
 		ctx.save();
-		ctx.globalAlpha = this.alpha;
 		ctx.translate(this.x, this.y);
 		ctx.scale(this.scale, this.scale);
 		
-		// Hơi nhấp nháy (flicker) như ngọn nến thật
-		const flicker = 0.95 + Math.random() * 0.05;
+		const flickerStrength = quality === 'low' ? 0.02 : quality === 'medium' ? 0.035 : 0.05;
+		const flicker = 1 - flickerStrength + ((Math.sin(now * 0.008 + this.phaseSeed * 9) + 1) * 0.5 * flickerStrength * 2);
 		ctx.globalAlpha = this.alpha * flicker;
 
 		// Vẽ hình ảnh đã cache (nhanh hơn vẽ trực tiếp 10 lần)
