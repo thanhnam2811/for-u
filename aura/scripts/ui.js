@@ -26,6 +26,10 @@ let btnCloseHelp = null;
 let helpPopup = null;
 let helpBackdrop = null;
 
+let veilHelpPopup = null;
+let veilHelpBackdrop = null;
+let btnCloseVeilHelp = null;
+
 let toastTimer = null;
 
 // Hiển thị Toast thông báo xinh xắn
@@ -66,6 +70,10 @@ export function setupUI() {
 	btnCloseHelp = document.getElementById('btn-close-help');
 	helpPopup = document.getElementById('help-popup');
 	helpBackdrop = document.getElementById('help-backdrop');
+
+	veilHelpPopup = document.getElementById('veil-help-popup');
+	veilHelpBackdrop = document.getElementById('veil-help-backdrop');
+	btnCloseVeilHelp = document.getElementById('btn-close-veil-help');
 
 	// Đồng bộ hóa trạng thái giao diện (UI) từ state đã nạp từ localStorage
 	if (colorBtns) {
@@ -144,7 +152,8 @@ export function setupUI() {
 	settingsBackdrop?.addEventListener('click', closeSettings);
 	document.addEventListener('keydown', (e) => {
 		if (e.key === 'Escape') {
-			if (helpPopup?.classList.contains('open')) closeHelp();
+			if (veilHelpPopup?.classList.contains('open')) closeVeilHelp();
+			else if (helpPopup?.classList.contains('open')) closeHelp();
 			else if (settingsPopup?.classList.contains('open')) closeSettings();
 		}
 	});
@@ -161,8 +170,23 @@ export function setupUI() {
 	};
 
 	btnHelp?.addEventListener('click', openHelp);
-	btnVeilHelp?.addEventListener('click', openHelp);
 	btnCloseHelp?.addEventListener('click', closeHelp);
+	helpBackdrop?.addEventListener('click', closeHelp);
+
+	// Popup Cẩm nang Sương khói
+	const closeVeilHelp = () => {
+		veilHelpPopup?.classList.remove('open');
+		veilHelpBackdrop?.classList.remove('open');
+	};
+
+	const openVeilHelp = () => {
+		veilHelpPopup?.classList.add('open');
+		veilHelpBackdrop?.classList.add('open');
+	};
+
+	btnVeilHelp?.addEventListener('click', openVeilHelp);
+	btnCloseVeilHelp?.addEventListener('click', closeVeilHelp);
+	veilHelpBackdrop?.addEventListener('click', closeVeilHelp);
 	helpBackdrop?.addEventListener('click', closeHelp);
 
 	// Đảm bảo không sử dụng Face Filter do đã ẩn carousel
