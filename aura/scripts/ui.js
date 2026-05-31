@@ -1,4 +1,4 @@
-import { getSensitivityThresholdForSlider, state, spendPhuoc, LANTERN_COST, MAX_LANTERNS, LANTERN_COOLDOWN_MS, saveLanternsState, LANTERN_LIFESPAN_MS } from "./state.js";
+import { getSensitivityThresholdForSlider, state, spendPhuoc, LANTERN_TYPES, LANTERN_ASSETS, MAX_LANTERNS, saveLanternsState, LANTERN_LIFESPAN_MS } from "./state.js";
 import { initAudio, playZenSound, playCameraShutter } from "./audio.js";
 import { setupWebcam } from "./camera.js";
 import { LotusLantern } from "./effects/lantern.js";
@@ -386,58 +386,102 @@ export function setupUI() {
 		});
 	});
 
-	// 11. Tính năng Thắp Hoa Đăng
-	if (phuocBadge && canvas) {
-		phuocBadge.title = `Thắp Hoa Đăng (${LANTERN_COST} Phước)`;
-		phuocBadge.addEventListener('click', (e) => {
-			const now = performance.now();
-			if (now - state.lanternsLastAddedAt < LANTERN_COOLDOWN_MS) return;
+	// ==========================================
+	// GIAO DIỆN CỬA HÀNG VẠN HẠNH (SHOP)
+	// ==========================================
+	const shopPopup = document.getElementById('shop-popup');
+	const shopBackdrop = document.getElementById('shop-backdrop');
+	const btnCloseShop = document.getElementById('btn-close-shop');
+	const shopItemsContainer = document.getElementById('shop-items-container');
+	
+	const openShop = () => {
+		if (phuocPopover) {
+			phuocPopover.classList.remove('show');
+			isHintDismissed = true;
+		}
+		shopPopup.classList.add('open');
+		shopBackdrop.classList.add('show');
+	};
 
-			if (spendPhuoc(LANTERN_COST)) {
-				state.lanternsLastAddedAt = now;
+	const closeShop = () => {
+		shopPopup.classList.remove('open');
+		shopBackdrop.classList.remove('show');
+	};
+
+	if (btnCloseShop) btnCloseShop.addEventListener('click', closeShop);
+	if (shopBackdrop) shopBackdrop.addEventListener('click', closeShop);
+	if (phuocBadge) phuocBadge.addEventListener('click', openShop);
+
+	// Render danh sách mặt hàng
+	if (shopItemsContainer) {
+		shopItemsContainer.innerHTML = '';
+		Object.keys(LANTERN_TYPES).forEach(key => {
+			const item = LANTERN_TYPES[key];
+			const itemEl = document.createElement('div');
+			itemEl.className = 'shop-item';
+			itemEl.innerHTML = `
+				<div class="shop-item-icon">
+					<img class="shop-lantern-icon" src="${LANTERN_ASSETS[item.assetKey].dataUrl}" alt="${item.name}" />
+				</div>
+				<div class="shop-item-info">
+					<div class="shop-item-title">${item.name}</div>
+					<div class="shop-item-desc">${item.desc}</div>
+					<button class="btn-buy" data-type="${key}" data-price="${item.price}">
+						<span class="material-icons-round" style="font-size: 14px;">favorite</span> 
+						${item.price}
+					</button>
+				</div>
+			`;
+			shopItemsContainer.appendChild(itemEl);
+		});
+
+		// Xử lý mua hàng
+		let isBuying = false;
+		shopItemsContainer.addEventListener('click', (e) => {
+			const btn = e.target.closest('.btn-buy');
+			if (!btn || isBuying) return;
+			
+			const typeKey = btn.dataset.type;
+			const price = parseInt(btn.dataset.price, 10);
+			const itemConfig = LANTERN_TYPES[typeKey];
+			
+			if (!itemConfig) return;
+
+			if (state.phuocCount >= price) {
+				// Đủ tiền -> Mua
+				isBuying = true;
+				spendPhuoc(price);
 				
-				const rect = phuocBadge.getBoundingClientRect();
+				// Lấy tọa độ nút bấm
+				const rect = btn.getBoundingClientRect();
 				const startX = rect.left + rect.width / 2;
 				const startY = rect.top + rect.height / 2;
-				
-				const lantern = new LotusLantern({
-					startX, 
-					startY, 
-					canvasWidth: canvas.width, 
-					canvasHeight: canvas.height
-				});
-				state.lanterns.push(lantern);
-				
-				let activeCount = state.lanterns.filter(l => l.phase !== 'DONE').length;
-				if (activeCount > MAX_LANTERNS) {
-					for (let i = 0; i < state.lanterns.length; i++) {
-						if (state.lanterns[i].phase === 'FLOATING' || state.lanterns[i].phase === 'SPAWNING') {
-							state.lanterns[i].startFadeOut();
-							break;
-						}
+
+				import('./effects/lantern.js').then(({ LotusLantern }) => {
+					// Xóa bớt nếu quá nhiều
+					if (state.lanterns.length >= MAX_LANTERNS) {
+						state.lanterns[0].startFadeOut();
 					}
-				}
-				saveLanternsState();
-				
-				// Người dùng đã ấn, ẩn popover trong phiên
-				isHintDismissed = true;
-				if (phuocPopover) {
-					phuocPopover.classList.remove('show');
-				}
-				clearTimeout(popoverTimer);
-				
-				phuocBadge.classList.remove('lantern-pulse');
-				void phuocBadge.offsetWidth;
-				phuocBadge.classList.add('lantern-pulse');
-				
-				const display = document.getElementById('phuoc-count-display');
-				if (display) display.innerText = state.phuocCount;
-				
+					
+					const lantern = new LotusLantern({
+						type: typeKey,
+						startX, 
+						startY, 
+						canvasWidth: canvas.width, 
+						canvasHeight: canvas.height
+					});
+					state.lanterns.push(lantern);
+					saveLanternsState();
+					
+					// Chống click đúp (cooldown 300ms)
+					setTimeout(() => { isBuying = false; }, 300);
+				});
 			} else {
-				phuocBadge.classList.remove('lantern-shake');
-				void phuocBadge.offsetWidth;
-				phuocBadge.classList.add('lantern-shake');
-				showToast(`Tích đủ ${LANTERN_COST} Phước để thắp Hoa Đăng`);
+				// Không đủ tiền -> Rung lắc
+				btn.classList.add('error');
+				setTimeout(() => {
+					btn.classList.remove('error');
+				}, 400);
 			}
 		});
 	}

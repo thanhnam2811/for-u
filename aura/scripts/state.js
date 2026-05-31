@@ -111,9 +111,7 @@ export const MAX_DARK_OPACITY = 0.62; // Không bao giờ vượt mức sương 
 export const DARK_HOLD_MS = 5000;     // Giữ mức tối đa trước khi duy trì sương dày chờ user clear
 
 // Hằng số Hoa Đăng
-export const LANTERN_COST = 10;
 export const MAX_LANTERNS = 40;
-export const LANTERN_COOLDOWN_MS = 300;
 export const LANTERN_LIFESPAN_MS = 30 * 60 * 1000; // 30 phút
 
 export function getSensitivityThresholdForSlider(sliderVal) {
@@ -135,10 +133,63 @@ export function spendPhuoc(amount) {
 	if (state.phuocCount >= amount) {
 		state.phuocCount -= amount;
 		localStorage.setItem('phuoc_count', state.phuocCount);
+		const phuocDisplay = document.getElementById('phuoc-count-display');
+		if (phuocDisplay) phuocDisplay.innerText = state.phuocCount;
 		return true;
 	}
 	return false;
 }
+
+// ----------------------------------------------------
+// QUẢN LÝ HOA ĐĂNG (LANTERNS)
+// ----------------------------------------------------
+import { LANTERN_SVGS } from "./assets/lantern-svgs.js";
+
+function svgToDataUrl(svg) {
+	return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+}
+
+export const LANTERN_ASSETS = {
+	basic: {
+		svg: LANTERN_SVGS.basic,
+		dataUrl: svgToDataUrl(LANTERN_SVGS.basic)
+	},
+	crystal: {
+		svg: LANTERN_SVGS.crystal,
+		dataUrl: svgToDataUrl(LANTERN_SVGS.crystal)
+	},
+	dragon: {
+		svg: LANTERN_SVGS.dragon,
+		dataUrl: svgToDataUrl(LANTERN_SVGS.dragon)
+	}
+};
+
+export const LANTERN_TYPES = {
+	basic: {
+		name: "Hoa Sen Bình An",
+		desc: "Hoa sen hồng truyền thống, thanh tịnh mộc mạc. Xua tan sương mù nhẹ.",
+		price: 10,
+		scale: 1,
+		fogClearRadius: 100,
+		assetKey: "basic"
+	},
+	crystal: {
+		name: "Ngọc Liên Đăng",
+		desc: "Khối pha lê lục giác tinh khôi, ánh sáng thanh khiết.",
+		price: 50,
+		scale: 1.25,
+		fogClearRadius: 200,
+		assetKey: "crystal"
+	},
+	dragon: {
+		name: "Kim Long Đăng",
+		desc: "Hoa sen mạ vàng kim cao cấp, điểm xuyết vệt long văn mờ ảo ở lõi.",
+		price: 200,
+		scale: 1.6,
+		fogClearRadius: 400,
+		assetKey: "dragon"
+	}
+};
 
 // Lưu trữ Hoa Đăng
 export function saveLanternsState() {
@@ -146,6 +197,7 @@ export function saveLanternsState() {
 		.filter(l => l.phase !== 'DONE' && l.id)
 		.map(l => ({
 			id: l.id,
+			type: l.type || 'basic',
 			spawnedAt: l.spawnedAt,
 			xRatio: l.xRatio,
 			baseYRatio: l.baseYRatio,

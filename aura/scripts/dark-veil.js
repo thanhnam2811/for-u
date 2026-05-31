@@ -7,7 +7,7 @@
  * Khi đạt mức tối đa, sương sẽ giữ nguyên cho tới khi user xua nó đi.
  */
 
-import { state, MAX_DARK_OPACITY, DARK_HOLD_MS } from "./state.js";
+import { state, MAX_DARK_OPACITY, DARK_HOLD_MS, LANTERN_TYPES } from "./state.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Offscreen canvas để tạo hiệu ứng "destination-out" (đục lỗ trong sương)
@@ -379,8 +379,9 @@ export function drawDarkVeil(ctx, canvasWidth, canvasHeight) {
     state.lanterns.forEach(lantern => {
       if (lantern.phase === 'DONE' || lantern.alpha <= 0.05) return;
       
-      // Bán kính sáng đục sương phụ thuộc vào độ sáng thực tại
-      const radius = 120 * lantern.scale * lantern.alpha;
+      // Bán kính sáng đục sương phụ thuộc vào độ sáng thực tại và loại hoa đăng
+      const typeConfig = LANTERN_TYPES[lantern.type] || LANTERN_TYPES['basic'];
+      const radius = 120 * lantern.scale * lantern.alpha * typeConfig.fogClearRadius;
       if (radius < 5) return;
       
       const clearGrad = darkCtx.createRadialGradient(

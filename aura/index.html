@@ -56,7 +56,12 @@
                                     </div>
                                     <span id="veil-warning-label" class="veil-warning-text">Sương đang lên</span>
                                 </div>
-                                <button id="btn-veil-help" class="veil-warning-help" type="button" aria-label="Xem chi tiết về sương mù">
+                                <button
+                                    id="btn-veil-help"
+                                    class="veil-warning-help"
+                                    type="button"
+                                    aria-label="Xem chi tiết về sương mù"
+                                >
                                     <span class="material-icons-round">help_outline</span>
                                 </button>
                             </div>
@@ -65,13 +70,14 @@
                             </div>
                         </div>
 
-                        <div id="phuoc-badge" class="phuoc-badge">
+                        <div id="phuoc-badge" class="phuoc-badge" role="button" tabindex="0" title="Mở Cửa Hàng">
                             <span class="material-icons-round">favorite</span>
                             <span><strong id="phuoc-count-display">0</strong> phước</span>
+                            <span style="margin-left: 4px">🏮</span>
                         </div>
                         <div id="phuoc-popover" class="phuoc-popover">
                             <div class="popover-arrow"></div>
-                            <span class="material-icons-round">flare</span> Nhấn thắp Hoa Đăng
+                            <span class="material-icons-round">storefront</span> Nhấn để mở Cửa Hàng
                         </div>
 
                         <div class="tech-stats">
@@ -109,10 +115,39 @@
                         </button>
                     </div>
                     <div class="sidebar-content">
-                        <div class="control-group" style="gap: 16px;">
-                            <p style="color: var(--text-secondary); line-height: 1.6;">Sương khói đại diện cho sự vô minh và những phiền não trong tâm trí. Khi sương kéo đến che lấp màn hình, bạn hãy thực hiện động tác <strong>Chắp Tay</strong> thiền định.</p>
-                            <p style="color: var(--text-secondary); line-height: 1.6;">Hào quang từ đôi bàn tay sẽ tỏa ra mạnh mẽ để xua tan bóng tối, đồng thời giúp bạn tích lũy <strong>Phước báu</strong> mỗi ngày.</p>
+                        <div class="control-group" style="gap: 16px">
+                            <p style="color: var(--text-secondary); line-height: 1.6">
+                                Sương khói đại diện cho sự vô minh và những phiền não trong tâm trí. Khi sương kéo đến
+                                che lấp màn hình, bạn hãy thực hiện động tác <strong>Chắp Tay</strong> thiền định.
+                            </p>
+                            <p style="color: var(--text-secondary); line-height: 1.6">
+                                Hào quang từ đôi bàn tay sẽ tỏa ra mạnh mẽ để xua tan bóng tối, đồng thời giúp bạn tích
+                                lũy <strong>Phước báu</strong> mỗi ngày.
+                            </p>
                         </div>
+                    </div>
+                </aside>
+
+                <!-- Shop Sidebar / Bottom Sheet -->
+                <div id="shop-backdrop" class="settings-backdrop"></div>
+                <aside
+                    id="shop-popup"
+                    class="controls-sidebar"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="shop-title"
+                >
+                    <div class="sidebar-header">
+                        <div class="sidebar-title">
+                            <span class="material-icons-round header-icon">storefront</span>
+                            <h2 id="shop-title">Cửa Hàng Vạn Hạnh</h2>
+                        </div>
+                        <button id="btn-close-shop" class="btn-close-settings" type="button" aria-label="Đóng cửa hàng">
+                            <span class="material-icons-round">close</span>
+                        </button>
+                    </div>
+                    <div class="sidebar-content shop-content" id="shop-items-container">
+                        <!-- Danh sách item sẽ được render động qua JS -->
                     </div>
                 </aside>
 
@@ -321,7 +356,8 @@
                         <div class="help-item-text">
                             <h4>Sương mù</h4>
                             <p>
-                                Khi sương dày lên, khung hình sẽ bị mây mù phủ kín và sẽ không tự tan. Bạn cần chắp tay để hào quang mở một vùng sáng rồi xua sạch màn sương đó.
+                                Khi sương dày lên, khung hình sẽ bị mây mù phủ kín và sẽ không tự tan. Bạn cần chắp tay
+                                để hào quang mở một vùng sáng rồi xua sạch màn sương đó.
                             </p>
                         </div>
                     </div>
@@ -351,7 +387,7 @@
                 <div class="loading-card">
                     <div class="loading-card-topline">
                         <span class="loading-dot"></span>
-                        Trải nghiệm chắp tay nhận hào quang
+                        Tích phước hào quang
                     </div>
 
                     <div class="lotus-spinner-shell">
