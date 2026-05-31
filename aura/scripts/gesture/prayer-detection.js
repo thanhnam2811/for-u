@@ -290,9 +290,10 @@ function activateGesture(midX, midY, canvasWidth, canvasHeight, now) {
 		if (rewardPassed) state.lastGestureRewardTime = now;
 	} else if (!currentAura || currentAura.done) {
 		triggerAuraEffects(midX, midY, canvasWidth, canvasHeight, {
-			reward: false,
+			reward: rewardPassed,
 			forceNew: true
 		});
+		if (rewardPassed) state.lastGestureRewardTime = now;
 	} else {
 		updateAuraEffects(midX, midY, canvasWidth, canvasHeight);
 	}
