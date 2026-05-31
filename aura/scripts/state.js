@@ -77,6 +77,9 @@ export const state = {
 				lastRunAt: 0,
 				lastVideoTime: -1
 			},
+				lanternUpdate: {
+					lastRunAt: 0
+				},
 			lanternSave: {
 				lastRunAt: 0
 			}

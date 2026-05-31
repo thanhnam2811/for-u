@@ -14,13 +14,30 @@ import { state, MAX_DARK_OPACITY, DARK_HOLD_MS, LANTERN_TYPES } from "./state.js
 // ─────────────────────────────────────────────────────────────────────────────
 let darkCanvas = null;
 let darkCtx = null;
+let fogBackdropCanvas = null;
+let fogBackdropCtx = null;
 let veilWarning = null;
 let veilProgress = null;
 let veilLabel = null;
+let fogBackdropCache = {
+	width: 0,
+	height: 0,
+	quality: 'high',
+	opacityBucket: -1,
+	lastRenderAt: 0
+};
+
+const FOG_REFRESH_INTERVAL_MS = {
+	high: 33,
+	medium: 48,
+	low: 66
+};
 
 export function initDarkVeil() {
 	darkCanvas = document.createElement('canvas');
 	darkCtx = darkCanvas.getContext('2d');
+	fogBackdropCanvas = document.createElement('canvas');
+	fogBackdropCtx = fogBackdropCanvas.getContext('2d');
 	veilWarning = document.getElementById('veil-warning');
 	veilProgress = document.getElementById('veil-progress-bar');
 	veilLabel = document.getElementById('veil-warning-label');
@@ -134,231 +151,19 @@ export function drawDarkVeil(ctx, canvasWidth, canvasHeight, now = performance.n
 		darkCanvas.width = canvasWidth;
 		darkCanvas.height = canvasHeight;
 	}
-	if (!darkCanvas || !darkCtx) return;
+	if (fogBackdropCanvas && (fogBackdropCanvas.width !== canvasWidth || fogBackdropCanvas.height !== canvasHeight)) {
+		fogBackdropCanvas.width = canvasWidth;
+		fogBackdropCanvas.height = canvasHeight;
+	}
+	if (!darkCanvas || !darkCtx || !fogBackdropCanvas || !fogBackdropCtx) return;
+
+	if (_shouldRefreshFogBackdrop(canvasWidth, canvasHeight, fogQuality, now)) {
+		_renderFogBackdrop(canvasWidth, canvasHeight, now, fogQuality);
+	}
 
 	// Vẽ lớp sương tối lên offscreen canvas
 	darkCtx.clearRect(0, 0, canvasWidth, canvasHeight);
-
-	const time = now * 0.00018;
-	const driftX = Math.sin(time * 1.4) * canvasWidth * 0.06;
-	const driftY = Math.cos(time * 1.15) * canvasHeight * 0.05;
-	const mistDriftX = Math.cos(time * 2.2) * canvasWidth * 0.08;
-	const mistDriftY = Math.sin(time * 1.9) * canvasHeight * 0.06;
-
-	const baseFog = darkCtx.createRadialGradient(
-		canvasWidth * 0.5 + driftX,
-		canvasHeight * 0.48 + driftY,
-		canvasHeight * 0.08,
-		canvasWidth * 0.5 + driftX,
-		canvasHeight * 0.48 + driftY,
-		Math.hypot(canvasWidth, canvasHeight) * 0.64
-	);
-	baseFog.addColorStop(0, `rgba(14, 18, 30, ${state.darkOpacity * 0.16})`);
-	baseFog.addColorStop(0.38, `rgba(8, 12, 24, ${state.darkOpacity * 0.46})`);
-	baseFog.addColorStop(1, `rgba(4, 6, 18, ${state.darkOpacity * 0.92})`);
-
-	const mistLayer = darkCtx.createRadialGradient(
-		canvasWidth * 0.62 + mistDriftX,
-		canvasHeight * 0.62 - mistDriftY,
-		canvasHeight * 0.04,
-		canvasWidth * 0.62 + mistDriftX,
-		canvasHeight * 0.62 - mistDriftY,
-		Math.hypot(canvasWidth, canvasHeight) * 0.34
-	);
-	mistLayer.addColorStop(0, `rgba(216, 226, 255, ${state.darkOpacity * 0.16})`);
-	mistLayer.addColorStop(0.28, `rgba(198, 212, 242, ${state.darkOpacity * 0.16})`);
-	mistLayer.addColorStop(0.62, `rgba(112, 128, 170, ${state.darkOpacity * 0.14})`);
-	mistLayer.addColorStop(1, 'rgba(28, 32, 48, 0)');
-
-	const mistLayerSoft = darkCtx.createRadialGradient(
-		canvasWidth * 0.28 - mistDriftX * 0.7,
-		canvasHeight * 0.76 + mistDriftY * 0.45,
-		0,
-		canvasWidth * 0.28 - mistDriftX * 0.7,
-		canvasHeight * 0.76 + mistDriftY * 0.45,
-		Math.hypot(canvasWidth, canvasHeight) * 0.28
-	);
-	mistLayerSoft.addColorStop(0, `rgba(244, 248, 255, ${state.darkOpacity * 0.14})`);
-	mistLayerSoft.addColorStop(0.34, `rgba(224, 232, 250, ${state.darkOpacity * 0.12})`);
-	mistLayerSoft.addColorStop(0.6, `rgba(170, 184, 214, ${state.darkOpacity * 0.12})`);
-	mistLayerSoft.addColorStop(1, 'rgba(30, 34, 50, 0)');
-
-	const cloudBankLeft = darkCtx.createRadialGradient(
-		canvasWidth * 0.12 + driftX * 0.3,
-		canvasHeight * 0.62 + driftY * 0.45,
-		0,
-		canvasWidth * 0.12 + driftX * 0.3,
-		canvasHeight * 0.62 + driftY * 0.45,
-		Math.hypot(canvasWidth, canvasHeight) * 0.22
-	);
-	cloudBankLeft.addColorStop(0, `rgba(245, 248, 255, ${state.darkOpacity * 0.22})`);
-	cloudBankLeft.addColorStop(0.24, `rgba(214, 224, 246, ${state.darkOpacity * 0.18})`);
-	cloudBankLeft.addColorStop(0.68, `rgba(92, 108, 148, ${state.darkOpacity * 0.14})`);
-	cloudBankLeft.addColorStop(1, 'rgba(20, 24, 36, 0)');
-
-	const cloudBankRight = darkCtx.createRadialGradient(
-		canvasWidth * 0.82 - driftX * 0.42,
-		canvasHeight * 0.34 - driftY * 0.3,
-		0,
-		canvasWidth * 0.82 - driftX * 0.42,
-		canvasHeight * 0.34 - driftY * 0.3,
-		Math.hypot(canvasWidth, canvasHeight) * 0.2
-	);
-	cloudBankRight.addColorStop(0, `rgba(236, 242, 255, ${state.darkOpacity * 0.18})`);
-	cloudBankRight.addColorStop(0.32, `rgba(196, 208, 234, ${state.darkOpacity * 0.14})`);
-	cloudBankRight.addColorStop(0.72, `rgba(84, 96, 132, ${state.darkOpacity * 0.12})`);
-	cloudBankRight.addColorStop(1, 'rgba(16, 20, 34, 0)');
-
-	const sideFog = darkCtx.createRadialGradient(
-		canvasWidth * 0.18 - driftX * 0.6,
-		canvasHeight * 0.28 + driftY * 0.4,
-		0,
-		canvasWidth * 0.18 - driftX * 0.6,
-		canvasHeight * 0.28 + driftY * 0.4,
-		Math.hypot(canvasWidth, canvasHeight) * 0.45
-	);
-	sideFog.addColorStop(0, `rgba(18, 18, 30, ${state.darkOpacity * 0.08})`);
-	sideFog.addColorStop(0.5, `rgba(8, 8, 24, ${state.darkOpacity * 0.30})`);
-	sideFog.addColorStop(1, 'rgba(4, 4, 18, 0)');
-
-	const hazeBand = darkCtx.createLinearGradient(0, 0, 0, canvasHeight);
-	hazeBand.addColorStop(0, `rgba(18, 18, 30, ${state.darkOpacity * 0.12})`);
-	hazeBand.addColorStop(0.35, `rgba(8, 8, 22, ${state.darkOpacity * 0.02})`);
-	hazeBand.addColorStop(0.65, `rgba(8, 8, 24, ${state.darkOpacity * 0.10})`);
-	hazeBand.addColorStop(1, `rgba(20, 20, 34, ${state.darkOpacity * 0.22})`);
-
-	const lowMistBand = darkCtx.createLinearGradient(0, canvasHeight * 0.42, 0, canvasHeight);
-	lowMistBand.addColorStop(0, `rgba(120, 136, 178, ${state.darkOpacity * 0.02})`);
-	lowMistBand.addColorStop(0.45, `rgba(206, 220, 246, ${state.darkOpacity * 0.12})`);
-	lowMistBand.addColorStop(1, `rgba(92, 104, 142, ${state.darkOpacity * 0.2})`);
-
-	const stormCeiling = darkCtx.createRadialGradient(
-		canvasWidth * 0.5,
-		canvasHeight * 0.02,
-		0,
-		canvasWidth * 0.5,
-		canvasHeight * 0.02,
-		Math.hypot(canvasWidth, canvasHeight) * 0.52
-	);
-	stormCeiling.addColorStop(0, `rgba(6, 8, 16, ${state.darkOpacity * 0.30})`);
-	stormCeiling.addColorStop(0.45, `rgba(8, 10, 20, ${state.darkOpacity * 0.22})`);
-	stormCeiling.addColorStop(1, 'rgba(4, 6, 14, 0)');
-
-	const curlShadowA = darkCtx.createRadialGradient(
-		canvasWidth * 0.42 + Math.sin(time * 2.4) * canvasWidth * 0.05,
-		canvasHeight * 0.44 + Math.cos(time * 1.9) * canvasHeight * 0.04,
-		0,
-		canvasWidth * 0.42 + Math.sin(time * 2.4) * canvasWidth * 0.05,
-		canvasHeight * 0.44 + Math.cos(time * 1.9) * canvasHeight * 0.04,
-		Math.hypot(canvasWidth, canvasHeight) * 0.22
-	);
-	curlShadowA.addColorStop(0, `rgba(232, 238, 252, ${state.darkOpacity * 0.16})`);
-	curlShadowA.addColorStop(0.34, `rgba(148, 160, 194, ${state.darkOpacity * 0.12})`);
-	curlShadowA.addColorStop(0.68, `rgba(38, 44, 68, ${state.darkOpacity * 0.18})`);
-	curlShadowA.addColorStop(1, 'rgba(10, 12, 24, 0)');
-
-	const curlShadowB = darkCtx.createRadialGradient(
-		canvasWidth * 0.74 + Math.cos(time * 2.1) * canvasWidth * 0.04,
-		canvasHeight * 0.58 + Math.sin(time * 2.5) * canvasHeight * 0.05,
-		0,
-		canvasWidth * 0.74 + Math.cos(time * 2.1) * canvasWidth * 0.04,
-		canvasHeight * 0.58 + Math.sin(time * 2.5) * canvasHeight * 0.05,
-		Math.hypot(canvasWidth, canvasHeight) * 0.2
-	);
-	curlShadowB.addColorStop(0, `rgba(236, 242, 255, ${state.darkOpacity * 0.14})`);
-	curlShadowB.addColorStop(0.28, `rgba(160, 174, 208, ${state.darkOpacity * 0.12})`);
-	curlShadowB.addColorStop(0.62, `rgba(42, 48, 74, ${state.darkOpacity * 0.18})`);
-	curlShadowB.addColorStop(1, 'rgba(8, 12, 22, 0)');
-
-	const murkRibbon = darkCtx.createLinearGradient(canvasWidth * 0.08, canvasHeight * 0.48, canvasWidth * 0.88, canvasHeight * 0.9);
-	murkRibbon.addColorStop(0, 'rgba(4, 6, 14, 0)');
-	murkRibbon.addColorStop(0.2, `rgba(12, 16, 30, ${state.darkOpacity * 0.08})`);
-	murkRibbon.addColorStop(0.52, `rgba(20, 24, 38, ${state.darkOpacity * 0.18})`);
-	murkRibbon.addColorStop(0.8, `rgba(8, 10, 20, ${state.darkOpacity * 0.12})`);
-	murkRibbon.addColorStop(1, 'rgba(4, 6, 14, 0)');
-
-	const swirlBand = darkCtx.createLinearGradient(canvasWidth * 0.1, canvasHeight * 0.3, canvasWidth * 0.9, canvasHeight * 0.8);
-	swirlBand.addColorStop(0, `rgba(228, 236, 255, ${state.darkOpacity * 0.03})`);
-	swirlBand.addColorStop(0.35, `rgba(176, 194, 234, ${state.darkOpacity * 0.08})`);
-	swirlBand.addColorStop(0.7, `rgba(98, 112, 156, ${state.darkOpacity * 0.06})`);
-	swirlBand.addColorStop(1, 'rgba(20, 24, 36, 0)');
-
-	const rollingCloudA = darkCtx.createRadialGradient(
-		canvasWidth * 0.34 + driftX * 0.5,
-		canvasHeight * 0.54 + driftY * 0.4,
-		0,
-		canvasWidth * 0.34 + driftX * 0.5,
-		canvasHeight * 0.54 + driftY * 0.4,
-		Math.hypot(canvasWidth, canvasHeight) * 0.26
-	);
-	rollingCloudA.addColorStop(0, `rgba(242, 246, 255, ${state.darkOpacity * 0.16})`);
-	rollingCloudA.addColorStop(0.24, `rgba(180, 194, 226, ${state.darkOpacity * 0.14})`);
-	rollingCloudA.addColorStop(0.56, `rgba(66, 76, 106, ${state.darkOpacity * 0.18})`);
-	rollingCloudA.addColorStop(1, 'rgba(12, 16, 28, 0)');
-
-	const rollingCloudB = darkCtx.createRadialGradient(
-		canvasWidth * 0.68 - driftX * 0.35,
-		canvasHeight * 0.72 - driftY * 0.3,
-		0,
-		canvasWidth * 0.68 - driftX * 0.35,
-		canvasHeight * 0.72 - driftY * 0.3,
-		Math.hypot(canvasWidth, canvasHeight) * 0.24
-	);
-	rollingCloudB.addColorStop(0, `rgba(230, 236, 248, ${state.darkOpacity * 0.14})`);
-	rollingCloudB.addColorStop(0.3, `rgba(156, 170, 202, ${state.darkOpacity * 0.12})`);
-	rollingCloudB.addColorStop(0.64, `rgba(54, 64, 92, ${state.darkOpacity * 0.18})`);
-	rollingCloudB.addColorStop(1, 'rgba(8, 12, 22, 0)');
-
-	const shadowSpine = darkCtx.createLinearGradient(canvasWidth * 0.16, canvasHeight * 0.22, canvasWidth * 0.84, canvasHeight * 0.9);
-	shadowSpine.addColorStop(0, 'rgba(6, 8, 16, 0)');
-	shadowSpine.addColorStop(0.28, `rgba(10, 12, 22, ${state.darkOpacity * 0.12})`);
-	shadowSpine.addColorStop(0.58, `rgba(4, 6, 14, ${state.darkOpacity * 0.22})`);
-	shadowSpine.addColorStop(1, 'rgba(4, 6, 14, 0)');
-
-	darkCtx.fillStyle = baseFog;
-	darkCtx.fillRect(0, 0, canvasWidth, canvasHeight);
-	darkCtx.fillStyle = mistLayer;
-	darkCtx.fillRect(0, 0, canvasWidth, canvasHeight);
-	darkCtx.fillStyle = sideFog;
-	darkCtx.fillRect(0, 0, canvasWidth, canvasHeight);
-	darkCtx.fillStyle = hazeBand;
-	darkCtx.fillRect(0, 0, canvasWidth, canvasHeight);
-
-	if (!isLowQuality) {
-		darkCtx.fillStyle = mistLayerSoft;
-		darkCtx.fillRect(0, 0, canvasWidth, canvasHeight);
-		darkCtx.fillStyle = cloudBankLeft;
-		darkCtx.fillRect(0, 0, canvasWidth, canvasHeight);
-		darkCtx.fillStyle = cloudBankRight;
-		darkCtx.fillRect(0, 0, canvasWidth, canvasHeight);
-		darkCtx.fillStyle = lowMistBand;
-		darkCtx.fillRect(0, 0, canvasWidth, canvasHeight);
-		darkCtx.fillStyle = rollingCloudA;
-		darkCtx.fillRect(0, 0, canvasWidth, canvasHeight);
-	}
-
-	if (!isLowQuality && !isMediumQuality) {
-		darkCtx.fillStyle = stormCeiling;
-		darkCtx.fillRect(0, 0, canvasWidth, canvasHeight);
-		darkCtx.fillStyle = rollingCloudB;
-		darkCtx.fillRect(0, 0, canvasWidth, canvasHeight);
-		darkCtx.fillStyle = curlShadowA;
-		darkCtx.fillRect(0, 0, canvasWidth, canvasHeight);
-		darkCtx.fillStyle = curlShadowB;
-		darkCtx.fillRect(0, 0, canvasWidth, canvasHeight);
-		darkCtx.save();
-		darkCtx.globalCompositeOperation = 'multiply';
-		darkCtx.fillStyle = shadowSpine;
-		darkCtx.fillRect(0, 0, canvasWidth, canvasHeight);
-		darkCtx.fillStyle = murkRibbon;
-		darkCtx.fillRect(0, 0, canvasWidth, canvasHeight);
-		darkCtx.restore();
-		darkCtx.save();
-		darkCtx.globalCompositeOperation = 'screen';
-		darkCtx.fillStyle = swirlBand;
-		darkCtx.fillRect(0, 0, canvasWidth, canvasHeight);
-		darkCtx.restore();
-	}
+	darkCtx.drawImage(fogBackdropCanvas, 0, 0);
 
 	// "Đục lỗ" tại vùng hào quang đã xóa (nếu đang clearing)
 	if (state.darkClearRadius > 5) {
@@ -369,10 +174,10 @@ export function drawDarkVeil(ctx, canvasWidth, canvasHeight, now = performance.n
 			state.darkClearCenterX, state.darkClearCenterY, 0,
 			state.darkClearCenterX, state.darkClearCenterY, state.darkClearRadius
 		);
-		clearGrad.addColorStop(0, 'rgba(0, 0, 0, 1)');       // Trung tâm: xóa hoàn toàn
-		clearGrad.addColorStop(0.65, 'rgba(0, 0, 0, 0.9)');     // Vẫn xóa mạnh
-		clearGrad.addColorStop(0.85, 'rgba(0, 0, 0, 0.4)');     // Rìa xóa mờ dần
-		clearGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');        // Rìa ngoài: không xóa
+		clearGrad.addColorStop(0, 'rgba(0, 0, 0, 1)');
+		clearGrad.addColorStop(0.65, 'rgba(0, 0, 0, 0.9)');
+		clearGrad.addColorStop(0.85, 'rgba(0, 0, 0, 0.4)');
+		clearGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
 
 		darkCtx.fillStyle = clearGrad;
 		darkCtx.beginPath();
@@ -388,7 +193,6 @@ export function drawDarkVeil(ctx, canvasWidth, canvasHeight, now = performance.n
 		state.lanterns.forEach(lantern => {
 			if (lantern.phase === 'DONE' || lantern.alpha <= 0.05) return;
 
-			// Bán kính sáng đục sương phụ thuộc vào độ sáng thực tại và loại hoa đăng
 			const typeConfig = LANTERN_TYPES[lantern.type] || LANTERN_TYPES['basic'];
 			const lanternRadiusQuality = isLowQuality ? 0.75 : isMediumQuality ? 0.88 : 1;
 			const radius = 120 * lantern.scale * lantern.alpha * typeConfig.fogClearRadius * lanternRadiusQuality;
@@ -411,11 +215,255 @@ export function drawDarkVeil(ctx, canvasWidth, canvasHeight, now = performance.n
 		darkCtx.restore();
 	}
 
-	// Vẽ offscreen canvas lên main canvas
 	ctx.save();
 	ctx.globalCompositeOperation = 'source-over';
 	ctx.drawImage(darkCanvas, 0, 0);
 	ctx.restore();
+}
+
+function _shouldRefreshFogBackdrop(canvasWidth, canvasHeight, fogQuality, now) {
+	const opacityBucket = Math.round(state.darkOpacity * 24);
+	const refreshInterval = FOG_REFRESH_INTERVAL_MS[fogQuality] || FOG_REFRESH_INTERVAL_MS.high;
+	return (
+		fogBackdropCache.width !== canvasWidth
+		|| fogBackdropCache.height !== canvasHeight
+		|| fogBackdropCache.quality !== fogQuality
+		|| fogBackdropCache.opacityBucket !== opacityBucket
+		|| (now - fogBackdropCache.lastRenderAt) >= refreshInterval
+	);
+}
+
+function _renderFogBackdrop(canvasWidth, canvasHeight, now, fogQuality) {
+	const isLowQuality = fogQuality === 'low';
+	const isMediumQuality = fogQuality === 'medium';
+	const time = now * 0.00018;
+	const driftX = Math.sin(time * 1.4) * canvasWidth * 0.06;
+	const driftY = Math.cos(time * 1.15) * canvasHeight * 0.05;
+	const mistDriftX = Math.cos(time * 2.2) * canvasWidth * 0.08;
+	const mistDriftY = Math.sin(time * 1.9) * canvasHeight * 0.06;
+
+	fogBackdropCtx.clearRect(0, 0, canvasWidth, canvasHeight);
+
+	const baseFog = fogBackdropCtx.createRadialGradient(
+		canvasWidth * 0.5 + driftX,
+		canvasHeight * 0.48 + driftY,
+		canvasHeight * 0.08,
+		canvasWidth * 0.5 + driftX,
+		canvasHeight * 0.48 + driftY,
+		Math.hypot(canvasWidth, canvasHeight) * 0.64
+	);
+	baseFog.addColorStop(0, `rgba(14, 18, 30, ${state.darkOpacity * 0.16})`);
+	baseFog.addColorStop(0.38, `rgba(8, 12, 24, ${state.darkOpacity * 0.46})`);
+	baseFog.addColorStop(1, `rgba(4, 6, 18, ${state.darkOpacity * 0.92})`);
+
+	const mistLayer = fogBackdropCtx.createRadialGradient(
+		canvasWidth * 0.62 + mistDriftX,
+		canvasHeight * 0.62 - mistDriftY,
+		canvasHeight * 0.04,
+		canvasWidth * 0.62 + mistDriftX,
+		canvasHeight * 0.62 - mistDriftY,
+		Math.hypot(canvasWidth, canvasHeight) * 0.34
+	);
+	mistLayer.addColorStop(0, `rgba(216, 226, 255, ${state.darkOpacity * 0.16})`);
+	mistLayer.addColorStop(0.28, `rgba(198, 212, 242, ${state.darkOpacity * 0.16})`);
+	mistLayer.addColorStop(0.62, `rgba(112, 128, 170, ${state.darkOpacity * 0.14})`);
+	mistLayer.addColorStop(1, 'rgba(28, 32, 48, 0)');
+
+	const mistLayerSoft = fogBackdropCtx.createRadialGradient(
+		canvasWidth * 0.28 - mistDriftX * 0.7,
+		canvasHeight * 0.76 + mistDriftY * 0.45,
+		0,
+		canvasWidth * 0.28 - mistDriftX * 0.7,
+		canvasHeight * 0.76 + mistDriftY * 0.45,
+		Math.hypot(canvasWidth, canvasHeight) * 0.28
+	);
+	mistLayerSoft.addColorStop(0, `rgba(244, 248, 255, ${state.darkOpacity * 0.14})`);
+	mistLayerSoft.addColorStop(0.34, `rgba(224, 232, 250, ${state.darkOpacity * 0.12})`);
+	mistLayerSoft.addColorStop(0.6, `rgba(170, 184, 214, ${state.darkOpacity * 0.12})`);
+	mistLayerSoft.addColorStop(1, 'rgba(30, 34, 50, 0)');
+
+	const cloudBankLeft = fogBackdropCtx.createRadialGradient(
+		canvasWidth * 0.12 + driftX * 0.3,
+		canvasHeight * 0.62 + driftY * 0.45,
+		0,
+		canvasWidth * 0.12 + driftX * 0.3,
+		canvasHeight * 0.62 + driftY * 0.45,
+		Math.hypot(canvasWidth, canvasHeight) * 0.22
+	);
+	cloudBankLeft.addColorStop(0, `rgba(245, 248, 255, ${state.darkOpacity * 0.22})`);
+	cloudBankLeft.addColorStop(0.24, `rgba(214, 224, 246, ${state.darkOpacity * 0.18})`);
+	cloudBankLeft.addColorStop(0.68, `rgba(92, 108, 148, ${state.darkOpacity * 0.14})`);
+	cloudBankLeft.addColorStop(1, 'rgba(20, 24, 36, 0)');
+
+	const cloudBankRight = fogBackdropCtx.createRadialGradient(
+		canvasWidth * 0.82 - driftX * 0.42,
+		canvasHeight * 0.34 - driftY * 0.3,
+		0,
+		canvasWidth * 0.82 - driftX * 0.42,
+		canvasHeight * 0.34 - driftY * 0.3,
+		Math.hypot(canvasWidth, canvasHeight) * 0.2
+	);
+	cloudBankRight.addColorStop(0, `rgba(236, 242, 255, ${state.darkOpacity * 0.18})`);
+	cloudBankRight.addColorStop(0.32, `rgba(196, 208, 234, ${state.darkOpacity * 0.14})`);
+	cloudBankRight.addColorStop(0.72, `rgba(84, 96, 132, ${state.darkOpacity * 0.12})`);
+	cloudBankRight.addColorStop(1, 'rgba(16, 20, 34, 0)');
+
+	const sideFog = fogBackdropCtx.createRadialGradient(
+		canvasWidth * 0.18 - driftX * 0.6,
+		canvasHeight * 0.28 + driftY * 0.4,
+		0,
+		canvasWidth * 0.18 - driftX * 0.6,
+		canvasHeight * 0.28 + driftY * 0.4,
+		Math.hypot(canvasWidth, canvasHeight) * 0.45
+	);
+	sideFog.addColorStop(0, `rgba(18, 18, 30, ${state.darkOpacity * 0.08})`);
+	sideFog.addColorStop(0.5, `rgba(8, 8, 24, ${state.darkOpacity * 0.30})`);
+	sideFog.addColorStop(1, 'rgba(4, 4, 18, 0)');
+
+	const hazeBand = fogBackdropCtx.createLinearGradient(0, 0, 0, canvasHeight);
+	hazeBand.addColorStop(0, `rgba(18, 18, 30, ${state.darkOpacity * 0.12})`);
+	hazeBand.addColorStop(0.35, `rgba(8, 8, 22, ${state.darkOpacity * 0.02})`);
+	hazeBand.addColorStop(0.65, `rgba(8, 8, 24, ${state.darkOpacity * 0.10})`);
+	hazeBand.addColorStop(1, `rgba(20, 20, 34, ${state.darkOpacity * 0.22})`);
+
+	const lowMistBand = fogBackdropCtx.createLinearGradient(0, canvasHeight * 0.42, 0, canvasHeight);
+	lowMistBand.addColorStop(0, `rgba(120, 136, 178, ${state.darkOpacity * 0.02})`);
+	lowMistBand.addColorStop(0.45, `rgba(206, 220, 246, ${state.darkOpacity * 0.12})`);
+	lowMistBand.addColorStop(1, `rgba(92, 104, 142, ${state.darkOpacity * 0.2})`);
+
+	const stormCeiling = fogBackdropCtx.createRadialGradient(
+		canvasWidth * 0.5,
+		canvasHeight * 0.02,
+		0,
+		canvasWidth * 0.5,
+		canvasHeight * 0.02,
+		Math.hypot(canvasWidth, canvasHeight) * 0.52
+	);
+	stormCeiling.addColorStop(0, `rgba(6, 8, 16, ${state.darkOpacity * 0.30})`);
+	stormCeiling.addColorStop(0.45, `rgba(8, 10, 20, ${state.darkOpacity * 0.22})`);
+	stormCeiling.addColorStop(1, 'rgba(4, 6, 14, 0)');
+
+	const curlShadowA = fogBackdropCtx.createRadialGradient(
+		canvasWidth * 0.42 + Math.sin(time * 2.4) * canvasWidth * 0.05,
+		canvasHeight * 0.44 + Math.cos(time * 1.9) * canvasHeight * 0.04,
+		0,
+		canvasWidth * 0.42 + Math.sin(time * 2.4) * canvasWidth * 0.05,
+		canvasHeight * 0.44 + Math.cos(time * 1.9) * canvasHeight * 0.04,
+		Math.hypot(canvasWidth, canvasHeight) * 0.22
+	);
+	curlShadowA.addColorStop(0, `rgba(232, 238, 252, ${state.darkOpacity * 0.16})`);
+	curlShadowA.addColorStop(0.34, `rgba(148, 160, 194, ${state.darkOpacity * 0.12})`);
+	curlShadowA.addColorStop(0.68, `rgba(38, 44, 68, ${state.darkOpacity * 0.18})`);
+	curlShadowA.addColorStop(1, 'rgba(10, 12, 24, 0)');
+
+	const curlShadowB = fogBackdropCtx.createRadialGradient(
+		canvasWidth * 0.74 + Math.cos(time * 2.1) * canvasWidth * 0.04,
+		canvasHeight * 0.58 + Math.sin(time * 2.5) * canvasHeight * 0.05,
+		0,
+		canvasWidth * 0.74 + Math.cos(time * 2.1) * canvasWidth * 0.04,
+		canvasHeight * 0.58 + Math.sin(time * 2.5) * canvasHeight * 0.05,
+		Math.hypot(canvasWidth, canvasHeight) * 0.2
+	);
+	curlShadowB.addColorStop(0, `rgba(236, 242, 255, ${state.darkOpacity * 0.14})`);
+	curlShadowB.addColorStop(0.28, `rgba(160, 174, 208, ${state.darkOpacity * 0.12})`);
+	curlShadowB.addColorStop(0.62, `rgba(42, 48, 74, ${state.darkOpacity * 0.18})`);
+	curlShadowB.addColorStop(1, 'rgba(8, 12, 22, 0)');
+
+	const murkRibbon = fogBackdropCtx.createLinearGradient(canvasWidth * 0.08, canvasHeight * 0.48, canvasWidth * 0.88, canvasHeight * 0.9);
+	murkRibbon.addColorStop(0, 'rgba(4, 6, 14, 0)');
+	murkRibbon.addColorStop(0.2, `rgba(12, 16, 30, ${state.darkOpacity * 0.08})`);
+	murkRibbon.addColorStop(0.52, `rgba(20, 24, 38, ${state.darkOpacity * 0.18})`);
+	murkRibbon.addColorStop(0.8, `rgba(8, 10, 20, ${state.darkOpacity * 0.12})`);
+	murkRibbon.addColorStop(1, 'rgba(4, 6, 14, 0)');
+
+	const swirlBand = fogBackdropCtx.createLinearGradient(canvasWidth * 0.1, canvasHeight * 0.3, canvasWidth * 0.9, canvasHeight * 0.8);
+	swirlBand.addColorStop(0, `rgba(228, 236, 255, ${state.darkOpacity * 0.03})`);
+	swirlBand.addColorStop(0.35, `rgba(176, 194, 234, ${state.darkOpacity * 0.08})`);
+	swirlBand.addColorStop(0.7, `rgba(98, 112, 156, ${state.darkOpacity * 0.06})`);
+	swirlBand.addColorStop(1, 'rgba(20, 24, 36, 0)');
+
+	const rollingCloudA = fogBackdropCtx.createRadialGradient(
+		canvasWidth * 0.34 + driftX * 0.5,
+		canvasHeight * 0.54 + driftY * 0.4,
+		0,
+		canvasWidth * 0.34 + driftX * 0.5,
+		canvasHeight * 0.54 + driftY * 0.4,
+		Math.hypot(canvasWidth, canvasHeight) * 0.26
+	);
+	rollingCloudA.addColorStop(0, `rgba(242, 246, 255, ${state.darkOpacity * 0.16})`);
+	rollingCloudA.addColorStop(0.24, `rgba(180, 194, 226, ${state.darkOpacity * 0.14})`);
+	rollingCloudA.addColorStop(0.56, `rgba(66, 76, 106, ${state.darkOpacity * 0.18})`);
+	rollingCloudA.addColorStop(1, 'rgba(12, 16, 28, 0)');
+
+	const rollingCloudB = fogBackdropCtx.createRadialGradient(
+		canvasWidth * 0.68 - driftX * 0.35,
+		canvasHeight * 0.72 - driftY * 0.3,
+		0,
+		canvasWidth * 0.68 - driftX * 0.35,
+		canvasHeight * 0.72 - driftY * 0.3,
+		Math.hypot(canvasWidth, canvasHeight) * 0.24
+	);
+	rollingCloudB.addColorStop(0, `rgba(230, 236, 248, ${state.darkOpacity * 0.14})`);
+	rollingCloudB.addColorStop(0.3, `rgba(156, 170, 202, ${state.darkOpacity * 0.12})`);
+	rollingCloudB.addColorStop(0.64, `rgba(54, 64, 92, ${state.darkOpacity * 0.18})`);
+	rollingCloudB.addColorStop(1, 'rgba(8, 12, 22, 0)');
+
+	const shadowSpine = fogBackdropCtx.createLinearGradient(canvasWidth * 0.16, canvasHeight * 0.22, canvasWidth * 0.84, canvasHeight * 0.9);
+	shadowSpine.addColorStop(0, 'rgba(6, 8, 16, 0)');
+	shadowSpine.addColorStop(0.28, `rgba(10, 12, 22, ${state.darkOpacity * 0.12})`);
+	shadowSpine.addColorStop(0.58, `rgba(4, 6, 14, ${state.darkOpacity * 0.22})`);
+	shadowSpine.addColorStop(1, 'rgba(4, 6, 14, 0)');
+
+	fogBackdropCtx.fillStyle = baseFog;
+	fogBackdropCtx.fillRect(0, 0, canvasWidth, canvasHeight);
+	fogBackdropCtx.fillStyle = mistLayer;
+	fogBackdropCtx.fillRect(0, 0, canvasWidth, canvasHeight);
+	fogBackdropCtx.fillStyle = sideFog;
+	fogBackdropCtx.fillRect(0, 0, canvasWidth, canvasHeight);
+	fogBackdropCtx.fillStyle = hazeBand;
+	fogBackdropCtx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+	if (!isLowQuality) {
+		fogBackdropCtx.fillStyle = mistLayerSoft;
+		fogBackdropCtx.fillRect(0, 0, canvasWidth, canvasHeight);
+		fogBackdropCtx.fillStyle = cloudBankLeft;
+		fogBackdropCtx.fillRect(0, 0, canvasWidth, canvasHeight);
+		fogBackdropCtx.fillStyle = cloudBankRight;
+		fogBackdropCtx.fillRect(0, 0, canvasWidth, canvasHeight);
+		fogBackdropCtx.fillStyle = lowMistBand;
+		fogBackdropCtx.fillRect(0, 0, canvasWidth, canvasHeight);
+		fogBackdropCtx.fillStyle = rollingCloudA;
+		fogBackdropCtx.fillRect(0, 0, canvasWidth, canvasHeight);
+	}
+
+	if (!isLowQuality && !isMediumQuality) {
+		fogBackdropCtx.fillStyle = stormCeiling;
+		fogBackdropCtx.fillRect(0, 0, canvasWidth, canvasHeight);
+		fogBackdropCtx.fillStyle = rollingCloudB;
+		fogBackdropCtx.fillRect(0, 0, canvasWidth, canvasHeight);
+		fogBackdropCtx.fillStyle = curlShadowA;
+		fogBackdropCtx.fillRect(0, 0, canvasWidth, canvasHeight);
+		fogBackdropCtx.fillStyle = curlShadowB;
+		fogBackdropCtx.fillRect(0, 0, canvasWidth, canvasHeight);
+		fogBackdropCtx.save();
+		fogBackdropCtx.globalCompositeOperation = 'multiply';
+		fogBackdropCtx.fillStyle = shadowSpine;
+		fogBackdropCtx.fillRect(0, 0, canvasWidth, canvasHeight);
+		fogBackdropCtx.fillStyle = murkRibbon;
+		fogBackdropCtx.fillRect(0, 0, canvasWidth, canvasHeight);
+		fogBackdropCtx.restore();
+		fogBackdropCtx.save();
+		fogBackdropCtx.globalCompositeOperation = 'screen';
+		fogBackdropCtx.fillStyle = swirlBand;
+		fogBackdropCtx.fillRect(0, 0, canvasWidth, canvasHeight);
+		fogBackdropCtx.restore();
+	}
+
+	fogBackdropCache.width = canvasWidth;
+	fogBackdropCache.height = canvasHeight;
+	fogBackdropCache.quality = fogQuality;
+	fogBackdropCache.opacityBucket = Math.round(state.darkOpacity * 24);
+	fogBackdropCache.lastRenderAt = now;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

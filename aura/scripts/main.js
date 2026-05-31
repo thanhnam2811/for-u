@@ -32,6 +32,13 @@ let statFps = null;
 
 const debugEnabled = new URLSearchParams(window.location.search).get('debug') === '1';
 
+function getLanternUpdateCadenceMs() {
+	const quality = state.engine.performance.effectQuality || 'high';
+	if (quality === 'low') return 66;
+	if (quality === 'medium') return 48;
+	return 33;
+}
+
 function initDomRefs() {
 	if (!video) video = document.getElementById('webcam');
 	if (!canvas) canvas = document.getElementById('canvas-overlay');
@@ -156,7 +163,9 @@ function updateFrame(frame) {
 		if (state.prayerAuras[i].done) state.prayerAuras.splice(i, 1);
 	}
 
-	updateLanterns(frame);
+	if (shouldRunTask(frame, state.engine.tasks.lanternUpdate, getLanternUpdateCadenceMs(), state.lanterns.length > 0)) {
+		updateLanterns(frame);
+	}
 
 	updateDarkVeil(now);
 }
