@@ -102,11 +102,11 @@ export class PrayerAuraAnimation {
 		layerCtx.fillRect(0, 0, this.canvasWidth, this.canvasHeight);
 
 		const screenGlow = layerCtx.createRadialGradient(
-			this.canvasWidth * 0.5,
-			this.canvasHeight * 0.5,
+			this.centerX,
+			this.centerY,
 			Math.min(this.canvasWidth, this.canvasHeight) * 0.08,
-			this.canvasWidth * 0.5,
-			this.canvasHeight * 0.5,
+			this.centerX,
+			this.centerY,
 			Math.hypot(this.canvasWidth, this.canvasHeight) * 0.68
 		);
 		screenGlow.addColorStop(0, `rgba(255, 255, 255, ${flashAlpha * 0.92})`);
