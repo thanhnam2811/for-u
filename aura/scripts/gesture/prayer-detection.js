@@ -9,11 +9,14 @@ const DISTANCE_EMA_ALPHA = 0.4;
 const OVERLAP_THRESHOLD = 0.24;
 const CONVERGENCE_WINDOW = 6;
 const CONVERGENCE_DROP = 0.045;
+const RENDER_GRACE_MS = 220;
 
 let statHands = null;
 let statDist = null;
 let gestureInstruction = null;
 let recentDistances = [];
+let lastRenderableResults = null;
+let lastRenderableAt = 0;
 
 function initDomRefs() {
 	if (!statHands) statHands = document.getElementById('hands-stat');
@@ -174,10 +177,29 @@ function resetGestureTracking() {
 	recentDistances = [];
 }
 
+function cacheRenderableResults(handResults, now) {
+	lastRenderableResults = handResults;
+	lastRenderableAt = now;
+}
+
+function getRenderableResults(handResults, now) {
+	if (handResults?.landmarks?.length >= 2) {
+		cacheRenderableResults(handResults, now);
+		return handResults;
+	}
+
+	if (state.gestureActive && lastRenderableResults && (now - lastRenderableAt) <= RENDER_GRACE_MS) {
+		return lastRenderableResults;
+	}
+
+	return handResults;
+}
+
 export function analyzeHands(handResults, canvasWidth, canvasHeight) {
 	initDomRefs();
 	const detectedCount = handResults.landmarks ? handResults.landmarks.length : 0;
 	const now = performance.now();
+	const renderableResults = getRenderableResults(handResults, now);
 	if (statHands) statHands.innerText = `${detectedCount}/2`;
 
 	if (detectedCount >= 2) {
@@ -236,7 +258,13 @@ export function analyzeHands(handResults, canvasWidth, canvasHeight) {
 		if (!state.gestureActive && state.prayerCandidateFrames === 0 && smoothedDistance > (state.sensitivityThreshold + 0.25)) {
 			deactivateGesture();
 		}
-		return;
+		return renderableResults;
+	}
+
+	if (state.gestureActive && lastRenderableResults && (now - lastRenderableAt) <= RENDER_GRACE_MS) {
+		state.lastHandsDetected = detectedCount;
+		if (statDist) statDist.innerText = state.smoothedDistanceNormalized < 999 ? state.smoothedDistanceNormalized.toFixed(2) : '--';
+		return renderableResults;
 	}
 
 	state.gestureMissFrames++;
@@ -246,6 +274,7 @@ export function analyzeHands(handResults, canvasWidth, canvasHeight) {
 	if (state.gestureMissFrames >= RELEASE_MISS_FRAMES) {
 		deactivateGesture();
 	}
+	return renderableResults;
 }
 
 function activateGesture(midX, midY, canvasWidth, canvasHeight, now) {
@@ -272,6 +301,8 @@ function activateGesture(midX, midY, canvasWidth, canvasHeight, now) {
 function deactivateGesture() {
 	if (!state.gestureActive) return;
 	state.gestureActive = false;
+	resetGestureTracking();
+	state.gestureMissFrames = 0;
 	releaseAuraEffects();
 	if (gestureInstruction) gestureInstruction.classList.remove('hidden');
 }

@@ -153,8 +153,7 @@ function renderLoop() {
 				if (state.handLandmarker) {
 					try {
 						const results = state.handLandmarker.detectForVideo(video, timestamp);
-						analyzeHands(results, canvas.width, canvas.height);
-						state.handResults = results;
+						state.handResults = analyzeHands(results, canvas.width, canvas.height) || results;
 					} catch (err) {
 						console.error("[AuraApp] Lỗi nhận diện tay:", err);
 					}

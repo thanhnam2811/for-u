@@ -19,7 +19,7 @@ export const state = {
 	volume: localStorage.getItem('volume') !== null ? parseFloat(localStorage.getItem('volume')) : 0.7,
 	sensitivitySliderVal: localStorage.getItem('sensitivity_slider_val') !== null
 		? parseInt(localStorage.getItem('sensitivity_slider_val'), 10) : 28,
-	sensitivityThreshold: 0.55,
+	sensitivityThreshold: 0.7,
 	showSkeleton: localStorage.getItem('show_skeleton') !== null
 		? localStorage.getItem('show_skeleton') === 'true' : true,
 	mirrorCamera: localStorage.getItem('mirror_camera') !== null
@@ -52,7 +52,7 @@ export const state = {
 	prayerCandidateFrames: 0,
 	gestureMissFrames: 0,
 	lastGestureRewardTime: 0,    // Timestamp lần gần nhất được cộng phước / phát feedback chính
-	gestureRewardCooldownMs: 2500, // Cooldown cho sound/counter để tránh spam phản hồi
+	gestureRewardCooldownMs: 700, // Cooldown ngắn để vòng chắp tay kế vẫn có chuông nhưng không spam khi detector rung
 
 	// ─────────────────────────────────────────────
 	// Chỉ số đo hiệu năng (FPS)
@@ -105,12 +105,15 @@ export const state = {
 };
 
 // Hằng số Dark Veil
-export const MAX_DARK_OPACITY = 0.55;      // Không bao giờ vượt mức sương này
-export const DARK_HOLD_MS = 5000;          // Giữ mức tối đa 5s rồi tự giảm nhẹ
-export const DARK_AUTO_CLEAR_OPACITY = 0.3; // Mức tự giảm về sau hold
+export const MAX_DARK_OPACITY = 0.62; // Không bao giờ vượt mức sương này
+export const DARK_HOLD_MS = 5000;     // Giữ mức tối đa trước khi duy trì sương dày chờ user clear
+
+export function getSensitivityThresholdForSlider(sliderVal) {
+	return 0.42 + (sliderVal / 100);
+}
 
 // Cập nhật ngưỡng độ nhạy ban đầu từ slider val
-state.sensitivityThreshold = 0.25 + (state.sensitivitySliderVal / 100);
+state.sensitivityThreshold = getSensitivityThresholdForSlider(state.sensitivitySliderVal);
 
 // Hàm cập nhật và lưu phước đức vào localStorage
 export function incrementPhuoc() {

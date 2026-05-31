@@ -47,13 +47,17 @@ export class PrayerAuraAnimation {
 			Math.max(centerX, canvasWidth - centerX),
 			Math.max(centerY, canvasHeight - centerY)
 		);
-		this.clearSpeed = Math.max(30, Math.min(canvasWidth, canvasHeight) * 0.045);
+		this.baseClearSpeed = Math.max(18, Math.min(canvasWidth, canvasHeight) * 0.023);
+		this.velocity = this.baseClearSpeed * 0.72;
 		this.done = false;
 	}
 
 	update() {
 		this.life += 1;
-		this.clearRadius += this.clearSpeed;
+		const progress = clamp01(this.clearRadius / (this.maxRadius || 1));
+		const targetSpeed = lerp(this.baseClearSpeed * 1.06, this.baseClearSpeed * 0.62, smoothstep(0, 1, progress));
+		this.velocity = lerp(this.velocity, targetSpeed, 0.14);
+		this.clearRadius += this.velocity;
 		state.auraWaveCenterX = this.centerX;
 		state.auraWaveCenterY = this.centerY;
 		state.auraWaveRadius = this.clearRadius;

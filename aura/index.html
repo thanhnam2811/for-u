@@ -49,8 +49,17 @@
 
                         <!-- Dark Veil warning indicator -->
                         <div id="veil-warning" class="veil-warning" role="status" aria-live="polite">
-                            <span class="material-icons-round">cloud</span>
-                            <span class="veil-warning-text">Sương khói đang lan...</span>
+                            <div class="veil-warning-header">
+                                <div class="veil-warning-leading">
+                                    <div class="veil-warning-icon">
+                                        <span class="material-icons-round">cloud</span>
+                                    </div>
+                                    <span id="veil-warning-label" class="veil-warning-text">Sương đang lên</span>
+                                </div>
+                                <button id="btn-veil-help" class="veil-warning-help" type="button" aria-label="Xem chi tiết về sương mù">
+                                    <span class="material-icons-round">help_outline</span>
+                                </button>
+                            </div>
                             <div class="veil-progress-track">
                                 <div id="veil-progress-bar" class="veil-progress-bar"></div>
                             </div>
@@ -259,7 +268,7 @@
             <div id="help-popup" class="help-popup">
                 <div class="help-popup-header">
                     <h3><span class="material-icons-round">lightbulb</span> Hướng dẫn</h3>
-                    <button id="btnCloseHelp" class="btn-close-help">
+                    <button id="btn-close-help" class="btn-close-help">
                         <span class="material-icons-round">close</span>
                     </button>
                 </div>
@@ -270,6 +279,15 @@
                             <h4>Chắp tay tích phước</h4>
                             <p>
                                 Đưa hai bàn tay lại gần nhau ở trước ngực để kích hoạt hào quang và tích thêm phước đức.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="help-item">
+                        <div class="help-item-icon"><span class="material-icons-round">cloud</span></div>
+                        <div class="help-item-text">
+                            <h4>Sương mù</h4>
+                            <p>
+                                Khi sương dày lên, khung hình sẽ bị mây mù phủ kín và sẽ không tự tan. Bạn cần chắp tay để hào quang mở một vùng sáng rồi xua sạch màn sương đó.
                             </p>
                         </div>
                     </div>

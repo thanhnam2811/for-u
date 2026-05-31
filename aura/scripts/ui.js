@@ -1,4 +1,4 @@
-import { state } from "./state.js";
+import { getSensitivityThresholdForSlider, state } from "./state.js";
 import { initAudio, playZenSound, playCameraShutter } from "./audio.js";
 import { setupWebcam } from "./camera.js";
 
@@ -21,6 +21,7 @@ let toastNotification = null;
 let video = null;
 let canvas = null;
 let btnHelp = null;
+let btnVeilHelp = null;
 let btnCloseHelp = null;
 let helpPopup = null;
 let helpBackdrop = null;
@@ -61,6 +62,7 @@ export function setupUI() {
 	video = document.getElementById('webcam');
 	canvas = document.getElementById('canvas-overlay');
 	btnHelp = document.getElementById('btn-help');
+	btnVeilHelp = document.getElementById('btn-veil-help');
 	btnCloseHelp = document.getElementById('btn-close-help');
 	helpPopup = document.getElementById('help-popup');
 	helpBackdrop = document.getElementById('help-backdrop');
@@ -159,6 +161,7 @@ export function setupUI() {
 	};
 
 	btnHelp?.addEventListener('click', openHelp);
+	btnVeilHelp?.addEventListener('click', openHelp);
 	btnCloseHelp?.addEventListener('click', closeHelp);
 	helpBackdrop?.addEventListener('click', closeHelp);
 
@@ -219,7 +222,7 @@ export function setupUI() {
 		sensitivitySlider.addEventListener('input', (e) => {
 			const val = parseInt(e.target.value, 10);
 			state.sensitivitySliderVal = val;
-			state.sensitivityThreshold = 0.25 + (val / 100); // Công thức mới: khó chắp hơn
+			state.sensitivityThreshold = getSensitivityThresholdForSlider(val);
 			localStorage.setItem('sensitivity_slider_val', val);
 
 			let label = "Bình thường";

@@ -26,7 +26,7 @@ export function triggerAuraEffects(midX, midY, canvasWidth, canvasHeight, option
 	if (typeof state._onGestureTriggered === 'function') {
 		state._onGestureTriggered(effectX, midY);
 	}
-	rewardPhuoc();
+	rewardPhuoc(effectX, midY);
 	return aura;
 }
 
