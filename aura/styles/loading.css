@@ -257,6 +257,10 @@
     box-shadow: 0 12px 30px rgba(var(--theme-color-rgb), 0.18);
 }
 
+.loading-start-btn[hidden] {
+    display: none;
+}
+
 .loading-start-btn .material-icons-round {
     font-size: 1.15rem;
 }

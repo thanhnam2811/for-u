@@ -228,14 +228,21 @@
 
 /* Phuoc badge pop animation khi tăng số */
 @keyframes phuoc-pop {
-  0%   { transform: scale(1); }
-  35%  { transform: scale(1.35); box-shadow: 0 0 25px rgba(var(--theme-color-rgb), 0.7); }
-  60%  { transform: scale(0.95); }
-  100% { transform: scale(1); }
+  0%   { transform: translateY(0) scale(1); }
+  35%  { transform: translateY(-2px) scale(1.18); box-shadow: 0 0 30px rgba(var(--theme-color-rgb), 0.55); }
+  62%  { transform: translateY(0) scale(0.97); }
+  100% { transform: translateY(0) scale(1); }
 }
 
 .phuoc-badge.popping {
-  animation: phuoc-pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  animation: phuoc-pop 0.62s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.phuoc-badge.rewarding {
+  box-shadow:
+    0 0 0 1px rgba(var(--theme-color-rgb), 0.35),
+    0 18px 34px rgba(0, 0, 0, 0.28),
+    0 0 24px rgba(var(--theme-color-rgb), 0.24);
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -357,13 +364,14 @@
   align-items: center;
   gap: 8px;
   box-shadow: var(--theme-glow), 0 4px 15px rgba(0, 0, 0, 0.2);
-  transition: all 0.3s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
   pointer-events: none;
   animation: phuoc-glow-pulse 2s infinite alternate ease-in-out;
+  overflow: visible;
 }
 
 .phuoc-badge span.material-icons-round {
-  color: #ff4d7a; /* Trái tim màu hồng đỏ rực rỡ */
+  color: color-mix(in srgb, var(--theme-color) 72%, #fff 28%);
   font-size: 1.2rem;
   animation: heart-beat 1s infinite alternate ease-in-out;
 }
@@ -387,27 +395,57 @@
 
 .phuoc-plus-one {
   position: absolute;
-  top: -15px;
-  right: 20px;
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: #ff4d7a;
+  top: -18px;
+  right: 18px;
+  font-size: 1.08rem;
+  font-weight: 800;
+  color: var(--phuoc-accent, var(--theme-color));
   pointer-events: none;
-  animation: phuoc-plus-float 0.8s ease-out forwards;
-  text-shadow: 0 0 8px rgba(255, 77, 122, 0.6);
+  animation: phuoc-plus-float 0.92s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  text-shadow: 0 0 12px var(--phuoc-shadow, rgba(var(--theme-color-rgb), 0.4));
 }
 
 @keyframes phuoc-plus-float {
   0% {
-    transform: translateY(10px) scale(0.7);
+    transform: translateY(12px) translateX(-2px) scale(0.7);
+    opacity: 0;
+  }
+  35% {
+    opacity: 1;
+    transform: translateY(-6px) translateX(0) scale(1.08);
+  }
+  100% {
+    transform: translateY(-32px) translateX(6px) scale(0.98);
+    opacity: 0;
+  }
+}
+
+.phuoc-spark {
+  position: absolute;
+  top: 12px;
+  right: var(--spark-x, 12px);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--spark-color, var(--theme-color));
+  box-shadow: 0 0 12px color-mix(in srgb, var(--spark-color, var(--theme-color)) 68%, #fff 32%);
+  opacity: 0;
+  pointer-events: none;
+  animation: phuoc-spark-burst 0.82s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation-delay: var(--spark-delay, 0ms);
+}
+
+@keyframes phuoc-spark-burst {
+  0% {
+    transform: translateY(0) scale(0.2);
     opacity: 0;
   }
   30% {
     opacity: 1;
-    transform: translateY(-5px) scale(1.2);
+    transform: translateY(-8px) scale(1);
   }
   100% {
-    transform: translateY(-25px) scale(1.0);
+    transform: translateY(-24px) scale(0.35);
     opacity: 0;
   }
 }

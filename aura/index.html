@@ -205,6 +205,7 @@
                         <div class="control-group">
                             <label><span class="material-icons-round">cloud</span> Chu kỳ Sương Khói</label>
                             <div class="settings-option-grid veil-options">
+                                <button class="settings-choice-btn" data-veil-interval="15000">15s</button>
                                 <button class="settings-choice-btn" data-veil-interval="30000">30s</button>
                                 <button class="settings-choice-btn" data-veil-interval="45000">45s</button>
                                 <button class="settings-choice-btn" data-veil-interval="60000">60s</button>
@@ -328,14 +329,14 @@
                     <div class="loading-status-panel">
                         <div class="loading-status-label">Trạng thái</div>
                         <p id="loading-status" class="loading-status-text">
-                            Nhấn nút bên dưới để cấp quyền camera và bắt đầu trải nghiệm.
+                            Đang chuẩn bị camera và nhận diện để tự động bắt đầu trải nghiệm.
                         </p>
                         <div class="loading-bar-container">
                             <div id="progress-bar" class="loading-bar"></div>
                         </div>
                     </div>
 
-                    <button id="btn-start-app" class="btn-primary loading-start-btn" type="button">
+                    <button id="btn-start-app" class="btn-primary loading-start-btn" type="button" hidden>
                         <span class="material-icons-round">play_arrow</span>
                         Bắt đầu trải nghiệm
                     </button>

@@ -14,6 +14,7 @@ let loadingScreen = null;
 let loadingStatus = null;
 let startButton = null;
 let appStartPromise = null;
+let autoStartAttempted = false;
 let debugErrorOverlay = null;
 let debugErrorMeta = null;
 let debugErrorContent = null;
@@ -244,7 +245,7 @@ async function startApp() {
 		const phuocDisplay = document.getElementById('phuoc-count-display');
 		if (phuocDisplay) phuocDisplay.innerText = state.phuocCount;
 		if (startButton) startButton.disabled = true;
-		if (loadingStatus) loadingStatus.innerText = "Đang mở camera...";
+		if (loadingStatus) loadingStatus.innerText = autoStartAttempted ? "Đang tự khởi động camera..." : "Đang mở camera...";
 
 		// 1. Xin quyền và khởi động webcam trước để Safari không bị kẹt ở bước tải model
 		const success = await setupWebcam(null, showToast);
@@ -270,9 +271,12 @@ async function startApp() {
 			console.log("[AuraApp] Khởi chạy renderLoop 60 FPS!");
 			renderLoop();
 		} else {
-			if (startButton) startButton.disabled = false;
+			if (startButton) {
+				startButton.hidden = false;
+				startButton.disabled = false;
+			}
 			if (loadingStatus) {
-				loadingStatus.innerText = "Không mở được camera. Hãy kiểm tra quyền truy cập rồi nhấn Bắt đầu trải nghiệm để thử lại.";
+				loadingStatus.innerText = "Không tự khởi động được camera. Hãy nhấn Bắt đầu trải nghiệm để thử lại.";
 			}
 			if (!state.lastCameraError) {
 				console.error("[AuraApp] Webcam setup thất bại nhưng không có thông tin lỗi camera chi tiết.");
@@ -292,10 +296,18 @@ async function startApp() {
 function setupStartButton() {
 	initDomRefs();
 	setupDebugErrorOverlay();
-	if (!startButton) return;
-	startButton.addEventListener('click', () => {
+	if (startButton) {
+		startButton.hidden = true;
+		startButton.addEventListener('click', () => {
+			autoStartAttempted = false;
+			void startApp();
+		});
+	}
+
+	if (!autoStartAttempted) {
+		autoStartAttempted = true;
 		void startApp();
-	});
+	}
 }
 
 // ES Modules defer-safe init

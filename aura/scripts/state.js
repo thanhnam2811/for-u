@@ -45,8 +45,12 @@ export const state = {
 	// ─────────────────────────────────────────────
 	gestureActive: false,
 	distanceNormalized: 999,
+	smoothedDistanceNormalized: 999,
 	lastHandsDetected: 0,
 	prevNormalizedDist: 999,     // Để tính signal convergence
+	stableTwoHandFrames: 0,
+	prayerCandidateFrames: 0,
+	gestureMissFrames: 0,
 	lastGestureRewardTime: 0,    // Timestamp lần gần nhất được cộng phước / phát feedback chính
 	gestureRewardCooldownMs: 2500, // Cooldown cho sound/counter để tránh spam phản hồi
 
@@ -85,6 +89,10 @@ export const state = {
 	darkClearCenterX: 0,
 	darkClearCenterY: 0,
 	darkClearActive: false,      // Đang trong quá trình clearing không
+	auraWaveCenterX: 0,
+	auraWaveCenterY: 0,
+	auraWaveRadius: 0,
+	auraWaveActive: false,
 
 	// ─────────────────────────────────────────────
 	// Web Audio Context

@@ -85,8 +85,14 @@ export function updateDarkVeil(now) {
     }
 
     case 'clearing': {
-      // User chắp tay → bán kính xóa lan rộng nhanh
-      state.darkClearRadius += 35; // px mỗi frame
+      // User chắp tay → ưu tiên đồng bộ bán kính clear với wave của aura nếu đang có.
+      if (state.auraWaveActive) {
+        state.darkClearCenterX = state.auraWaveCenterX;
+        state.darkClearCenterY = state.auraWaveCenterY;
+        state.darkClearRadius = Math.max(state.darkClearRadius, state.auraWaveRadius);
+      } else {
+        state.darkClearRadius += 35;
+      }
       const maxClearRadius = Math.hypot(
         Math.max(state.darkClearCenterX, darkCanvas?.width - state.darkClearCenterX || 9999),
         Math.max(state.darkClearCenterY, darkCanvas?.height - state.darkClearCenterY || 9999)
@@ -141,16 +147,45 @@ export function drawDarkVeil(ctx, canvasWidth, canvasHeight) {
   // Vẽ lớp sương tối lên offscreen canvas
   darkCtx.clearRect(0, 0, canvasWidth, canvasHeight);
 
-  // Lớp sương khói với gradient nhẹ (đậm ở rìa, nhẹ hơn ở giữa — tạo cảm giác huyền bí)
-  const fogGrad = darkCtx.createRadialGradient(
-    canvasWidth / 2, canvasHeight / 2, canvasHeight * 0.1,
-    canvasWidth / 2, canvasHeight / 2, Math.hypot(canvasWidth, canvasHeight) * 0.6
-  );
-  fogGrad.addColorStop(0, `rgba(5, 5, 20, ${state.darkOpacity * 0.5})`);    // Giữa nhẹ hơn
-  fogGrad.addColorStop(0.5, `rgba(5, 5, 20, ${state.darkOpacity * 0.85})`);
-  fogGrad.addColorStop(1, `rgba(5, 5, 20, ${state.darkOpacity})`);           // Rìa đậm nhất
+  const time = performance.now() * 0.00018;
+  const driftX = Math.sin(time * 1.4) * canvasWidth * 0.06;
+  const driftY = Math.cos(time * 1.15) * canvasHeight * 0.05;
 
-  darkCtx.fillStyle = fogGrad;
+  const baseFog = darkCtx.createRadialGradient(
+    canvasWidth * 0.5 + driftX,
+    canvasHeight * 0.48 + driftY,
+    canvasHeight * 0.08,
+    canvasWidth * 0.5 + driftX,
+    canvasHeight * 0.48 + driftY,
+    Math.hypot(canvasWidth, canvasHeight) * 0.64
+  );
+  baseFog.addColorStop(0, `rgba(10, 10, 24, ${state.darkOpacity * 0.24})`);
+  baseFog.addColorStop(0.42, `rgba(7, 7, 22, ${state.darkOpacity * 0.62})`);
+  baseFog.addColorStop(1, `rgba(4, 4, 18, ${state.darkOpacity * 0.96})`);
+
+  const sideFog = darkCtx.createRadialGradient(
+    canvasWidth * 0.18 - driftX * 0.6,
+    canvasHeight * 0.28 + driftY * 0.4,
+    0,
+    canvasWidth * 0.18 - driftX * 0.6,
+    canvasHeight * 0.28 + driftY * 0.4,
+    Math.hypot(canvasWidth, canvasHeight) * 0.45
+  );
+  sideFog.addColorStop(0, `rgba(18, 18, 30, ${state.darkOpacity * 0.08})`);
+  sideFog.addColorStop(0.5, `rgba(8, 8, 24, ${state.darkOpacity * 0.30})`);
+  sideFog.addColorStop(1, 'rgba(4, 4, 18, 0)');
+
+  const hazeBand = darkCtx.createLinearGradient(0, 0, 0, canvasHeight);
+  hazeBand.addColorStop(0, `rgba(18, 18, 30, ${state.darkOpacity * 0.12})`);
+  hazeBand.addColorStop(0.35, `rgba(8, 8, 22, ${state.darkOpacity * 0.02})`);
+  hazeBand.addColorStop(0.65, `rgba(8, 8, 24, ${state.darkOpacity * 0.10})`);
+  hazeBand.addColorStop(1, `rgba(20, 20, 34, ${state.darkOpacity * 0.22})`);
+
+  darkCtx.fillStyle = baseFog;
+  darkCtx.fillRect(0, 0, canvasWidth, canvasHeight);
+  darkCtx.fillStyle = sideFog;
+  darkCtx.fillRect(0, 0, canvasWidth, canvasHeight);
+  darkCtx.fillStyle = hazeBand;
   darkCtx.fillRect(0, 0, canvasWidth, canvasHeight);
 
   // "Đục lỗ" tại vùng hào quang đã xóa (nếu đang clearing)
