@@ -15,8 +15,8 @@
   width: 100%;
   max-width: 100%;
   aspect-ratio: var(--camera-aspect-ratio, 4/3);
-  max-height: calc(100vh - 260px);
-  max-height: calc(100dvh - 260px);
+  max-height: calc(100vh - 120px);
+  max-height: calc(100dvh - 120px);
   background: #0f0f18;
   border-radius: 24px;
   border: 1px solid var(--border-glass);
@@ -226,41 +226,93 @@
   line-height: 1.5;
 }
 
-.gesture-triggered-msg {
-  text-align: center;
+/* Phuoc badge pop animation khi tăng số */
+@keyframes phuoc-pop {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(1.35); box-shadow: 0 0 25px rgba(var(--theme-color-rgb), 0.7); }
+  60%  { transform: scale(0.95); }
+  100% { transform: scale(1); }
+}
+
+.phuoc-badge.popping {
+  animation: phuoc-pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * Dark Veil Warning UI
+ * ───────────────────────────────────────────────────────────────────────────── */
+.veil-warning {
+  position: absolute;
+  bottom: 25px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  z-index: 5;
+  background: rgba(10, 10, 15, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border-glass);
+  padding: 10px 20px;
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
   opacity: 0;
-  transform: scale(0.7);
-  transition: opacity 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  pointer-events: none;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-.gesture-triggered-msg.active {
+.veil-warning.visible {
   opacity: 1;
-  transform: scale(1);
+  transform: translateX(-50%) translateY(0);
 }
 
-.sparkle-text {
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: clamp(1.8rem, 7vw, 3rem);
-  color: #ffffff;
-  text-shadow: 0 0 10px #fff, 0 0 20px var(--theme-color), 0 0 40px var(--theme-color);
-  letter-spacing: 0;
-  animation: pulse-glow 1s infinite alternate;
+.veil-warning.urgent {
+  border-color: #ff3b3b;
+  box-shadow: 0 0 15px rgba(255, 59, 59, 0.4);
+  animation: veil-pulse 1s infinite alternate;
 }
 
-.gesture-triggered-msg p {
+.veil-warning .material-icons-round {
+  color: var(--theme-color);
+  font-size: 1.5rem;
+  transition: color 0.3s;
+}
+
+.veil-warning.urgent .material-icons-round {
+  color: #ff3b3b;
+}
+
+.veil-warning-text {
   font-family: var(--font-display);
-  font-weight: 600;
-  font-size: 1.2rem;
+  font-size: 0.85rem;
   color: var(--text-primary);
-  margin-top: 5px;
-  letter-spacing: 0;
+  font-weight: 600;
 }
 
-@keyframes pulse-glow {
-  0% { transform: scale(0.98); text-shadow: 0 0 10px #fff, 0 0 20px var(--theme-color), 0 0 40px var(--theme-color); }
-  100% { transform: scale(1.02); text-shadow: 0 0 15px #fff, 0 0 35px var(--theme-color), 0 0 60px var(--theme-color); }
+.veil-progress-track {
+  width: 120px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
 }
+
+.veil-progress-bar {
+  height: 100%;
+  width: 0%;
+  background: var(--theme-color);
+  transition: width 0.2s linear, background-color 0.3s;
+}
+
+.veil-warning.urgent .veil-progress-bar {
+  background: #ff3b3b;
+}
+
+@keyframes veil-pulse {
+  from { box-shadow: 0 0 10px rgba(255, 59, 59, 0.2); transform: translateX(-50%) scale(1); }
+  to { box-shadow: 0 0 25px rgba(255, 59, 59, 0.6); transform: translateX(-50%) scale(1.05); }
+}
+
 
 /* Thông số kỹ thuật nhỏ */
 .tech-stats {
@@ -333,20 +385,47 @@
   to { transform: scale(1.15); }
 }
 
+.phuoc-plus-one {
+  position: absolute;
+  top: -15px;
+  right: 20px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #ff4d7a;
+  pointer-events: none;
+  animation: phuoc-plus-float 0.8s ease-out forwards;
+  text-shadow: 0 0 8px rgba(255, 77, 122, 0.6);
+}
+
+@keyframes phuoc-plus-float {
+  0% {
+    transform: translateY(10px) scale(0.7);
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(-5px) scale(1.2);
+  }
+  100% {
+    transform: translateY(-25px) scale(1.0);
+    opacity: 0;
+  }
+}
+
 @media (max-width: 1024px) {
   .camera-section {
     flex: 0 0 auto;
   }
 
   .camera-wrapper {
-    max-height: calc(100dvh - 240px);
+    max-height: calc(100dvh - 120px);
   }
 }
 
 @media (max-width: 600px) {
   .camera-wrapper {
     border-radius: 16px;
-    max-height: calc(100dvh - 210px);
+    max-height: calc(100dvh - 120px);
   }
 
   .btn-help {
@@ -502,140 +581,5 @@
   }
 }
 
-/* Thanh cuộn ngang chọn Filter (Swiper.js Pro Edition) */
-.face-filter-carousel {
-  position: absolute;
-  bottom: 15px; 
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100%;
-  max-width: 480px;
-  height: 90px;
-  z-index: 10;
-  background: transparent !important;
-  pointer-events: auto;
-  opacity: 0.5;
-  transition: opacity 0.4s ease;
-}
-
-.face-filter-carousel.swiper-initialized {
-  opacity: 0.6;
-}
-
-.face-filter-carousel:hover,
-.face-filter-carousel.active-scroll {
-  opacity: 1;
-}
-
-/* Vùng tâm điểm */
-.carousel-center-highlight {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 66px;
-  height: 66px;
-  border: 2px solid var(--theme-color);
-  border-radius: 50%;
-  z-index: 4;
-  pointer-events: none;
-  box-shadow: 0 0 20px rgba(var(--theme-color-rgb), 0.4);
-}
-
-.swiper-wrapper {
-  align-items: center;
-}
-
-.filter-item {
-  width: 60px !important; /* Độ rộng cố định cho slide */
-  height: 60px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: opacity 0.3s ease;
-}
-
-.filter-icon-container {
-  width: 54px;
-  height: 54px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(12px);
-  border: 1.5px solid rgba(255, 255, 255, 0.15);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  color: #fff;
-  transition: all 0.3s ease;
-}
-
-.swiper-slide-active .filter-icon-container {
-  background: rgba(var(--theme-color-rgb), 0.25);
-  border-color: var(--theme-color);
-  box-shadow: 0 0 15px rgba(var(--theme-color-rgb), 0.3);
-}
-
-.filter-item.active {
-  opacity: 1;
-  transform: scale(1.1); /* To khi ở giữa */
-}
-
-.filter-icon-container {
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  color: #fff;
-}
-
-.filter-label {
-  display: none; /* Ẩn chữ ở mobile để tiết kiệm diện tích, TikTok style */
-}
-
-@media (min-width: 1024px) {
-  .filter-label {
-    display: block;
-    position: absolute;
-    bottom: -20px;
-    font-size: 10px;
-    white-space: nowrap;
-    opacity: 0.7;
-  }
-}
-
-/* Tối ưu hóa Responsive cho thanh cuộn ngang trên điện thoại */
-@media (max-width: 600px) {
-  .face-filter-carousel {
-    margin-top: 5px;
-    padding: 8px 10px;
-    border-radius: 16px;
-    background: transparent !important; /* Triệt tiêu nền hoàn toàn trên mobile */
-    border: none;
-    box-shadow: none;
-  }
-
-  .filter-track {
-    gap: 12px;
-  }
-
-  .filter-icon-container {
-    width: 48px;
-    height: 48px;
-  }
-
-  .filter-icon-container span.material-icons-round {
-    font-size: 1.35rem;
-  }
-
-  .filter-label {
-    font-size: 0.65rem;
-  }
-}
+/* Face filter Swiper carousel removed */
 

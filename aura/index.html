@@ -1,295 +1,391 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="vi">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Trải Nghiệm Hào Quang AI 🌟</title>
-  
-  <!-- Font chữ tròn trịa, hiện đại -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@300..700&family=Quicksand:wght@300..700&display=swap" rel="stylesheet">
-  
-  <!-- Biểu tượng Material Icons Round -->
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
-  
-  <!-- Swiper.js CSS -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Tích Phước Hào Quang</title>
 
-  <!-- CSS Stylesheets -->
-  <link rel="stylesheet" href="styles/base.css">
-  <link rel="stylesheet" href="styles/layout.css">
-  <link rel="stylesheet" href="styles/camera.css">
-  <link rel="stylesheet" href="styles/sidebar.css">
-  <link rel="stylesheet" href="styles/effects.css">
-  <link rel="stylesheet" href="styles/loading.css">
-</head>
-<body class="theme-lotus">
-  <div class="app-container">
-    
-    <!-- Thanh điều hướng trên cùng (nếu cần) -->
-    <a href="../index.html" class="btn-back">
-      <span class="material-icons-round">arrow_back</span>
-      <span>Quay lại</span>
-    </a>
+        <!-- Font chữ tròn trịa, hiện đại -->
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@300..700&family=Quicksand:wght@300..700&display=swap"
+            rel="stylesheet"
+        />
 
-    <button id="btn-settings" class="btn-settings" aria-label="Mở cài đặt">
-      <span class="material-icons-round">tune</span>
-      <span>Cài đặt</span>
-    </button>
+        <!-- Biểu tượng Material Icons Round -->
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet" />
 
-    <!-- Nội dung chính -->
-    <main class="main-layout">
-      
-      <!-- Khu vực camera và filter -->
-      <section class="camera-section">
-        <div id="camera-wrapper" class="camera-wrapper">
-          <video id="webcam" autoplay playsinline></video>
-          <canvas id="canvas-overlay"></canvas>
+        <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg" />
 
-          <div class="gesture-overlay">
-            <div id="gesture-triggered-msg" class="gesture-triggered-msg">
-              <h1 class="sparkle-text">AURA AI 🌟</h1>
-              <p>Hào quang hộ thể!</p>
-            </div>
-          </div>
+        <!-- CSS Stylesheets -->
+        <link rel="stylesheet" href="styles/base.css" />
+        <link rel="stylesheet" href="styles/layout.css" />
+        <link rel="stylesheet" href="styles/camera.css" />
+        <link rel="stylesheet" href="styles/sidebar.css" />
+        <link rel="stylesheet" href="styles/effects.css" />
+        <link rel="stylesheet" href="styles/loading.css" />
+    </head>
+    <body class="theme-lotus">
+        <div class="app-container">
+            <!-- Thanh điều hướng trên cùng (nếu cần) -->
+            <a href="../index.html" class="btn-back">
+                <span class="material-icons-round">arrow_back</span>
+                <span>Quay lại</span>
+            </a>
 
-          <div id="phuoc-badge" class="phuoc-badge">
-            <span class="material-icons-round">favorite</span>
-            <span>Tích phước: <strong id="phuoc-count-display">0</strong></span>
-          </div>
+            <button id="btn-settings" class="btn-settings" aria-label="Mở cài đặt">
+                <span class="material-icons-round">tune</span>
+                <span>Cài đặt</span>
+            </button>
 
-          <div class="tech-stats">
-            <div><span class="label">FPS:</span> <span id="fps-stat">--</span></div>
-            <div><span class="label">Hand:</span> <span id="hands-stat">--</span></div>
-            <div><span class="label">Dist:</span> <span id="dist-stat">--</span></div>
-          </div>
+            <!-- Nội dung chính -->
+            <main class="main-layout">
+                <!-- Khu vực camera và filter -->
+                <section class="camera-section">
+                    <div id="camera-wrapper" class="camera-wrapper">
+                        <video id="webcam" autoplay muted playsinline></video>
+                        <canvas id="canvas-overlay"></canvas>
 
-          <button id="btn-help" class="btn-help" title="Hướng dẫn sử dụng">
-            <span class="material-icons-round">help_outline</span>
-          </button>
+                        <!-- Dark Veil warning indicator -->
+                        <div id="veil-warning" class="veil-warning" role="status" aria-live="polite">
+                            <span class="material-icons-round">cloud</span>
+                            <span class="veil-warning-text">Sương khói đang lan...</span>
+                            <div class="veil-progress-track">
+                                <div id="veil-progress-bar" class="veil-progress-bar"></div>
+                            </div>
+                        </div>
 
-          <!-- Thanh cuộn ngang chọn Nhãn dán AR (Swiper.js Pro Style) -->
-          <div class="face-filter-carousel swiper" id="face-filter-carousel">
-            <div class="carousel-center-highlight"></div>
-            <div class="swiper-wrapper">
-              <div class="swiper-slide filter-item" data-filter="none" title="Tự nhiên">
-                <div class="filter-icon-container">
-                  <span class="material-icons-round">not_interested</span>
+                        <div id="phuoc-badge" class="phuoc-badge">
+                            <span class="material-icons-round">favorite</span>
+                            <span><strong id="phuoc-count-display">0</strong> phước</span>
+                        </div>
+
+                        <div class="tech-stats">
+                            <div><span class="label">FPS:</span> <span id="fps-stat">--</span></div>
+                            <div><span class="label">Hand:</span> <span id="hands-stat">--</span></div>
+                            <div><span class="label">Dist:</span> <span id="dist-stat">--</span></div>
+                        </div>
+
+                        <button id="btn-help" class="btn-help" title="Hướng dẫn sử dụng">
+                            <span class="material-icons-round">help_outline</span>
+                        </button>
+                    </div>
+                </section>
+
+                <div id="settings-backdrop" class="settings-backdrop"></div>
+
+                <!-- Bảng điều khiển cấu hình hiển thị dạng popup -->
+                <aside
+                    id="settings-popup"
+                    class="controls-sidebar"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="settings-title"
+                >
+                    <div class="sidebar-header">
+                        <div class="sidebar-title">
+                            <span class="material-icons-round header-icon">tune</span>
+                            <h2 id="settings-title">Cài Đặt Hiệu Ứng</h2>
+                        </div>
+                        <button
+                            id="btn-close-settings"
+                            class="btn-close-settings"
+                            type="button"
+                            aria-label="Đóng cài đặt"
+                        >
+                            <span class="material-icons-round">close</span>
+                        </button>
+                    </div>
+
+                    <div class="sidebar-content">
+                        <!-- Chọn Camera -->
+                        <div class="control-group">
+                            <label for="camera-select">
+                                <span class="material-icons-round">videocam</span>
+                                Chọn Camera
+                            </label>
+                            <div class="custom-select-wrapper">
+                                <select id="camera-select" class="custom-select">
+                                    <option value="">Đang tìm thiết bị...</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Tông màu hào quang -->
+                        <div class="control-group">
+                            <label><span class="material-icons-round">palette</span> Tông Màu Hào Quang</label>
+                            <div class="color-presets">
+                                <button
+                                    class="settings-choice-btn color-btn theme-gold"
+                                    data-preset="gold"
+                                    title="Hoàng Kim"
+                                >
+                                    <div class="color-preview" style="background-color: #ffd700"></div>
+                                    Vàng
+                                </button>
+                                <button
+                                    class="settings-choice-btn color-btn theme-lotus active"
+                                    data-preset="lotus"
+                                    title="Hồng Sen"
+                                >
+                                    <div class="color-preview" style="background-color: #ff7ebb"></div>
+                                    Hồng
+                                </button>
+                                <button
+                                    class="settings-choice-btn color-btn theme-cosmic"
+                                    data-preset="cosmic"
+                                    title="Tử Quang"
+                                >
+                                    <div class="color-preview" style="background-color: #d05eff"></div>
+                                    Tím
+                                </button>
+                                <button
+                                    class="settings-choice-btn color-btn theme-emerald"
+                                    data-preset="emerald"
+                                    title="Lục Bảo"
+                                >
+                                    <div class="color-preview" style="background-color: #2effa2"></div>
+                                    Xanh
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Kiểu âm thanh -->
+                        <div class="control-group">
+                            <label><span class="material-icons-round">music_note</span> Âm Thanh Thiền Định</label>
+                            <div class="settings-option-grid sound-options">
+                                <button class="settings-choice-btn" data-sound="gong">Tiếng Chuông</button>
+                                <button class="settings-choice-btn" data-sound="zen">Suối Chảy</button>
+                                <button class="settings-choice-btn" data-sound="om">Om Chanting</button>
+                                <button class="settings-choice-btn" data-sound="mute">Tắt Âm</button>
+                            </div>
+                        </div>
+
+                        <!-- Slider âm lượng -->
+                        <div class="control-group">
+                            <div class="slider-label">
+                                <div class="label-left">
+                                    <span class="material-icons-round">volume_up</span>
+                                    Âm lượng
+                                </div>
+                                <span id="volume-val" class="slider-value">70%</span>
+                            </div>
+                            <input
+                                type="range"
+                                id="volume-slider"
+                                class="settings-range"
+                                min="0"
+                                max="100"
+                                value="70"
+                            />
+                        </div>
+
+                        <!-- Slider Độ nhạy AI -->
+                        <div class="control-group">
+                            <div class="slider-label">
+                                <div class="label-left">
+                                    <span class="material-icons-round">psychology</span>
+                                    Độ nhạy AI
+                                </div>
+                                <span id="sensitivity-val" class="slider-value">Khá nhạy</span>
+                            </div>
+                            <input
+                                type="range"
+                                id="sensitivity-slider"
+                                class="settings-range"
+                                min="5"
+                                max="40"
+                                value="20"
+                            />
+                            <p class="helper-text">Kéo sang trái để yêu cầu chắp tay chính xác hơn.</p>
+                        </div>
+
+                        <!-- Dark Veil settings -->
+                        <div class="control-group">
+                            <label><span class="material-icons-round">cloud</span> Chu kỳ Sương Khói</label>
+                            <div class="settings-option-grid veil-options">
+                                <button class="settings-choice-btn" data-veil-interval="30000">30s</button>
+                                <button class="settings-choice-btn" data-veil-interval="45000">45s</button>
+                                <button class="settings-choice-btn" data-veil-interval="60000">60s</button>
+                                <button class="settings-choice-btn" data-veil-interval="90000">90s</button>
+                            </div>
+                        </div>
+
+                        <div class="control-group">
+                            <label><span class="material-icons-round">speed</span> Tốc độ Sương</label>
+                            <div class="settings-option-grid veil-options">
+                                <button class="settings-choice-btn" data-veil-grow="15000">Nhanh</button>
+                                <button class="settings-choice-btn" data-veil-grow="25000">Bình thường</button>
+                                <button class="settings-choice-btn" data-veil-grow="40000">Chậm</button>
+                            </div>
+                        </div>
+
+                        <!-- Toggle switches -->
+                        <div class="settings-toggle-group">
+                            <div class="toggle-item">
+                                <label class="toggle-label" for="toggle-skeleton">
+                                    <span class="material-icons-round">gesture</span>
+                                    Hiện xương tay AI
+                                </label>
+                                <label class="switch">
+                                    <input type="checkbox" id="toggle-skeleton" checked />
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                            <div class="toggle-item">
+                                <label class="toggle-label" for="toggle-mirror">
+                                    <span class="material-icons-round">flip</span>
+                                    Chế độ gương soi
+                                </label>
+                                <label class="switch">
+                                    <input type="checkbox" id="toggle-mirror" checked />
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <button id="btn-screenshot" class="btn-primary">
+                            <span class="material-icons-round">photo_camera</span>
+                            Chụp Ảnh Hào Quang
+                        </button>
+                    </div>
+                </aside>
+            </main>
+
+            <!-- Popup Hướng dẫn sử dụng -->
+            <div id="help-backdrop" class="help-popup-backdrop"></div>
+            <div id="help-popup" class="help-popup">
+                <div class="help-popup-header">
+                    <h3><span class="material-icons-round">lightbulb</span> Hướng dẫn</h3>
+                    <button id="btnCloseHelp" class="btn-close-help">
+                        <span class="material-icons-round">close</span>
+                    </button>
                 </div>
-                <span class="filter-label">Tự Nhiên</span>
-              </div>
-              <div class="swiper-slide filter-item" data-filter="beauty" title="Làm đẹp da">
-                <div class="filter-icon-container">
-                  <span class="material-icons-round">auto_awesome</span>
+                <div class="help-content">
+                    <div class="help-item">
+                        <div class="help-item-icon"><span class="material-icons-round">front_hand</span></div>
+                        <div class="help-item-text">
+                            <h4>Chắp tay tích phước</h4>
+                            <p>
+                                Đưa hai bàn tay lại gần nhau ở trước ngực để kích hoạt hào quang và tích thêm phước đức.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="help-item">
+                        <div class="help-item-icon"><span class="material-icons-round">face</span></div>
+                        <div class="help-item-text">
+                            <h4>Nhãn dán AR</h4>
+                            <p>Kéo chọn các filter ở dưới để dán trực tiếp lên gương mặt bạn theo thời gian thực.</p>
+                        </div>
+                    </div>
+                    <div class="help-item">
+                        <div class="help-item-icon"><span class="material-icons-round">palette</span></div>
+                        <div class="help-item-text">
+                            <h4>Tùy chỉnh</h4>
+                            <p>
+                                Mở mục <strong>Cài đặt</strong> để đổi màu hào quang, âm thanh và điều chỉnh độ nhạy AI.
+                            </p>
+                        </div>
+                    </div>
                 </div>
-                <span class="filter-label">Làm Đẹp</span>
-              </div>
-              <div class="swiper-slide filter-item" data-filter="glasses" title="Kính Thug Life">
-                <div class="filter-icon-container">
-                  <span class="material-icons-round">visibility</span>
+            </div>
+
+            <!-- Màn hình chờ nạp MediaPipe -->
+            <div id="loading-screen" class="loading-screen">
+                <div class="loading-orb loading-orb-a"></div>
+                <div class="loading-orb loading-orb-b"></div>
+                <div class="loading-card">
+                    <div class="loading-card-topline">
+                        <span class="loading-dot"></span>
+                        Trải nghiệm chắp tay nhận hào quang
+                    </div>
+
+                    <div class="lotus-spinner-shell">
+                        <div class="lotus-spinner">
+                            <span class="material-icons-round">filter_vintage</span>
+                        </div>
+                        <div class="loading-spinner-ring loading-spinner-ring-a"></div>
+                        <div class="loading-spinner-ring loading-spinner-ring-b"></div>
+                    </div>
+
+                    <h2>Bắt đầu tích phước</h2>
+                    <p class="loading-lead">
+                        Cho phép camera để hệ thống nhận diện động tác chắp tay và tạo hiệu ứng hào quang theo thời gian
+                        thực.
+                    </p>
+
+                    <div class="loading-pill-row">
+                        <span class="loading-pill"><span class="material-icons-round">videocam</span> Camera</span>
+                        <span class="loading-pill"
+                            ><span class="material-icons-round">front_hand</span> Nhận diện tay</span
+                        >
+                        <span class="loading-pill"
+                            ><span class="material-icons-round">auto_awesome</span> Hiệu ứng hào quang</span
+                        >
+                    </div>
+
+                    <div class="loading-status-panel">
+                        <div class="loading-status-label">Trạng thái</div>
+                        <p id="loading-status" class="loading-status-text">
+                            Nhấn nút bên dưới để cấp quyền camera và bắt đầu trải nghiệm.
+                        </p>
+                        <div class="loading-bar-container">
+                            <div id="progress-bar" class="loading-bar"></div>
+                        </div>
+                    </div>
+
+                    <button id="btn-start-app" class="btn-primary loading-start-btn" type="button">
+                        <span class="material-icons-round">play_arrow</span>
+                        Bắt đầu trải nghiệm
+                    </button>
+
+                    <div class="loading-checklist">
+                        <div class="loading-check-item">
+                            <span class="material-icons-round">verified_user</span>
+                            Camera chỉ dùng để nhận diện trực tiếp trên thiết bị.
+                        </div>
+                        <div class="loading-check-item">
+                            <span class="material-icons-round">network_check</span>
+                            Lần đầu mở có thể mất vài giây để chuẩn bị nhận diện.
+                        </div>
+                    </div>
                 </div>
-                <span class="filter-label">Kính Râm</span>
-              </div>
-              <div class="swiper-slide filter-item" data-filter="rabbit" title="Tai Thỏ Dễ Thương">
-                <div class="filter-icon-container">
-                  <span class="material-icons-round">cruelty_free</span>
+            </div>
+        </div>
+
+        <!-- Lớp phủ hiệu ứng Flash khi chụp ảnh -->
+        <div id="flash-effect" class="flash-effect"></div>
+
+        <!-- Thông báo nhỏ khi chụp ảnh hoặc có sự kiện -->
+        <div id="toast-notification" class="toast-notification"></div>
+
+        <!-- Debug overlay, chỉ hiện khi có ?debug=1 -->
+        <div id="debug-error-overlay" class="debug-error-overlay" hidden>
+            <div class="debug-error-card">
+                <div class="debug-error-header">
+                    <strong>Lỗi Debug</strong>
+                    <button
+                        id="btn-close-debug-error"
+                        class="debug-error-close"
+                        type="button"
+                        aria-label="Đóng lỗi debug"
+                    >
+                        <span class="material-icons-round">close</span>
+                    </button>
                 </div>
-                <span class="filter-label">Tai Thỏ</span>
-              </div>
-              <div class="swiper-slide filter-item" data-filter="halo" title="Vòng Thiên Thần">
-                <div class="filter-icon-container">
-                  <span class="material-icons-round">wb_sunny</span>
+                <p id="debug-error-meta" class="debug-error-meta"></p>
+                <pre id="debug-error-content" class="debug-error-content"></pre>
+                <div class="debug-error-actions">
+                    <button id="btn-copy-debug-error" class="btn-primary debug-error-copy" type="button">
+                        <span class="material-icons-round">content_copy</span>
+                        Sao chép
+                    </button>
                 </div>
-                <span class="filter-label">Thiên Thần</span>
-              </div>
-              <div class="swiper-slide filter-item" data-filter="cat" title="Má Hồng Râu Mèo">
-                <div class="filter-icon-container">
-                  <span class="material-icons-round">pets</span>
-                </div>
-                <span class="filter-label">Má Mèo</span>
-              </div>
             </div>
-          </div>
-        </div>
-      </section>
-
-      <div id="settings-backdrop" class="settings-backdrop"></div>
-
-      <!-- Bảng điều khiển cấu hình hiển thị dạng popup -->
-      <aside id="settings-popup" class="controls-sidebar" role="dialog" aria-modal="true" aria-labelledby="settings-title">
-        <div class="sidebar-header">
-          <div class="sidebar-title">
-            <span class="material-icons-round header-icon">tune</span>
-            <h2 id="settings-title">Cài Đặt Hiệu Ứng</h2>
-          </div>
-          <button id="btn-close-settings" class="btn-close-settings" type="button" aria-label="Đóng cài đặt">
-            <span class="material-icons-round">close</span>
-          </button>
         </div>
 
-        <div class="sidebar-content">
-          <!-- Chọn Camera -->
-          <div class="control-group">
-            <label for="camera-select">
-              <span class="material-icons-round">videocam</span>
-              Chọn Camera
-            </label>
-            <div class="custom-select-wrapper">
-              <select id="camera-select" class="custom-select">
-                <option value="">Đang tìm thiết bị...</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Tông màu hào quang -->
-          <div class="control-group">
-            <label><span class="material-icons-round">palette</span> Tông Màu Hào Quang</label>
-            <div class="color-presets">
-              <button class="color-btn theme-gold" data-preset="gold" title="Hoàng Kim">
-                <div class="color-preview" style="background-color: #ffd700;"></div>
-                Vàng
-              </button>
-              <button class="color-btn theme-lotus active" data-preset="lotus" title="Hồng Sen">
-                <div class="color-preview" style="background-color: #ff7ebb;"></div>
-                Hồng
-              </button>
-              <button class="color-btn theme-cosmic" data-preset="cosmic" title="Tử Quang">
-                <div class="color-preview" style="background-color: #d05eff;"></div>
-                Tím
-              </button>
-              <button class="color-btn theme-emerald" data-preset="emerald" title="Lục Bảo">
-                <div class="color-preview" style="background-color: #2effa2;"></div>
-                Xanh
-              </button>
-            </div>
-          </div>
-
-          <!-- Kiểu âm thanh -->
-          <div class="control-group">
-            <label><span class="material-icons-round">music_note</span> Âm Thanh Thiền Định</label>
-            <div class="sound-presets">
-              <button class="sound-btn active" data-sound="gong">Tiếng Chuông</button>
-              <button class="sound-btn" data-sound="zen">Suối Chảy</button>
-              <button class="sound-btn" data-sound="om">Om Chanting</button>
-              <button class="sound-btn" data-sound="mute">Tắt Âm</button>
-            </div>
-          </div>
-
-          <!-- Slider âm lượng -->
-          <div class="control-group">
-            <div class="slider-label">
-              <div class="label-left">
-                <span class="material-icons-round">volume_up</span>
-                Âm lượng
-              </div>
-              <span id="volume-val" class="slider-value">70%</span>
-            </div>
-            <input type="range" id="volume-slider" min="0" max="100" value="70">
-          </div>
-
-          <!-- Slider Độ nhạy AI -->
-          <div class="control-group">
-            <div class="slider-label">
-              <div class="label-left">
-                <span class="material-icons-round">psychology</span>
-                Độ nhạy AI
-              </div>
-              <span id="sensitivity-val" class="slider-value">Khá nhạy</span>
-            </div>
-            <input type="range" id="sensitivity-slider" min="5" max="40" value="20">
-            <p class="helper-text">Kéo sang trái để yêu cầu chắp tay chính xác hơn.</p>
-          </div>
-
-          <!-- Các công tắc bật tắt -->
-          <div class="toggle-group">
-            <div class="toggle-item">
-              <label class="toggle-label" for="toggle-skeleton">
-                <span class="material-icons-round">gesture</span>
-                Hiện xương tay AI
-              </label>
-              <label class="switch">
-                <input type="checkbox" id="toggle-skeleton" checked>
-                <span class="slider round"></span>
-              </label>
-            </div>
-            <div class="toggle-item">
-              <label class="toggle-label" for="toggle-mirror">
-                <span class="material-icons-round">flip</span>
-                Chế độ gương soi
-              </label>
-              <label class="switch">
-                <input type="checkbox" id="toggle-mirror" checked>
-                <span class="slider round"></span>
-              </label>
-            </div>
-          </div>
-
-          <button id="btn-screenshot" class="btn-primary">
-            <span class="material-icons-round">photo_camera</span>
-            Chụp Ảnh Hào Quang
-          </button>
-        </div>
-      </aside>
-    </main>
-
-    <!-- Popup Hướng dẫn sử dụng -->
-    <div id="help-backdrop" class="help-popup-backdrop"></div>
-    <div id="help-popup" class="help-popup">
-      <div class="help-popup-header">
-        <h3><span class="material-icons-round">lightbulb</span> Hướng dẫn</h3>
-        <button id="btnCloseHelp" class="btn-close-help"><span class="material-icons-round">close</span></button>
-      </div>
-      <div class="help-content">
-        <div class="help-item">
-          <div class="help-item-icon"><span class="material-icons-round">front_hand</span></div>
-          <div class="help-item-text">
-            <h4>Chắp tay tích phước</h4>
-            <p>Đưa hai bàn tay lại gần nhau ở trước ngực để kích hoạt hào quang và tích thêm phước đức.</p>
-          </div>
-        </div>
-        <div class="help-item">
-          <div class="help-item-icon"><span class="material-icons-round">face</span></div>
-          <div class="help-item-text">
-            <h4>Nhãn dán AR</h4>
-            <p>Kéo chọn các filter ở dưới để dán trực tiếp lên gương mặt bạn theo thời gian thực.</p>
-          </div>
-        </div>
-        <div class="help-item">
-          <div class="help-item-icon"><span class="material-icons-round">palette</span></div>
-          <div class="help-item-text">
-            <h4>Tùy chỉnh</h4>
-            <p>Mở mục <strong>Cài đặt</strong> để đổi màu hào quang, âm thanh và điều chỉnh độ nhạy AI.</p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Màn hình chờ nạp MediaPipe -->
-    <div id="loading-screen" class="loading-screen">
-      <div class="loading-card">
-        <div class="lotus-spinner">
-          <span class="material-icons-round">filter_vintage</span>
-        </div>
-        <h2>Đang khởi tạo AI...</h2>
-        <p>Vui lòng chờ trong giây lát để MediaPipe nạp dữ liệu xử lý gương mặt và bàn tay.</p>
-        <div class="loading-bar-container">
-          <div class="loading-bar"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Lớp phủ hiệu ứng Flash khi chụp ảnh -->
-  <div id="flash-effect" class="flash-effect"></div>
-
-  <!-- Thông báo nhỏ khi chụp ảnh hoặc có sự kiện -->
-  <div id="toast-notification" class="toast-notification"></div>
-
-  <!-- Swiper.js JS -->
-  <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
-
-  <!-- Scripts -->
-  <script type="module" src="scripts/main.js"></script>
-</body>
+        <!-- Scripts -->
+        <script type="module" src="scripts/main.js"></script>
+    </body>
 </html>

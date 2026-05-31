@@ -44,7 +44,7 @@ export function showToast(message) {
 // Bắt đầu lắng nghe và gán sự kiện cho các điều khiển UI
 export function setupUI() {
   colorBtns = document.querySelectorAll('.color-btn');
-  soundBtns = document.querySelectorAll('.sound-btn');
+  soundBtns = document.querySelectorAll('[data-sound]');
   volumeSlider = document.getElementById('volume-slider');
   volumeVal = document.getElementById('volume-val');
   sensitivitySlider = document.getElementById('sensitivity-slider');
@@ -162,76 +162,8 @@ export function setupUI() {
   btnCloseHelp?.addEventListener('click', closeHelp);
   helpBackdrop?.addEventListener('click', closeHelp);
 
-  // --- KHỞI TẠO SWIPER.JS CHO FILTER CAROUSEL ---
-  let filterSwiper = null;
-  const filterCarousel = document.getElementById('face-filter-carousel');
-
-  if (filterCarousel && typeof Swiper !== 'undefined') {
-    filterSwiper = new Swiper('#face-filter-carousel', {
-      slidesPerView: 'auto',
-      centeredSlides: true,
-      spaceBetween: 20,
-      grabCursor: true,
-      slideToClickedSlide: true,
-      watchSlidesProgress: true,
-      resistanceRatio: 0.7,
-      on: {
-        init: function() {
-          // Cuộn đến filter đã lưu
-          const slides = this.slides;
-          for (let i = 0; i < slides.length; i++) {
-            if (slides[i].dataset.filter === state.activeFaceFilter) {
-              this.slideTo(i, 0);
-              break;
-            }
-          }
-        },
-        progress: function() {
-          // Hiệu ứng Fisheye (To ở giữa, nhỏ dần sang hai bên)
-          this.slides.forEach(slide => {
-            const progress = slide.progress; // -1 (trái), 0 (giữa), 1 (phải)
-            const absProgress = Math.abs(progress);
-            
-            const scale = Math.max(0.7, 1.15 - absProgress * 0.4);
-            const opacity = Math.max(0.4, 1.0 - absProgress * 0.6);
-            
-            const container = slide.querySelector('.filter-icon-container');
-            if (container) {
-              container.style.transform = `scale3d(${scale}, ${scale}, 1)`;
-              container.style.opacity = opacity;
-            }
-          });
-        },
-        setTransition: function(speed) {
-          this.slides.forEach(slide => {
-            const container = slide.querySelector('.filter-icon-container');
-            if (container) {
-              container.style.transition = `${speed}ms ease`;
-            }
-          });
-        },
-        slideChange: function() {
-          const activeSlide = this.slides[this.activeIndex];
-          if (!activeSlide) return;
-          
-          const filterName = activeSlide.dataset.filter;
-          if (state.activeFaceFilter !== filterName) {
-            state.activeFaceFilter = filterName;
-            localStorage.setItem('active_face_filter', filterName);
-            initAudio();
-          }
-        },
-        sliderMove: function() {
-          filterCarousel.classList.add('active-scroll');
-        },
-        touchEnd: function() {
-          setTimeout(() => {
-            filterCarousel.classList.remove('active-scroll');
-          }, 1500);
-        }
-      }
-    });
-  }
+  // Đảm bảo không sử dụng Face Filter do đã ẩn carousel
+  state.activeFaceFilter = 'none';
 
   // 1. Đổi tông màu hào quang
   colorBtns.forEach(btn => {
@@ -339,26 +271,17 @@ export function setupUI() {
   if (btnScreenshot) {
     btnScreenshot.addEventListener('click', () => {
       if (!state.isCameraActive) return;
-      
-      // Phát ra tiếng màn trập camera ảo
       playCameraShutter();
-
-      // Chụp ảnh từ canvas
       try {
         if (canvas) {
           const dataUrl = canvas.toDataURL("image/png");
-          
-          // Tạo phần tử tải ảnh ảo
           const downloadLink = document.createElement("a");
           downloadLink.href = dataUrl;
-          
           const dateStr = new Date().toISOString().slice(0, 10);
           downloadLink.download = `hao-quang-ho-the-${dateStr}.png`;
-          
           document.body.appendChild(downloadLink);
           downloadLink.click();
           document.body.removeChild(downloadLink);
-          
           showToast("📸 Đã chụp ảnh và lưu về máy thành công!");
         }
       } catch (err) {
@@ -367,4 +290,32 @@ export function setupUI() {
       }
     });
   }
+
+  // 9. Dark Veil — Chu kỳ sương khói
+  const veilIntervalBtns = document.querySelectorAll('[data-veil-interval]');
+  veilIntervalBtns.forEach(btn => {
+    const val = parseInt(btn.dataset.veilInterval, 10);
+    if (val === state.darkIntervalMs) btn.classList.add('active');
+    btn.addEventListener('click', () => {
+      veilIntervalBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.darkIntervalMs = val;
+      localStorage.setItem('dark_interval_ms', val);
+      showToast(`⛅ Chu kỳ sương: ${val / 1000}s`);
+    });
+  });
+
+  // 10. Dark Veil — Tốc độ sương
+  const veilGrowBtns = document.querySelectorAll('[data-veil-grow]');
+  veilGrowBtns.forEach(btn => {
+    const val = parseInt(btn.dataset.veilGrow, 10);
+    if (val === state.darkGrowMs) btn.classList.add('active');
+    btn.addEventListener('click', () => {
+      veilGrowBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.darkGrowMs = val;
+      localStorage.setItem('dark_grow_ms', val);
+      showToast(`💨 Tốc độ sương: ${btn.innerText.trim()}`);
+    });
+  });
 }
