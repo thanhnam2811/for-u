@@ -1,4 +1,4 @@
-import { getSensitivityThresholdForSlider, state, spendPhuoc, LANTERN_TYPES, LANTERN_ASSETS, MAX_LANTERNS, saveLanternsState, LANTERN_LIFESPAN_MS } from "./state.js";
+import { getSensitivityThresholdForSlider, state, spendPhuoc, LANTERN_TYPES, LANTERN_ASSETS, MAX_LANTERNS, LANTERN_LIFESPAN_MS } from "./state.js";
 import { initAudio, playZenSound, playCameraShutter } from "./audio.js";
 import { setupWebcam } from "./camera.js";
 import { LotusLantern } from "./effects/lantern.js";
@@ -452,7 +452,7 @@ export function setupUI() {
 						canvasHeight: canvas.height
 					});
 					state.lanterns.push(lantern);
-					saveLanternsState();
+					state.engine.dirtyFlags.lanterns = true;
 
 					// Chống click đúp (cooldown 300ms)
 					setTimeout(() => { isBuying = false; }, 300);

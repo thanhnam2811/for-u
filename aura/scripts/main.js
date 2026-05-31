@@ -5,6 +5,11 @@ import { loadHandLandmarkerModel, drawHandSkeleton, analyzeHands } from "./ai.js
 import { initDarkVeil, updateDarkVeil, drawDarkVeil, triggerVeilClear } from "./dark-veil.js";
 import { drawFaceFilter } from "./filters/index.js";
 import { initAudio } from "./audio.js";
+import { createGameLoop, shouldRunTask } from "./game-loop.js";
+
+const HAND_DETECT_INTERVAL_MS = 33;
+const FACE_DETECT_INTERVAL_MS = 66;
+const LANTERN_SAVE_INTERVAL_MS = 500;
 
 // DOM references
 let video = null;
@@ -15,12 +20,14 @@ let loadingStatus = null;
 let startButton = null;
 let appStartPromise = null;
 let autoStartAttempted = false;
+let gameLoop = null;
 let debugErrorOverlay = null;
 let debugErrorMeta = null;
 let debugErrorContent = null;
 let debugErrorCopyButton = null;
 let debugErrorCloseButton = null;
 let lastDebugErrorText = "";
+let statFps = null;
 
 const debugEnabled = new URLSearchParams(window.location.search).get('debug') === '1';
 
@@ -31,6 +38,7 @@ function initDomRefs() {
 	if (!loadingScreen) loadingScreen = document.getElementById('loading-screen');
 	if (!loadingStatus) loadingStatus = document.getElementById('loading-status');
 	if (!startButton) startButton = document.getElementById('btn-start-app');
+	if (!statFps) statFps = document.getElementById('fps-stat');
 	if (!debugErrorOverlay) debugErrorOverlay = document.getElementById('debug-error-overlay');
 	if (!debugErrorMeta) debugErrorMeta = document.getElementById('debug-error-meta');
 	if (!debugErrorContent) debugErrorContent = document.getElementById('debug-error-content');
@@ -109,120 +117,138 @@ function setupDebugErrorOverlay() {
 	}
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Render Loop — 60 FPS
-// ─────────────────────────────────────────────────────────────────────────────
-function renderLoop() {
+function beginFrame(frame) {
 	initDomRefs();
-	const now = performance.now();
+	frame.videoReady = Boolean(video && canvas && ctx && video.readyState >= 2);
+	frame.isMirrored = state.mirrorCamera;
+
+	if (frame.videoReady && canvas.width !== video.videoWidth || frame.videoReady && canvas.height !== video.videoHeight) {
+		canvas.width = video.videoWidth;
+		canvas.height = video.videoHeight;
+	}
+
+	frame.canvasWidth = canvas?.width || 0;
+	frame.canvasHeight = canvas?.height || 0;
+	state.engine.frameId = frame.frameId;
+	state.engine.lastDt = frame.dt;
+
+	if (!frame.videoReady) return;
+
+	ctx.clearRect(0, 0, frame.canvasWidth, frame.canvasHeight);
+}
+
+function updateFrame(frame) {
+	const now = frame.now;
 
 	// FPS counter
 	state.frameCount++;
 	if (now > state.lastFrameTime + 1000) {
 		state.currentFps = Math.round((state.frameCount * 1000) / (now - state.lastFrameTime));
-		const statFps = document.getElementById('fps-stat');
 		if (statFps) statFps.innerText = state.currentFps;
 		state.frameCount = 0;
 		state.lastFrameTime = now;
 	}
 
-	if (video && canvas && ctx && video.readyState >= 2) {
+	if (!frame.videoReady) return;
 
-		// Đồng bộ kích thước canvas theo video
-		if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
-			canvas.width = video.videoWidth;
-			canvas.height = video.videoHeight;
-		}
+	if (state.isModelLoaded) {
+		const timestamp = frame.now;
+		const handTask = state.engine.tasks.handDetect;
+		const faceTask = state.engine.tasks.faceDetect;
 
-		ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-		// ── 1. Vẽ Webcam làm nền ───────────────────────────────────────────────
-		ctx.save();
-		if (state.mirrorCamera) {
-			ctx.translate(canvas.width, 0);
-			ctx.scale(-1, 1);
-		}
-		ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-		// ── 2. Chạy AI (Hand + Face detection) ────────────────────────────────
-		if (state.isModelLoaded) {
-			const timestamp = performance.now();
-			if (video.currentTime !== state.lastVideoTime) {
-				state.lastVideoTime = video.currentTime;
-
-				if (state.handLandmarker) {
-					try {
-						const results = state.handLandmarker.detectForVideo(video, timestamp);
-						state.handResults = analyzeHands(results, canvas.width, canvas.height) || results;
-					} catch (err) {
-						console.error("[AuraApp] Lỗi nhận diện tay:", err);
-					}
-				}
-
-				if (state.activeFaceFilter !== 'none' && state.faceLandmarker) {
-					try {
-						const faceResults = state.faceLandmarker.detectForVideo(video, timestamp);
-						state.faceLandmarks = faceResults?.faceLandmarks?.[0] ?? null;
-					} catch (err) {
-						console.error("[AuraApp] Lỗi nhận diện gương mặt:", err);
-					}
-				} else {
-					state.faceLandmarks = null;
-				}
+		const hasNewHandVideoFrame = video.currentTime !== handTask.lastVideoTime;
+		if (state.handLandmarker && shouldRunTask(frame, handTask, HAND_DETECT_INTERVAL_MS, hasNewHandVideoFrame)) {
+			handTask.lastVideoTime = video.currentTime;
+			try {
+				const results = state.handLandmarker.detectForVideo(video, timestamp);
+				state.handResults = analyzeHands(results, frame.canvasWidth, frame.canvasHeight) || results;
+			} catch (err) {
+				console.error("[AuraApp] Lỗi nhận diện tay:", err);
 			}
 		}
 
-		// ── 3. Vẽ Hand Skeleton (nếu bật) ─────────────────────────────────────
-		if (state.showSkeleton && state.handResults?.landmarks) {
-			state.handResults.landmarks.forEach((landmarks, index) => {
-				const isRight = state.handResults.handednesses?.[index]?.[0]?.categoryName === "Right"
-					|| index === 0;
-				drawHandSkeleton(ctx, landmarks, isRight, canvas.width, canvas.height);
-			});
-		}
-
-		// ── 4. Vẽ Face Filter AR ──────────────────────────────────────────────
-		if (state.activeFaceFilter !== 'none' && state.faceLandmarks) {
-			drawFaceFilter(ctx, state.faceLandmarks, state.activeFaceFilter, canvas.width, canvas.height);
-		}
-
-		// Restore từ mirror transform — hiệu ứng vẽ trong hệ toạ độ gốc
-		ctx.restore();
-
-		// ── 5. Particles — hạt sáng lấp lánh ─────────────────────────────────
-		for (let i = state.particles.length - 1; i >= 0; i--) {
-			state.particles[i].update();
-			state.particles[i].draw(ctx);
-			if (state.particles[i].life <= 0) state.particles.splice(i, 1);
-		}
-
-		// ── 6. Prayer Aura — lightweight torso glow timeline ─────────────────
-		for (let i = state.prayerAuras.length - 1; i >= 0; i--) {
-			state.prayerAuras[i].update();
-			state.prayerAuras[i].draw(ctx);
-			if (state.prayerAuras[i].done) state.prayerAuras.splice(i, 1);
-		}
-
-		// Update and draw Lotus Lanterns
-		let lanternsChanged = false;
-		for (let i = state.lanterns.length - 1; i >= 0; i--) {
-			state.lanterns[i].update(canvas.width, canvas.height);
-			state.lanterns[i].draw(ctx);
-			if (state.lanterns[i].phase === 'DONE') {
-				state.lanterns.splice(i, 1);
-				lanternsChanged = true;
+		if (state.activeFaceFilter !== 'none' && state.faceLandmarker) {
+			const hasNewFaceVideoFrame = video.currentTime !== faceTask.lastVideoTime;
+			if (shouldRunTask(frame, faceTask, FACE_DETECT_INTERVAL_MS, hasNewFaceVideoFrame)) {
+				faceTask.lastVideoTime = video.currentTime;
+				try {
+					const faceResults = state.faceLandmarker.detectForVideo(video, timestamp);
+					state.faceLandmarks = faceResults?.faceLandmarks?.[0] ?? null;
+				} catch (err) {
+					console.error("[AuraApp] Lỗi nhận diện gương mặt:", err);
+				}
 			}
+		} else {
+			state.faceLandmarks = null;
+			faceTask.lastVideoTime = -1;
 		}
-		if (lanternsChanged) {
-			saveLanternsState();
-		}
-
-		// ── 7. Dark Veil — sương khói nhiệm vụ ───────────────────────────────
-		updateDarkVeil(now);
-		drawDarkVeil(ctx, canvas.width, canvas.height);
 	}
 
-	requestAnimationFrame(renderLoop);
+	for (let i = state.particles.length - 1; i >= 0; i--) {
+		state.particles[i].update();
+		if (state.particles[i].life <= 0) state.particles.splice(i, 1);
+	}
+
+	for (let i = state.prayerAuras.length - 1; i >= 0; i--) {
+		state.prayerAuras[i].update();
+		if (state.prayerAuras[i].done) state.prayerAuras.splice(i, 1);
+	}
+
+	for (let i = state.lanterns.length - 1; i >= 0; i--) {
+		state.lanterns[i].update(frame.canvasWidth, frame.canvasHeight);
+		if (state.lanterns[i].phase === 'DONE') {
+			state.lanterns.splice(i, 1);
+			state.engine.dirtyFlags.lanterns = true;
+		}
+	}
+
+	updateDarkVeil(now);
+}
+
+function renderFrame(frame) {
+	if (!frame.videoReady) return;
+
+	ctx.save();
+	if (frame.isMirrored) {
+		ctx.translate(frame.canvasWidth, 0);
+		ctx.scale(-1, 1);
+	}
+	ctx.drawImage(video, 0, 0, frame.canvasWidth, frame.canvasHeight);
+
+	if (state.showSkeleton && state.handResults?.landmarks) {
+		state.handResults.landmarks.forEach((landmarks, index) => {
+			const isRight = state.handResults.handednesses?.[index]?.[0]?.categoryName === "Right"
+				|| index === 0;
+			drawHandSkeleton(ctx, landmarks, isRight, frame.canvasWidth, frame.canvasHeight);
+		});
+	}
+
+	if (state.activeFaceFilter !== 'none' && state.faceLandmarks) {
+		drawFaceFilter(ctx, state.faceLandmarks, state.activeFaceFilter, frame.canvasWidth, frame.canvasHeight, frame.now);
+	}
+
+	ctx.restore();
+
+	for (let i = state.particles.length - 1; i >= 0; i--) {
+		state.particles[i].draw(ctx);
+	}
+
+	for (let i = state.prayerAuras.length - 1; i >= 0; i--) {
+		state.prayerAuras[i].draw(ctx);
+	}
+
+	for (let i = state.lanterns.length - 1; i >= 0; i--) {
+		state.lanterns[i].draw(ctx);
+	}
+
+	drawDarkVeil(ctx, frame.canvasWidth, frame.canvasHeight, frame.now);
+}
+
+function commitFrame(frame) {
+	if (state.engine.dirtyFlags.lanterns && shouldRunTask(frame, state.engine.tasks.lanternSave, LANTERN_SAVE_INTERVAL_MS)) {
+		saveLanternsState();
+		state.engine.dirtyFlags.lanterns = false;
+	}
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -280,9 +306,18 @@ async function startApp() {
 			initDarkVeil();
 			setupGestureHook();
 
+			if (!gameLoop) {
+				gameLoop = createGameLoop({
+					beginFrame,
+					update: updateFrame,
+					render: renderFrame,
+					commit: commitFrame
+				});
+			}
+
 			// 6. Khởi chạy render loop 60 FPS
 			console.log("[AuraApp] Khởi chạy renderLoop 60 FPS!");
-			renderLoop();
+			gameLoop.start();
 		} else {
 			if (startButton) {
 				startButton.hidden = false;

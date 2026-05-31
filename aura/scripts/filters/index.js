@@ -5,7 +5,7 @@ import { drawCat } from "./cat.js";
 import { drawBeauty } from "./beauty.js";
 
 // Hàm vẽ bộ lọc gương mặt AR (Stickers) dựa trên toạ độ mốc MediaPipe FaceLandmarker
-export function drawFaceFilter(ctx, landmarks, filterName, canvasWidth, canvasHeight) {
+export function drawFaceFilter(ctx, landmarks, filterName, canvasWidth, canvasHeight, frameNow = performance.now()) {
   if (!landmarks || landmarks.length === 0 || filterName === 'none') return;
 
   // 1. Tính toán tâm hai mắt từ các điểm mốc chính xác của MediaPipe
@@ -62,19 +62,19 @@ export function drawFaceFilter(ctx, landmarks, filterName, canvasWidth, canvasHe
   // Điều phối vẽ dựa trên tên bộ lọc (filterName)
   switch (filterName) {
     case 'glasses':
-      drawGlasses(ctx, landmarks, metrics, canvasWidth, canvasHeight);
+      drawGlasses(ctx, landmarks, metrics, canvasWidth, canvasHeight, frameNow);
       break;
     case 'rabbit':
-      drawRabbit(ctx, landmarks, metrics, canvasWidth, canvasHeight);
+      drawRabbit(ctx, landmarks, metrics, canvasWidth, canvasHeight, frameNow);
       break;
     case 'halo':
-      drawHalo(ctx, landmarks, metrics, canvasWidth, canvasHeight);
+      drawHalo(ctx, landmarks, metrics, canvasWidth, canvasHeight, frameNow);
       break;
     case 'cat':
-      drawCat(ctx, landmarks, metrics, canvasWidth, canvasHeight);
+      drawCat(ctx, landmarks, metrics, canvasWidth, canvasHeight, frameNow);
       break;
     case 'beauty':
-      drawBeauty(ctx, landmarks, metrics, canvasWidth, canvasHeight);
+      drawBeauty(ctx, landmarks, metrics, canvasWidth, canvasHeight, frameNow);
       break;
     default:
       break;

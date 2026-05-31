@@ -1,7 +1,7 @@
 // FILTER 2: Tai Thỏ Hữu Cơ (Bezier Curves + Squash & Stretch) 🐰💕
-export function drawRabbit(ctx, landmarks, metrics, canvasWidth, canvasHeight) {
+export function drawRabbit(ctx, landmarks, metrics, canvasWidth, canvasHeight, frameNow = performance.now()) {
   const { eyeDist, angle, noseX, noseY, fhX, fhY } = metrics;
-  const time = performance.now() * 0.005;
+  const time = frameNow * 0.005;
 
   ctx.save();
 

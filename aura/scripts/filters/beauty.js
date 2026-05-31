@@ -2,13 +2,13 @@ import { state } from "../state.js";
 import { THEME_COLORS } from "../constants.js";
 
 // FILTER 5: Làm Đẹp / Beauty Filter - Nâng cấp Cinematic & Smooth ✨💖
-export function drawBeauty(ctx, landmarks, metrics, canvasWidth, canvasHeight) {
+export function drawBeauty(ctx, landmarks, metrics, canvasWidth, canvasHeight, frameNow = performance.now()) {
   const { leX, leY, reX, reY, eyeDist, angle, noseX, noseY, fhX, fhY } = metrics;
 
   ctx.save();
 
   const theme = THEME_COLORS[state.activePreset];
-  const time = performance.now();
+  const time = frameNow;
 
   // Tâm giữa khuôn mặt
   const faceCX = (leX + reX) / 2;

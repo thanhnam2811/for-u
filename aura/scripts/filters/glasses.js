@@ -1,7 +1,7 @@
 // FILTER 1: Kính Modern Luxury (Thương hiệu cao cấp) 😎✨
-export function drawGlasses(ctx, landmarks, metrics, canvasWidth, canvasHeight) {
+export function drawGlasses(ctx, landmarks, metrics, canvasWidth, canvasHeight, frameNow = performance.now()) {
   const { leX, leY, reX, reY, eyeDist, angle } = metrics;
-  const time = performance.now();
+  const time = frameNow;
 
   // Trọng tâm nằm ở trung điểm 2 mắt
   const midX = (leX + reX) / 2;

@@ -2,9 +2,9 @@ import { state } from "../state.js";
 import { THEME_COLORS } from "../constants.js";
 
 // FILTER 3: Vòng Thiên Thần Neon Cao Cấp (God Rays & Orbitals) 👼✨
-export function drawHalo(ctx, landmarks, metrics, canvasWidth, canvasHeight) {
+export function drawHalo(ctx, landmarks, metrics, canvasWidth, canvasHeight, frameNow = performance.now()) {
   const { eyeDist, angle, fhX, fhY } = metrics;
-  const time = performance.now();
+  const time = frameNow;
 
   // Hiệu ứng nhấp nhô mượt mà
   const hoverY = fhY - eyeDist * 1.1 + Math.sin(time / 400) * eyeDist * 0.15; // Nâng cao hơn nữa

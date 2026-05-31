@@ -60,6 +60,26 @@ export const state = {
 	lastFrameTime: performance.now(),
 	frameCount: 0,
 	currentFps: 0,
+	engine: {
+		frameId: 0,
+		lastDt: 16.67,
+		tasks: {
+			handDetect: {
+				lastRunAt: 0,
+				lastVideoTime: -1
+			},
+			faceDetect: {
+				lastRunAt: 0,
+				lastVideoTime: -1
+			},
+			lanternSave: {
+				lastRunAt: 0
+			}
+		},
+		dirtyFlags: {
+			lanterns: false
+		}
+	},
 
 	// ─────────────────────────────────────────────
 	// Mảng chứa các đối tượng hiệu ứng đang vẽ

@@ -1,7 +1,7 @@
 // FILTER 4: Mèo Xinh Má Hồng Toàn Diện (Có cử động) 🐱✨
-export function drawCat(ctx, landmarks, metrics, canvasWidth, canvasHeight) {
+export function drawCat(ctx, landmarks, metrics, canvasWidth, canvasHeight, frameNow = performance.now()) {
   const { leX, leY, reX, reY, eyeDist, angle, noseX, noseY, fhX, fhY } = metrics;
-  const time = performance.now();
+  const time = frameNow;
 
   ctx.save();
 

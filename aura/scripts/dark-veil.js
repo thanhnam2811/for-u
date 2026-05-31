@@ -123,7 +123,7 @@ export function triggerVeilClear(centerX, centerY) {
 // ─────────────────────────────────────────────────────────────────────────────
 // drawDarkVeil — vẽ lên main canvas
 // ─────────────────────────────────────────────────────────────────────────────
-export function drawDarkVeil(ctx, canvasWidth, canvasHeight) {
+export function drawDarkVeil(ctx, canvasWidth, canvasHeight, now = performance.now()) {
 	if (state.darkOpacity < 0.005) return;
 
 	// Đồng bộ kích thước offscreen canvas
@@ -136,7 +136,7 @@ export function drawDarkVeil(ctx, canvasWidth, canvasHeight) {
 	// Vẽ lớp sương tối lên offscreen canvas
 	darkCtx.clearRect(0, 0, canvasWidth, canvasHeight);
 
-	const time = performance.now() * 0.00018;
+	const time = now * 0.00018;
 	const driftX = Math.sin(time * 1.4) * canvasWidth * 0.06;
 	const driftY = Math.cos(time * 1.15) * canvasHeight * 0.05;
 	const mistDriftX = Math.cos(time * 2.2) * canvasWidth * 0.08;
