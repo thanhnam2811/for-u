@@ -70,6 +70,8 @@ export const state = {
 	auraBursts: [],
 	bodyGlowPulses: [],          // Hiệu ứng glow từ viền cơ thể ra ngoài
 	prayerAuras: [],             // Timeline hào quang cinematic sau khi chắp tay
+	lanterns: [],                // Mảng chứa các Hoa Đăng đang trôi
+	lanternsLastAddedAt: 0,      // Cooldown click cho Hoa Đăng
 
 	// ─────────────────────────────────────────────
 	// Runtime data cho effect đang hoạt động
@@ -108,6 +110,12 @@ export const state = {
 export const MAX_DARK_OPACITY = 0.62; // Không bao giờ vượt mức sương này
 export const DARK_HOLD_MS = 5000;     // Giữ mức tối đa trước khi duy trì sương dày chờ user clear
 
+// Hằng số Hoa Đăng
+export const LANTERN_COST = 10;
+export const MAX_LANTERNS = 40;
+export const LANTERN_COOLDOWN_MS = 300;
+export const LANTERN_LIFESPAN_MS = 30 * 60 * 1000; // 30 phút
+
 export function getSensitivityThresholdForSlider(sliderVal) {
 	return 0.42 + (sliderVal / 100);
 }
@@ -120,4 +128,30 @@ export function incrementPhuoc() {
 	state.phuocCount++;
 	localStorage.setItem('phuoc_count', state.phuocCount);
 	return state.phuocCount;
+}
+
+// Hàm tiêu phước
+export function spendPhuoc(amount) {
+	if (state.phuocCount >= amount) {
+		state.phuocCount -= amount;
+		localStorage.setItem('phuoc_count', state.phuocCount);
+		return true;
+	}
+	return false;
+}
+
+// Lưu trữ Hoa Đăng
+export function saveLanternsState() {
+	const activeLanterns = state.lanterns
+		.filter(l => l.phase !== 'DONE' && l.id)
+		.map(l => ({
+			id: l.id,
+			spawnedAt: l.spawnedAt,
+			xRatio: l.xRatio,
+			baseYRatio: l.baseYRatio,
+			phaseSeed: l.phaseSeed,
+			startX: l.startX,
+			startY: l.startY
+		}));
+	localStorage.setItem('lanterns_data', JSON.stringify(activeLanterns));
 }

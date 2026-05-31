@@ -372,6 +372,34 @@ export function drawDarkVeil(ctx, canvasWidth, canvasHeight) {
     darkCtx.restore();
   }
 
+  // "Đục lỗ" cho ánh sáng của Hoa Đăng
+  if (state.lanterns && state.lanterns.length > 0) {
+    darkCtx.save();
+    darkCtx.globalCompositeOperation = 'destination-out';
+    state.lanterns.forEach(lantern => {
+      if (lantern.phase === 'DONE' || lantern.alpha <= 0.05) return;
+      
+      // Bán kính sáng đục sương phụ thuộc vào độ sáng thực tại
+      const radius = 120 * lantern.scale * lantern.alpha;
+      if (radius < 5) return;
+      
+      const clearGrad = darkCtx.createRadialGradient(
+        lantern.x, lantern.y, 0,
+        lantern.x, lantern.y, radius
+      );
+      clearGrad.addColorStop(0,    'rgba(0, 0, 0, 0.95)');
+      clearGrad.addColorStop(0.4,  'rgba(0, 0, 0, 0.7)');
+      clearGrad.addColorStop(0.8,  'rgba(0, 0, 0, 0.2)');
+      clearGrad.addColorStop(1,    'rgba(0, 0, 0, 0)');
+
+      darkCtx.fillStyle = clearGrad;
+      darkCtx.beginPath();
+      darkCtx.arc(lantern.x, lantern.y, radius, 0, Math.PI * 2);
+      darkCtx.fill();
+    });
+    darkCtx.restore();
+  }
+
   // Vẽ offscreen canvas lên main canvas
   ctx.save();
   ctx.globalCompositeOperation = 'source-over';

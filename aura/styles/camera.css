@@ -426,10 +426,108 @@
   align-items: center;
   gap: 8px;
   box-shadow: var(--theme-glow), 0 4px 15px rgba(0, 0, 0, 0.2);
-  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
-  pointer-events: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+  cursor: pointer;
+  user-select: none;
   animation: phuoc-glow-pulse 2s infinite alternate ease-in-out;
   overflow: visible;
+}
+
+.phuoc-popover {
+  position: absolute;
+  top: 22px;
+  left: 115px; /* Kéo sát lại nút Phước */
+  z-index: 4;
+  background: rgba(255, 255, 255, 0.95);
+  color: #12121c;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  opacity: 0;
+  transform: translateX(-10px);
+  pointer-events: none;
+  transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.phuoc-popover.show {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.popover-arrow {
+  position: absolute;
+  left: -5px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-top: 6px solid transparent;
+  border-bottom: 6px solid transparent;
+  border-right: 6px solid rgba(255, 255, 255, 0.95);
+}
+
+.phuoc-popover .material-icons-round {
+  font-size: 1.1rem;
+  color: #ffaa00;
+}
+
+@media (max-width: 600px) {
+  .phuoc-popover {
+    top: 65px;
+    left: 15px;
+    transform: translateY(-10px);
+  }
+  .phuoc-popover.show {
+    transform: translateY(0);
+  }
+  .popover-arrow {
+    left: 20px;
+    top: -5px;
+    transform: none;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-bottom: 6px solid rgba(255, 255, 255, 0.95);
+    border-top: none;
+  }
+}
+
+.phuoc-badge:hover {
+  transform: scale(1.05);
+  background: rgba(30, 30, 45, 0.85);
+  border-color: color-mix(in srgb, var(--theme-color) 80%, white);
+}
+
+.phuoc-badge:active {
+  transform: scale(0.96);
+}
+
+@keyframes lantern-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  50% { transform: translateX(4px); }
+  75% { transform: translateX(-4px); }
+}
+.phuoc-badge.lantern-shake {
+  animation: lantern-shake 0.3s ease;
+  border-color: #ff6b6b;
+  color: #ff6b6b;
+}
+
+@keyframes lantern-pulse {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 170, 0, 0.6); }
+  50% { transform: scale(1.1); box-shadow: 0 0 25px 10px rgba(255, 170, 0, 0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 170, 0, 0); }
+}
+.phuoc-badge.lantern-pulse {
+  animation: lantern-pulse 0.5s ease-out;
+  border-color: #ffaa00;
+  color: #ffaa00;
 }
 
 .phuoc-badge span.material-icons-round {

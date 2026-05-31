@@ -1,6 +1,7 @@
-import { getSensitivityThresholdForSlider, state } from "./state.js";
+import { getSensitivityThresholdForSlider, state, spendPhuoc, LANTERN_COST, MAX_LANTERNS, LANTERN_COOLDOWN_MS, saveLanternsState, LANTERN_LIFESPAN_MS } from "./state.js";
 import { initAudio, playZenSound, playCameraShutter } from "./audio.js";
 import { setupWebcam } from "./camera.js";
+import { LotusLantern } from "./effects/lantern.js";
 
 // DOM References
 let colorBtns = null;
@@ -74,6 +75,45 @@ export function setupUI() {
 	veilHelpPopup = document.getElementById('veil-help-popup');
 	veilHelpBackdrop = document.getElementById('veil-help-backdrop');
 	btnCloseVeilHelp = document.getElementById('btn-close-veil-help');
+
+	// Khôi phục hoa đăng từ lần chơi trước
+	try {
+		const savedData = JSON.parse(localStorage.getItem('lanterns_data') || '[]');
+		if (Array.isArray(savedData) && canvas) {
+			const now = Date.now();
+			savedData.forEach(config => {
+				if (now - config.spawnedAt < LANTERN_LIFESPAN_MS) {
+					config.canvasWidth = canvas.width;
+					config.canvasHeight = canvas.height;
+					state.lanterns.push(new LotusLantern(config));
+				}
+			});
+		}
+	} catch(e) { console.error("Lỗi parse hoa đăng:", e); }
+
+	// Xử lý Popover hướng dẫn thả hoa đăng (Bỏ sessionStorage để test thoải mái)
+	const phuocBadge = document.getElementById('phuoc-badge');
+	const phuocPopover = document.getElementById('phuoc-popover');
+	let popoverTimer = null;
+	let popoverShowCount = 0;
+	let isHintDismissed = false;
+	
+	if (phuocBadge && phuocPopover && !isHintDismissed) {
+		const showPopover = () => {
+			if (isHintDismissed) return;
+			popoverShowCount++;
+			phuocPopover.classList.add('show');
+			
+			setTimeout(() => {
+				phuocPopover.classList.remove('show');
+				if (popoverShowCount < 3 && !isHintDismissed) {
+					popoverTimer = setTimeout(showPopover, 25000); // Ngủ 25s rồi hiện lại
+				}
+			}, 4000); // Hiện trong 4s
+		};
+		// Đợi 2 giây sau khi load trang rồi hiện lần đầu
+		popoverTimer = setTimeout(showPopover, 2000);
+	}
 
 	// Đồng bộ hóa trạng thái giao diện (UI) từ state đã nạp từ localStorage
 	if (colorBtns) {
@@ -345,4 +385,60 @@ export function setupUI() {
 			showToast(`💨 Tốc độ sương: ${btn.innerText.trim()}`);
 		});
 	});
+
+	// 11. Tính năng Thắp Hoa Đăng
+	if (phuocBadge && canvas) {
+		phuocBadge.title = `Thắp Hoa Đăng (${LANTERN_COST} Phước)`;
+		phuocBadge.addEventListener('click', (e) => {
+			const now = performance.now();
+			if (now - state.lanternsLastAddedAt < LANTERN_COOLDOWN_MS) return;
+
+			if (spendPhuoc(LANTERN_COST)) {
+				state.lanternsLastAddedAt = now;
+				
+				const rect = phuocBadge.getBoundingClientRect();
+				const startX = rect.left + rect.width / 2;
+				const startY = rect.top + rect.height / 2;
+				
+				const lantern = new LotusLantern({
+					startX, 
+					startY, 
+					canvasWidth: canvas.width, 
+					canvasHeight: canvas.height
+				});
+				state.lanterns.push(lantern);
+				
+				let activeCount = state.lanterns.filter(l => l.phase !== 'DONE').length;
+				if (activeCount > MAX_LANTERNS) {
+					for (let i = 0; i < state.lanterns.length; i++) {
+						if (state.lanterns[i].phase === 'FLOATING' || state.lanterns[i].phase === 'SPAWNING') {
+							state.lanterns[i].startFadeOut();
+							break;
+						}
+					}
+				}
+				saveLanternsState();
+				
+				// Người dùng đã ấn, ẩn popover trong phiên
+				isHintDismissed = true;
+				if (phuocPopover) {
+					phuocPopover.classList.remove('show');
+				}
+				clearTimeout(popoverTimer);
+				
+				phuocBadge.classList.remove('lantern-pulse');
+				void phuocBadge.offsetWidth;
+				phuocBadge.classList.add('lantern-pulse');
+				
+				const display = document.getElementById('phuoc-count-display');
+				if (display) display.innerText = state.phuocCount;
+				
+			} else {
+				phuocBadge.classList.remove('lantern-shake');
+				void phuocBadge.offsetWidth;
+				phuocBadge.classList.add('lantern-shake');
+				showToast(`Tích đủ ${LANTERN_COST} Phước để thắp Hoa Đăng`);
+			}
+		});
+	}
 }

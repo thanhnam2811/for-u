@@ -1,4 +1,4 @@
-import { state } from "./state.js";
+import { state, saveLanternsState } from "./state.js";
 import { setupUI, showToast } from "./ui.js";
 import { setupWebcam, getCameraDevices } from "./camera.js";
 import { loadHandLandmarkerModel, drawHandSkeleton, analyzeHands } from "./ai.js";
@@ -201,6 +201,20 @@ function renderLoop() {
 			state.prayerAuras[i].update();
 			state.prayerAuras[i].draw(ctx);
 			if (state.prayerAuras[i].done) state.prayerAuras.splice(i, 1);
+		}
+
+		// Update and draw Lotus Lanterns
+		let lanternsChanged = false;
+		for (let i = state.lanterns.length - 1; i >= 0; i--) {
+			state.lanterns[i].update(canvas.width, canvas.height);
+			state.lanterns[i].draw(ctx);
+			if (state.lanterns[i].phase === 'DONE') {
+				state.lanterns.splice(i, 1);
+				lanternsChanged = true;
+			}
+		}
+		if (lanternsChanged) {
+			saveLanternsState();
 		}
 
 		// ── 7. Dark Veil — sương khói nhiệm vụ ───────────────────────────────
