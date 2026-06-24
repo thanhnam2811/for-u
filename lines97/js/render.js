@@ -76,8 +76,8 @@ export function renderStats() {
 export function renderUndoHintUI() {
   const ub = $('#undo-btn'), uc = $('#undo-count');
   const hb = $('#hint-btn'), hc = $('#hint-count');
-  if (ub) ub.disabled = state.undoStack.length === 0 || state.undoLeft <= 0;
-  if (uc) uc.textContent = state.undoLeft;
+  if (ub) ub.disabled = state.undoStack.length === 0;
+  if (uc) uc.textContent = '';
   if (hb) hb.disabled = state.hintLeft <= 0;
   if (hc) hc.textContent = state.hintLeft;
 }

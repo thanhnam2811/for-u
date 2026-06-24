@@ -78,7 +78,6 @@ function stopTimer() {
 
 // ── Undo ──
 function saveSnapshot() {
-  if (state.undoLeft <= 0) return;
   state.undoStack.push({
     board: state.board.map(r => [...r]),
     score: state.score,
@@ -88,13 +87,11 @@ function saveSnapshot() {
     longestLine: state.longestLine,
     elapsedTime: state.elapsedTime,
   });
-  if (state.undoStack.length > MAX_UNDO) state.undoStack.shift();
 }
 
 function undo() {
-  if (!state.undoStack.length || state.undoLeft <= 0 || state.animating || state.gameOver) return;
+  if (!state.undoStack.length || state.animating || state.gameOver) return;
   const snap = state.undoStack.pop();
-  state.undoLeft--;
   state.board = snap.board.map(r => [...r]);
   state.score = snap.score;
   state.nextBalls = snap.nextBalls.map(b => ({ ...b }));
