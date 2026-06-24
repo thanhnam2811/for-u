@@ -366,8 +366,26 @@ body {
   .stats-bar { gap: 10px; font-size: 0.72rem; padding: 2px 0 6px; }
   .board { border-radius: 12px; padding: 4px; }
   .cell { border-radius: 5px; }
-  .game-controls { gap: 4px; }
-  .control-btn { padding: 7px 8px; font-size: 0.72rem; border-radius: 10px; }
+  
+  /* Game controls grid optimization */
+  .game-controls {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 6px;
+  }
+  .control-btn {
+    padding: 7px 8px;
+    font-size: 0.72rem;
+    border-radius: 10px;
+    flex: none;
+    width: 100%;
+  }
+  #undo-btn { grid-column: span 3; }
+  #hint-btn { grid-column: span 3; }
+  #new-game-btn { grid-column: span 2; }
+  #sound-toggle { grid-column: span 2; }
+  #leaderboard-btn { grid-column: span 2; }
+
   .control-btn .material-icons-round { font-size: 0.95rem; }
   .badge { min-width: 16px; height: 16px; font-size: 0.6rem; }
   .game-over-card { padding: 24px 20px; border-radius: 20px; }
@@ -378,7 +396,6 @@ body {
 @media (max-width: 360px) {
   .back-btn span:not(.material-icons-round) { display: none; }
   .game-title { font-size: 1.1rem; }
-  .control-btn span:not(.material-icons-round):not(.badge) { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
