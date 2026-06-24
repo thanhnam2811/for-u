@@ -380,11 +380,11 @@ body {
     flex: none;
     width: 100%;
   }
-  #undo-btn { grid-column: span 3; }
-  #hint-btn { grid-column: span 3; }
+  #undo-btn { grid-column: span 2; }
+  #hint-btn { grid-column: span 2; }
   #new-game-btn { grid-column: span 2; }
-  #sound-toggle { grid-column: span 2; }
-  #leaderboard-btn { grid-column: span 2; }
+  #sound-toggle { grid-column: span 3; }
+  #leaderboard-btn { grid-column: span 3; }
 
   .control-btn .material-icons-round { font-size: 0.95rem; }
   .badge { min-width: 16px; height: 16px; font-size: 0.6rem; }
