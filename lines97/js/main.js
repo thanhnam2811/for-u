@@ -461,6 +461,26 @@ function setupEvents() {
   document.addEventListener('visibilitychange', () => {
     // Timer auto-pauses via document.hidden check in interval
   });
+
+  // Intercept back navigation / physical back button
+  history.pushState(null, null, window.location.href);
+  window.addEventListener('popstate', () => {
+    if (state.moves > 0 && !state.gameOver) {
+      if (confirm('Bạn có muốn thoát game không? Tiến trình chơi sẽ được tự động lưu.')) {
+        history.back();
+      } else {
+        history.pushState(null, null, window.location.href);
+      }
+    }
+  });
+
+  // Intercept reload / page close
+  window.addEventListener('beforeunload', (e) => {
+    if (state.moves > 0 && !state.gameOver) {
+      e.preventDefault();
+      e.returnValue = '';
+    }
+  });
 }
 
 // ── Boot ──
