@@ -29,6 +29,22 @@
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+button {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  outline: none;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
 body {
   background: var(--bg-gradient);
   color: var(--text-dark);
@@ -367,18 +383,23 @@ body {
   .board { border-radius: 12px; padding: 4px; }
   .cell { border-radius: 5px; }
   
-  /* Game controls grid optimization */
+  /* Game controls grid optimization (Safari compatible) */
   .game-controls {
     display: grid;
     grid-template-columns: repeat(6, 1fr);
     gap: 6px;
+    width: 100%;
+    max-width: 100%;
+    align-self: stretch;
+    box-sizing: border-box;
   }
   .control-btn {
     padding: 7px 8px;
     font-size: 0.72rem;
     border-radius: 10px;
-    flex: none;
+    flex: none !important;
     width: 100%;
+    box-sizing: border-box;
   }
   #undo-btn { grid-column: span 2; }
   #hint-btn { grid-column: span 2; }
