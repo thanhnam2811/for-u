@@ -32,14 +32,16 @@ export function renderBoard() {
       const cell = getCell(r, c);
       const old = cell.querySelector('.ball');
       if (old) old.remove();
-      // Clear hint classes
-      cell.classList.remove('hint-src', 'hint-dst');
+      // Clear hint and selection classes
+      cell.classList.remove('hint-src', 'hint-dst', 'selected-cell');
       const val = state.board[r][c];
       if (val) {
         const ball = document.createElement('div');
         ball.className = `ball ball-${val}`;
-        if (state.selected && state.selected.row === r && state.selected.col === c)
+        if (state.selected && state.selected.row === r && state.selected.col === c) {
           ball.classList.add('selected');
+          cell.classList.add('selected-cell');
+        }
         cell.appendChild(ball);
       }
     }
