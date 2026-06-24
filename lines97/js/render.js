@@ -152,9 +152,9 @@ export function renderUndoHintUI() {
 
 // ── Palette ──
 export function buildPalettePanel() {
-  const panel = $('#palette-panel');
-  const inner = document.createElement('div');
-  inner.className = 'palette-panel-inner';
+  const container = $('#palette-options-container');
+  if (!container) return;
+  container.innerHTML = '';
   for (const [key, pal] of Object.entries(PALETTES)) {
     const opt = document.createElement('div');
     opt.className = 'palette-option' + (key === state.palette ? ' active' : '');
@@ -172,9 +172,8 @@ export function buildPalettePanel() {
     });
     opt.appendChild(name);
     opt.appendChild(preview);
-    inner.appendChild(opt);
+    container.appendChild(opt);
   }
-  panel.appendChild(inner);
 }
 
 export function applyPalette(key) {

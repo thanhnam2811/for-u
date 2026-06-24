@@ -37,35 +37,7 @@
       </div>
     </header>
 
-    <!-- Palette selector -->
-    <div class="palette-panel" id="palette-panel"></div>
 
-    <!-- Checkpoint panel -->
-    <div class="palette-panel" id="checkpoint-panel">
-      <div class="palette-panel-inner">
-        <div class="cp-slot" data-slot="0">
-          <div class="cp-header"><span class="cp-label">Slot 1</span><span class="cp-info" data-slot="0">Trống</span></div>
-          <div class="cp-actions">
-            <button class="cp-save" data-slot="0"><span class="material-icons-round">save</span> Lưu</button>
-            <button class="cp-load" data-slot="0" disabled><span class="material-icons-round">play_arrow</span> Tải</button>
-          </div>
-        </div>
-        <div class="cp-slot" data-slot="1">
-          <div class="cp-header"><span class="cp-label">Slot 2</span><span class="cp-info" data-slot="1">Trống</span></div>
-          <div class="cp-actions">
-            <button class="cp-save" data-slot="1"><span class="material-icons-round">save</span> Lưu</button>
-            <button class="cp-load" data-slot="1" disabled><span class="material-icons-round">play_arrow</span> Tải</button>
-          </div>
-        </div>
-        <div class="cp-slot" data-slot="2">
-          <div class="cp-header"><span class="cp-label">Slot 3</span><span class="cp-info" data-slot="2">Trống</span></div>
-          <div class="cp-actions">
-            <button class="cp-save" data-slot="2"><span class="material-icons-round">save</span> Lưu</button>
-            <button class="cp-load" data-slot="2" disabled><span class="material-icons-round">play_arrow</span> Tải</button>
-          </div>
-        </div>
-      </div>
-    </div>
 
     <!-- Score / Preview -->
     <div class="score-section">
@@ -154,6 +126,54 @@
         <button class="restart-btn" id="close-leaderboard-btn">
           <span class="material-icons-round">close</span> Đóng
         </button>
+      </div>
+    </div>
+
+    <!-- Palette Modal -->
+    <div class="game-over-overlay" id="palette-modal">
+      <div class="game-over-card modal-card">
+        <div class="modal-header">
+          <h2>🎨 Chọn bộ màu</h2>
+          <button class="modal-close-btn" id="close-palette-btn" aria-label="Đóng">
+            <span class="material-icons-round">close</span>
+          </button>
+        </div>
+        <div class="palette-panel-inner" id="palette-options-container"></div>
+      </div>
+    </div>
+
+    <!-- Checkpoint Modal -->
+    <div class="game-over-overlay" id="checkpoint-modal">
+      <div class="game-over-card modal-card">
+        <div class="modal-header">
+          <h2>📌 Checkpoint</h2>
+          <button class="modal-close-btn" id="close-checkpoint-btn" aria-label="Đóng">
+            <span class="material-icons-round">close</span>
+          </button>
+        </div>
+        <div class="palette-panel-inner">
+          <div class="cp-slot" data-slot="0">
+            <div class="cp-header"><span class="cp-label">Slot 1</span><span class="cp-info" data-slot="0">Trống</span></div>
+            <div class="cp-actions">
+              <button class="cp-save" data-slot="0"><span class="material-icons-round">save</span> Lưu</button>
+              <button class="cp-load" data-slot="0" disabled><span class="material-icons-round">play_arrow</span> Tải</button>
+            </div>
+          </div>
+          <div class="cp-slot" data-slot="1">
+            <div class="cp-header"><span class="cp-label">Slot 2</span><span class="cp-info" data-slot="1">Trống</span></div>
+            <div class="cp-actions">
+              <button class="cp-save" data-slot="1"><span class="material-icons-round">save</span> Lưu</button>
+              <button class="cp-load" data-slot="1" disabled><span class="material-icons-round">play_arrow</span> Tải</button>
+            </div>
+          </div>
+          <div class="cp-slot" data-slot="2">
+            <div class="cp-header"><span class="cp-label">Slot 3</span><span class="cp-info" data-slot="2">Trống</span></div>
+            <div class="cp-actions">
+              <button class="cp-save" data-slot="2"><span class="material-icons-round">save</span> Lưu</button>
+              <button class="cp-load" data-slot="2" disabled><span class="material-icons-round">play_arrow</span> Tải</button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 

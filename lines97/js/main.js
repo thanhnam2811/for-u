@@ -371,24 +371,37 @@ function setupEvents() {
     if (Sound.enabled) { Sound.resume(); Sound.select(); }
   });
 
-  // Palette panel
+  // Palette Modal
   $('#palette-toggle').addEventListener('click', () => {
-    $('#palette-panel').classList.toggle('open');
-    $('#palette-toggle').classList.toggle('active');
+    $('#palette-modal').classList.add('visible');
   });
-  $('#palette-panel').addEventListener('click', (e) => {
+  $('#close-palette-btn').addEventListener('click', () => {
+    $('#palette-modal').classList.remove('visible');
+  });
+  $('#palette-modal').addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) $('#palette-modal').classList.remove('visible');
+  });
+  $('#palette-options-container').addEventListener('click', (e) => {
     const opt = e.target.closest('.palette-option');
-    if (opt) selectPaletteHandler(opt.dataset.palette);
+    if (opt) {
+      selectPaletteHandler(opt.dataset.palette);
+      $('#palette-modal').classList.remove('visible');
+    }
   });
 
-  // Checkpoint panel
+  // Checkpoint Modal
   $('#checkpoint-toggle').addEventListener('click', () => {
-    $('#checkpoint-panel').classList.toggle('open');
-    $('#checkpoint-toggle').classList.toggle('active');
+    $('#checkpoint-modal').classList.add('visible');
     renderCheckpointSlots();
   });
+  $('#close-checkpoint-btn').addEventListener('click', () => {
+    $('#checkpoint-modal').classList.remove('visible');
+  });
+  $('#checkpoint-modal').addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) $('#checkpoint-modal').classList.remove('visible');
+  });
 
-  // Checkpoint save/load
+  // Checkpoint save/load actions
   document.addEventListener('click', (e) => {
     const saveBtn = e.target.closest('.cp-save');
     const loadBtn = e.target.closest('.cp-load');
@@ -404,6 +417,7 @@ function setupEvents() {
       if (loadCheckpoint(slot)) {
         Sound.checkpoint();
         hideGameOver();
+        $('#checkpoint-modal').classList.remove('visible');
         renderBoard(); renderPreview(); renderScore(); renderStats(); renderUndoHintUI();
         startTimer();
         autoSave();
@@ -412,21 +426,19 @@ function setupEvents() {
     }
   });
 
-  // Load checkpoint from game-over
+  // Load checkpoint from game-over screen
   const lcBtn = $('#load-checkpoint-btn');
   if (lcBtn) lcBtn.addEventListener('click', () => {
     hideGameOver();
-    $('#checkpoint-panel').classList.add('open');
-    $('#checkpoint-toggle').classList.add('active');
+    $('#checkpoint-modal').classList.add('visible');
     renderCheckpointSlots();
   });
 
-  // Leaderboard
+  // Leaderboard Modal
   $('#leaderboard-btn').addEventListener('click', () => {
     showLeaderboard(getLeaderboard(), null);
   });
   $('#close-leaderboard-btn').addEventListener('click', hideLeaderboard);
-  // Close overlay on backdrop click
   $('#leaderboard-overlay').addEventListener('click', (e) => {
     if (e.target === e.currentTarget) hideLeaderboard();
   });
@@ -434,7 +446,7 @@ function setupEvents() {
     if (e.target === e.currentTarget && state.gameOver) { /* don't close on backdrop */ }
   });
 
-  // Keyboard
+  // Keyboard controls
   document.addEventListener('keydown', (e) => {
     if (e.ctrlKey && e.key === 'z') { e.preventDefault(); undo(); return; }
     switch (e.key.toLowerCase()) {
@@ -452,6 +464,8 @@ function setupEvents() {
       }
       case 'escape':
         if ($('#leaderboard-overlay').classList.contains('visible')) { hideLeaderboard(); break; }
+        if ($('#palette-modal').classList.contains('visible')) { $('#palette-modal').classList.remove('visible'); break; }
+        if ($('#checkpoint-modal').classList.contains('visible')) { $('#checkpoint-modal').classList.remove('visible'); break; }
         if (state.selected) { state.selected = null; clearHint(); renderBoard(); break; }
         break;
     }
