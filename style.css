@@ -243,6 +243,18 @@ body {
   box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
 }
 
+/* Tông màu thẻ Lines 97 */
+.card-lines97 .card-icon-wrapper {
+  background: rgba(126, 200, 227, 0.12);
+  color: #5AA0BC;
+  border: 1px solid rgba(126, 200, 227, 0.25);
+}
+.card-lines97:hover .card-icon-wrapper {
+  transform: rotate(15deg) scale(1.1);
+  background: rgba(126, 200, 227, 0.2);
+  box-shadow: 0 0 15px rgba(126, 200, 227, 0.3);
+}
+
 /* Tông màu thẻ khóa */
 .card-locked {
   cursor: not-allowed;

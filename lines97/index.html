@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Lines 97 🎱 — Góc Nhỏ Phép Thuật</title>
+  <meta name="description" content="Chơi game Lines 97 kinh điển — xếp 5 viên bi cùng màu thành hàng để ghi điểm!">
+
+  <!-- Fonts (same as hub) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@500;700&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="game-container">
+
+    <!-- Header -->
+    <header class="game-header">
+      <a href="../index.html" class="back-btn">
+        <span class="material-icons-round">arrow_back</span>
+        <span>Về Hub</span>
+      </a>
+      <h1 class="game-title">Lines 97 🎱</h1>
+      <button class="settings-btn" id="palette-toggle" aria-label="Chọn bộ màu">
+        <span class="material-icons-round">palette</span>
+      </button>
+    </header>
+
+    <!-- Palette selector (collapsed) -->
+    <div class="palette-panel" id="palette-panel"></div>
+
+    <!-- Score / Preview -->
+    <div class="score-section">
+      <div class="score-card">
+        <span class="score-label">Điểm</span>
+        <span class="score-value" id="score">0</span>
+      </div>
+      <div class="preview-card">
+        <span class="preview-label">Tiếp theo</span>
+        <div class="preview-balls" id="next-preview"></div>
+      </div>
+      <div class="score-card">
+        <span class="score-label">Kỷ lục</span>
+        <span class="score-value" id="high-score">0</span>
+      </div>
+    </div>
+
+    <!-- Game Board -->
+    <div class="board-wrapper">
+      <div class="board" id="game-board"></div>
+    </div>
+
+    <!-- Controls -->
+    <div class="game-controls">
+      <button class="control-btn" id="new-game-btn">
+        <span class="material-icons-round">refresh</span>
+        <span>Ván mới</span>
+      </button>
+      <button class="control-btn" id="sound-toggle">
+        <span class="material-icons-round" id="sound-icon">volume_up</span>
+        <span id="sound-label">Âm thanh</span>
+      </button>
+    </div>
+
+    <!-- Instructions -->
+    <div class="game-instructions">
+      <p>🎯 Click chọn bi → Click ô trống để di chuyển → Xếp 5+ bi cùng màu thành hàng!</p>
+    </div>
+
+    <!-- Game Over Overlay -->
+    <div class="game-over-overlay" id="game-over-overlay">
+      <div class="game-over-card">
+        <span class="game-over-icon">😢</span>
+        <h2>Hết chỗ rồi!</h2>
+        <p class="game-over-score">Điểm: <span id="final-score">0</span></p>
+        <p class="game-over-high">Kỷ lục: <span id="final-high">0</span></p>
+        <button class="restart-btn" id="restart-btn">
+          <span class="material-icons-round">replay</span>
+          <span>Chơi lại</span>
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
