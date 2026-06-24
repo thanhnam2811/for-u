@@ -55,12 +55,78 @@ export function renderPreview() {
   }
 }
 
+let currentScore = 0;
+let currentHighScore = 0;
+let scoreAnimId = null;
+let highScoreAnimId = null;
+
+function animateScore(target, isHigh = false) {
+  const el = isHigh ? $('#high-score') : $('#score');
+  if (!el) return;
+
+  const current = isHigh ? currentHighScore : currentScore;
+  if (current === target) {
+    el.textContent = target;
+    return;
+  }
+
+  if (isHigh && highScoreAnimId) {
+    cancelAnimationFrame(highScoreAnimId);
+    highScoreAnimId = null;
+  } else if (!isHigh && scoreAnimId) {
+    cancelAnimationFrame(scoreAnimId);
+    scoreAnimId = null;
+  }
+
+  const startTime = performance.now();
+  const startVal = current;
+
+  function update(time) {
+    const elapsed = time - startTime;
+    const progress = Math.min(elapsed / 300, 1);
+    
+    // Ease out quad
+    const easeProgress = progress * (2 - progress);
+    const val = Math.round(startVal + (target - startVal) * easeProgress);
+    
+    el.textContent = val;
+    
+    if (isHigh) {
+      currentHighScore = val;
+    } else {
+      currentScore = val;
+    }
+
+    if (progress < 1) {
+      if (isHigh) {
+        highScoreAnimId = requestAnimationFrame(update);
+      } else {
+        scoreAnimId = requestAnimationFrame(update);
+      }
+    } else {
+      el.textContent = target;
+      if (isHigh) {
+        currentHighScore = target;
+        highScoreAnimId = null;
+      } else {
+        currentScore = target;
+        scoreAnimId = null;
+      }
+    }
+  }
+
+  if (isHigh) {
+    highScoreAnimId = requestAnimationFrame(update);
+  } else {
+    el.classList.add('bump');
+    setTimeout(() => el.classList.remove('bump'), 300);
+    scoreAnimId = requestAnimationFrame(update);
+  }
+}
+
 export function renderScore() {
-  const s = $('#score'), h = $('#high-score');
-  s.textContent = state.score;
-  h.textContent = state.highScore;
-  s.classList.add('bump');
-  setTimeout(() => s.classList.remove('bump'), 300);
+  animateScore(state.score, false);
+  animateScore(state.highScore, true);
 }
 
 export function renderStats() {
