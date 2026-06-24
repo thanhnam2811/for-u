@@ -20,7 +20,12 @@ import {
   signInWithPopup,
   linkWithPopup,
   signOut,
-  onAuthStateChanged
+  onAuthStateChanged,
+  EmailAuthProvider,
+  linkWithCredential,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  updateProfile
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { findBestHint, showHint, clearHint } from './hint.js';
 import { Haptics } from './haptics.js';
@@ -519,10 +524,137 @@ function setupEvents() {
 }
 
 // ── Firebase Auth & Sync ──
+function generateRandomNickname() {
+  const adjs = ["Thần Bí", "Lấp Lánh", "Kỳ Diệu", "Huyền Thoại", "Ma Thuật", "Siêu Cấp", "Vô Địch", "Thần Tốc", "Nhiệm Màu", "Vui Vẻ"];
+  const nouns = ["Phù Thủy", "Chiến Binh", "Tinh Linh", "Hiệp Sĩ", "Thần Thú", "Ninja", "Ảo Thuật Gia", "Nhà Thám Hiểm", "Phi Hành Gia", "Học Giả"];
+  const adj = adjs[Math.floor(Math.random() * adjs.length)];
+  const noun = nouns[Math.floor(Math.random() * nouns.length)];
+  const num = Math.floor(1000 + Math.random() * 9000);
+  return `${noun} ${adj} #${num}`;
+}
+
 function setupFirebaseAuth() {
+  const accountModal = $('#account-modal');
+  $('#close-account-btn').addEventListener('click', () => accountModal.classList.remove('visible'));
+  accountModal.addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) accountModal.classList.remove('visible');
+  });
+
+  // Google Sign-in button listener (inside account modal)
+  $('#modal-google-btn').addEventListener('click', async () => {
+    const user = auth.currentUser;
+    if (!user) return;
+    showToast("🔑 Đang mở đăng nhập Google...");
+    const provider = new GoogleAuthProvider();
+    try {
+      await linkWithPopup(user, provider);
+      showToast("🎉 Liên kết tài khoản Google thành công!");
+      accountModal.classList.remove('visible');
+    } catch (error) {
+      if (error.code === 'auth/credential-already-in-use') {
+        if (confirm("Tài khoản Google này đã được liên kết với một tiến trình khác. Bạn có muốn chuyển sang tài khoản này (tiến trình hiện tại trên thiết bị sẽ bị thay thế)?")) {
+          try {
+            showToast("🔑 Đang chuyển tài khoản...");
+            await signInWithPopup(auth, provider);
+            showToast("👋 Đăng nhập Google thành công!");
+            accountModal.classList.remove('visible');
+          } catch (err) {
+            console.error("Direct Google Sign-in error:", err);
+            showToast("❌ Đăng nhập Google thất bại!");
+          }
+        }
+      } else {
+        console.error("Google linking error:", error);
+        showToast("❌ Liên kết Google thất bại!");
+      }
+    }
+  });
+
+  // Email Sign In form submission
+  $('#email-auth-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = $('#auth-email').value;
+    const password = $('#auth-password').value;
+    showToast("🔐 Đang đăng nhập...");
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      showToast("👋 Đăng nhập thành công!");
+      accountModal.classList.remove('visible');
+      $('#auth-email').value = '';
+      $('#auth-password').value = '';
+    } catch (err) {
+      console.error("Email sign-in error:", err);
+      if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+        showToast("❌ Sai Email hoặc Mật khẩu!");
+      } else {
+        showToast(`❌ Đăng nhập thất bại!`);
+      }
+    }
+  });
+
+  // Email Sign Up button action
+  $('#email-signup-btn').addEventListener('click', async () => {
+    const email = $('#auth-email').value;
+    const password = $('#auth-password').value;
+    if (!email || !password) {
+      showToast("⚠️ Vui lòng điền đầy đủ Email và Mật khẩu!");
+      return;
+    }
+    if (password.length < 6) {
+      showToast("⚠️ Mật khẩu phải có tối thiểu 6 ký tự!");
+      return;
+    }
+    const user = auth.currentUser;
+    if (!user) return;
+
+    showToast("📝 Đang đăng ký...");
+    try {
+      const credential = EmailAuthProvider.credential(email, password);
+      await linkWithCredential(user, credential);
+      showToast("🎉 Đã tạo và liên kết tài khoản Email!");
+      accountModal.classList.remove('visible');
+      $('#auth-email').value = '';
+      $('#auth-password').value = '';
+    } catch (err) {
+      console.error("Email sign-up error:", err);
+      if (err.code === 'auth/email-already-in-use') {
+        showToast("⚠️ Email này đã được sử dụng!");
+      } else {
+        showToast(`❌ Đăng ký thất bại!`);
+      }
+    }
+  });
+
+  // Sign out button
+  $('#account-signout-btn').addEventListener('click', async () => {
+    if (confirm("Bạn có muốn đăng xuất khỏi tài khoản hiện tại không?")) {
+      showToast("🚪 Đang đăng xuất...");
+      try {
+        await signOut(auth);
+        accountModal.classList.remove('visible');
+        showToast("🚪 Đã đăng xuất!");
+      } catch (err) {
+        console.error("Sign out error:", err);
+        showToast("❌ Lỗi đăng xuất!");
+      }
+    }
+  });
+
+  // Firebase Auth Observer
   onAuthStateChanged(auth, async (user) => {
     if (user) {
       console.log("Firebase Auth State: Logged in as", user.uid, user.isAnonymous ? "Anonymous" : user.displayName);
+      
+      if (user.isAnonymous && !user.displayName) {
+        const nickname = generateRandomNickname();
+        try {
+          await updateProfile(user, { displayName: nickname });
+          console.log("Profile updated with nickname:", nickname);
+        } catch (err) {
+          console.error("Profile update error:", err);
+        }
+      }
+
       updateUserUI(user);
       
       // Show toast and synchronize progress
@@ -552,52 +684,49 @@ function setupFirebaseAuth() {
     }
   });
 
-  // Google Login button event listener
+  // Profile button listener on header
   const loginBtn = $('#google-login-btn');
   if (loginBtn) {
-    loginBtn.addEventListener('click', async () => {
-      const user = auth.currentUser;
-      if (!user) return;
-      
-      if (!user.isAnonymous) {
-        // Already logged in with Google, ask if they want to sign out
-        if (confirm(`Bạn có muốn đăng xuất khỏi tài khoản Google (${user.displayName || user.email}) không?`)) {
-          showToast("🚪 Đang đăng xuất...");
-          try {
-            await signOut(auth);
-            showToast("🚪 Đã đăng xuất thành công!");
-          } catch (err) {
-            console.error("Sign out error:", err);
-            showToast("❌ Lỗi đăng xuất!");
-          }
-        }
-      } else {
-        // Anonymous user, trigger Google Sign-In with linking
-        showToast("🔑 Đang mở đăng nhập Google...");
-        const provider = new GoogleAuthProvider();
-        try {
-          await linkWithPopup(user, provider);
-          showToast("🎉 Đã liên kết tài khoản Google thành công!");
-        } catch (error) {
-          if (error.code === 'auth/credential-already-in-use') {
-            // Already in use, sign in directly with Google and overwrite local progress if confirmed
-            if (confirm("Tài khoản Google này đã được liên kết với một tiến trình khác. Bạn có muốn chuyển sang tài khoản này (tiến trình hiện tại trên thiết bị sẽ bị thay thế)?")) {
-              try {
-                showToast("🔑 Đang chuyển tài khoản...");
-                await signInWithPopup(auth, provider);
-                showToast("👋 Đăng nhập tài khoản Google thành công!");
-              } catch (err) {
-                console.error("Direct Google Sign-in error:", err);
-                showToast("❌ Đăng nhập Google thất bại!");
-              }
-            }
-          } else {
-            console.error("Google linking error:", error);
-            showToast("❌ Liên kết Google thất bại!");
-          }
-        }
-      }
+    loginBtn.addEventListener('click', () => {
+      accountModal.classList.add('visible');
+      updateAccountModalUI(auth.currentUser);
     });
+  }
+}
+
+function updateAccountModalUI(user) {
+  const profileView = $('#account-profile-view');
+  const loginView = $('#account-login-view');
+  if (!user) return;
+
+  if (user.isAnonymous) {
+    profileView.style.display = 'none';
+    loginView.style.display = 'block';
+    $('#modal-anon-name').textContent = user.displayName || "Khách ẩn danh";
+  } else {
+    profileView.style.display = 'block';
+    loginView.style.display = 'none';
+    
+    const avatarImg = $('#modal-user-avatar');
+    const avatarIcon = $('#modal-user-icon');
+    
+    if (user.photoURL) {
+      avatarImg.src = user.photoURL;
+      avatarImg.style.display = 'inline-block';
+      avatarIcon.style.display = 'none';
+    } else {
+      avatarImg.style.display = 'none';
+      avatarIcon.style.display = 'inline-block';
+      avatarIcon.textContent = 'face';
+    }
+    
+    $('#modal-user-name').textContent = user.displayName || "Người chơi";
+    $('#modal-user-email').textContent = user.email || "";
+    
+    const isGoogle = user.providerData.some(p => p.providerId === 'google.com');
+    const badge = $('#modal-user-badge');
+    badge.textContent = isGoogle ? "Google" : "Email";
+    badge.style.background = isGoogle ? "#4285F4" : "var(--primary-pink)";
   }
 }
 
@@ -613,7 +742,7 @@ function updateUserUI(user) {
       avatarIcon.style.display = 'inline-block';
       avatarIcon.textContent = 'account_circle';
     }
-    loginBtn.title = "Đăng nhập Google để đồng bộ lưu trữ";
+    loginBtn.title = "Tài khoản (Ẩn danh)";
   } else {
     if (user.photoURL) {
       if (avatarImg) {
@@ -628,7 +757,11 @@ function updateUserUI(user) {
         avatarIcon.textContent = 'face';
       }
     }
-    loginBtn.title = `Tài khoản: ${user.displayName || user.email} (Click để đăng xuất)`;
+    loginBtn.title = `Tài khoản: ${user.displayName || user.email}`;
+  }
+  
+  if ($('#account-modal').classList.contains('visible')) {
+    updateAccountModalUI(user);
   }
 }
 

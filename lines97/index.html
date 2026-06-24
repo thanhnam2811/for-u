@@ -181,6 +181,71 @@
       </div>
     </div>
 
+    <!-- Account Modal -->
+    <div class="game-over-overlay" id="account-modal">
+      <div class="game-over-card modal-card">
+        <div class="modal-header">
+          <h2>👤 Tài khoản</h2>
+          <button class="modal-close-btn" id="close-account-btn" aria-label="Đóng">
+            <span class="material-icons-round">close</span>
+          </button>
+        </div>
+        <div class="account-modal-body">
+          <!-- Profile View (shown when logged in with Google/Email) -->
+          <div id="account-profile-view" style="display: none;">
+            <div class="user-profile-info">
+              <img id="modal-user-avatar" src="" alt="Avatar" style="display:none;" />
+              <span class="material-icons-round" id="modal-user-icon">account_circle</span>
+              <div class="user-profile-details">
+                <h3 id="modal-user-name">Người chơi</h3>
+                <p id="modal-user-email">email@domain.com</p>
+                <span class="badge" id="modal-user-badge">Google</span>
+              </div>
+            </div>
+            <button class="restart-btn" id="account-signout-btn" style="width: 100%; margin-top: 14px;">
+              <span class="material-icons-round">logout</span> Đăng xuất
+            </button>
+          </div>
+
+          <!-- Login/Link Form (shown when anonymous) -->
+          <div id="account-login-view">
+            <div class="user-profile-info">
+              <span class="material-icons-round" id="modal-anon-icon">account_circle</span>
+              <div class="user-profile-details">
+                <h3 id="modal-anon-name">Khách</h3>
+                <p class="text-muted">Chế độ chơi ẩn danh</p>
+              </div>
+            </div>
+            <p class="modal-info-text">💡 Đăng nhập để lưu tiến trình chơi và điểm kỷ lục vĩnh viễn trên nhiều thiết bị.</p>
+            
+            <!-- Google Sign-in -->
+            <button class="restart-btn google-btn" id="modal-google-btn" style="width: 100%; display: flex; align-items: center; justify-content: center;">
+              <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="" style="width: 18px; margin-right: 8px;" />
+              Liên kết tài khoản Google
+            </button>
+
+            <div class="divider"><span>HOẶC EMAIL</span></div>
+
+            <!-- Email Form -->
+            <form id="email-auth-form" style="text-align: left;">
+              <div class="form-group">
+                <label for="auth-email">Email</label>
+                <input type="email" id="auth-email" required placeholder="nhap@email.com" />
+              </div>
+              <div class="form-group">
+                <label for="auth-password">Mật khẩu (tối thiểu 6 ký tự)</label>
+                <input type="password" id="auth-password" required placeholder="••••••" minlength="6" />
+              </div>
+              <div class="form-actions-row">
+                <button type="button" class="restart-btn secondary" id="email-signup-btn">Đăng ký</button>
+                <button type="submit" class="restart-btn" id="email-signin-btn">Đăng nhập</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Toast -->
     <div class="toast" id="toast"></div>
   </div>
