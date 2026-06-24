@@ -226,6 +226,22 @@ body {
   background: rgba(126, 200, 227, 0.12);
 }
 
+/* Path preview dots */
+.cell.path-cell::after {
+  content: '';
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--path-color, var(--primary-pink));
+  box-shadow: 0 0 10px var(--path-color, var(--primary-pink)), 0 0 4px var(--path-color, var(--primary-pink));
+  opacity: 0.85;
+  pointer-events: none;
+  z-index: 10;
+  animation: pathPulse 1.2s ease-in-out infinite;
+  animation-delay: var(--path-delay, 0ms);
+}
+
 /* === BALLS === */
 .ball {
   width: var(--ball-size); height: var(--ball-size); border-radius: 50%;
@@ -264,10 +280,26 @@ body {
   animation: scoreFloat 0.9s ease forwards; text-shadow: 0 1px 4px rgba(255, 117, 151, 0.3);
 }
 .particle {
-  position: absolute; width: 6px; height: 6px; border-radius: 50%;
-  pointer-events: none; z-index: 25; animation: particleBurst 0.6s ease forwards;
+  position: absolute;
+  width: var(--size, 6px);
+  height: var(--size, 6px);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 25;
+  mix-blend-mode: screen;
+  box-shadow: 0 0 8px var(--glow-color);
+  animation: particleBurst var(--duration, 0.7s) cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
 }
-@keyframes particleBurst { 0% { transform: translate(0,0) scale(1); opacity:1; } 100% { transform: translate(var(--px),var(--py)) scale(0); opacity:0; } }
+@keyframes particleBurst {
+  0% {
+    transform: translate(0, 0) scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--px), calc(var(--py) + var(--gravity, 30px))) scale(0);
+    opacity: 0;
+  }
+}
 
 /* === CONTROLS === */
 .game-controls {

@@ -251,18 +251,35 @@ function createParticles(cell, color) {
   const cr = cell.getBoundingClientRect(), br = board.getBoundingClientRect();
   const cx = cr.left - br.left + cr.width / 2, cy = cr.top - br.top + cr.height / 2;
   const pal = PALETTES[state.palette].colors[color - 1];
-  const count = window.innerWidth <= 480 ? 4 : 8;
+  
+  // Premium particle count
+  const count = window.innerWidth <= 480 ? 10 : 20;
+  
   for (let i = 0; i < count; i++) {
     const p = document.createElement('div');
     p.className = 'particle';
-    p.style.left = `${cx}px`; p.style.top = `${cy}px`;
-    p.style.background = pal.main;
-    const a = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.5;
-    const d = 18 + Math.random() * 22;
-    p.style.setProperty('--px', `${Math.cos(a) * d}px`);
-    p.style.setProperty('--py', `${Math.sin(a) * d}px`);
+    p.style.left = `${cx}px`;
+    p.style.top = `${cy}px`;
+    p.style.background = `radial-gradient(circle, ${pal.light} 0%, ${pal.main} 60%, ${pal.dark} 100%)`;
+    p.style.setProperty('--glow-color', pal.glow || pal.main);
+    
+    const a = Math.random() * Math.PI * 2;
+    const d = 25 + Math.random() * 45;
+    const px = Math.cos(a) * d;
+    const py = Math.sin(a) * d;
+    
+    const size = 4 + Math.random() * 6;
+    const gravity = 25 + Math.random() * 35;
+    const duration = 0.6 + Math.random() * 0.3;
+    
+    p.style.setProperty('--px', `${px}px`);
+    p.style.setProperty('--py', `${py}px`);
+    p.style.setProperty('--size', `${size}px`);
+    p.style.setProperty('--gravity', `${gravity}px`);
+    p.style.setProperty('--duration', `${duration}s`);
+    
     board.appendChild(p);
-    setTimeout(() => p.remove(), 600);
+    setTimeout(() => p.remove(), duration * 1000 + 100);
   }
 }
 
@@ -356,4 +373,28 @@ export function renderCheckpointSlots() {
       if (loadBtn) loadBtn.disabled = true;
     }
   }
+}
+
+// ── Real-time Path Preview ──
+export function clearPath() {
+  $$('.cell').forEach(cell => {
+    cell.classList.remove('path-cell');
+  });
+}
+
+export function drawPath(path, colorVal) {
+  clearPath();
+  if (!path) return;
+  const pal = PALETTES[state.palette].colors[colorVal - 1];
+  const pathColor = pal ? pal.main : 'var(--primary-pink)';
+  
+  path.forEach((pt, index) => {
+    if (index === 0) return; // Skip start cell (ball is already there)
+    const cell = getCell(pt.row, pt.col);
+    if (cell) {
+      cell.classList.add('path-cell');
+      cell.style.setProperty('--path-color', pathColor);
+      cell.style.setProperty('--path-delay', `${index * 35}ms`);
+    }
+  });
 }

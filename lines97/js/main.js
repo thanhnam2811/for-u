@@ -7,10 +7,11 @@ import {
   $, $$, buildBoard, renderBoard, renderPreview, renderScore, renderStats, renderUndoHintUI,
   animateMove, animateSpawn, removeWithEffect, showGameOver, hideGameOver, showToast,
   delay, buildPalettePanel, applyPalette, getCell, showLeaderboard, hideLeaderboard,
-  renderCheckpointSlots,
+  renderCheckpointSlots, drawPath, clearPath,
 } from './render.js';
 import { autoSave, loadSavedGame, clearSave, saveCheckpoint, loadCheckpoint, saveToLeaderboard, getLeaderboard } from './save.js';
 import { findBestHint, showHint, clearHint } from './hint.js';
+import { Haptics } from './haptics.js';
 
 // ── Init ──
 function init() {
@@ -116,37 +117,17 @@ function undo() {
   autoSave();
 }
 
-// ── Cell Click ──
-async function onCellClick(row, col) {
-  if (state.animating || state.gameOver) return;
-  Sound.resume();
-  const value = state.board[row][col];
-
-  // Click ball
-  if (value !== 0) {
-    if (state.selected && state.selected.row === row && state.selected.col === col) {
-      state.selected = null; Sound.deselect();
-    } else {
-      state.selected = { row, col }; Sound.select();
-    }
-    clearHint(); renderBoard(); return;
-  }
-
-  // Click empty — need selected
-  if (!state.selected) return;
+// ── Movement Logic ──
+async function executeMove(row, col) {
   const path = findPath(state.selected.row, state.selected.col, row, col);
-  if (!path) {
-    Sound.noPath();
-    const c = getCell(row, col);
-    c.classList.add('no-path');
-    setTimeout(() => c.classList.remove('no-path'), 400);
-    return;
-  }
+  if (!path) return;
 
   // Save for undo
   saveSnapshot();
   state.animating = true;
   clearHint();
+  clearPath();
+  
   const fromR = state.selected.row, fromC = state.selected.col;
   const color = state.board[fromR][fromC];
   state.board[fromR][fromC] = 0;
@@ -158,10 +139,12 @@ async function onCellClick(row, col) {
   state.board[row][col] = color;
   renderBoard();
   Sound.land();
+  Haptics.light();
 
   // Check lines
   const removed = checkLines(row, col);
   if (removed.length > 0) {
+    Haptics.success();
     await removeWithEffect(removed);
     state.animating = false;
   } else {
@@ -172,7 +155,10 @@ async function onCellClick(row, col) {
     const spawnRemoved = checkAllNewBalls(
       state.nextBalls.filter(b => state.board[b.row]?.[b.col])
     );
-    if (spawnRemoved.length > 0) await removeWithEffect(spawnRemoved);
+    if (spawnRemoved.length > 0) {
+      Haptics.success();
+      await removeWithEffect(spawnRemoved);
+    }
     generateNextBalls();
     renderPreview();
     if (getEmptyCells().length === 0) {
@@ -180,6 +166,7 @@ async function onCellClick(row, col) {
       state.animating = false;
       stopTimer();
       Sound.gameOver();
+      Haptics.gameOver();
       saveToLeaderboard();
       clearSave();
       showGameOver();
@@ -188,6 +175,41 @@ async function onCellClick(row, col) {
     state.animating = false;
   }
   renderStats(); renderUndoHintUI(); autoSave();
+}
+
+// ── Cell Click ──
+async function onCellClick(row, col) {
+  if (state.animating || state.gameOver) return;
+  Sound.resume();
+  const value = state.board[row][col];
+
+  // Click ball
+  if (value !== 0) {
+    if (state.selected && state.selected.row === row && state.selected.col === col) {
+      state.selected = null; Sound.deselect();
+      Haptics.light();
+      clearPath();
+    } else {
+      state.selected = { row, col }; Sound.select();
+      Haptics.light();
+      clearHint();
+    }
+    renderBoard(); return;
+  }
+
+  // Click empty — need selected
+  if (!state.selected) return;
+  const path = findPath(state.selected.row, state.selected.col, row, col);
+  if (!path) {
+    Sound.noPath();
+    Haptics.error();
+    const c = getCell(row, col);
+    c.classList.add('no-path');
+    setTimeout(() => c.classList.remove('no-path'), 400);
+    return;
+  }
+
+  await executeMove(row, col);
 }
 
 // ── Hint ──
@@ -224,14 +246,102 @@ function updateSoundUI() {
   }
 }
 
+let isDragging = false;
+let lastHoveredCell = null;
+
 // ── Events ──
 function setupEvents() {
-  // Board — use pointerdown for faster mobile response
-  $('#game-board').addEventListener('pointerdown', (e) => {
+  const boardEl = $('#game-board');
+
+  // Board — use pointerdown for select and classic tap-to-move
+  boardEl.addEventListener('pointerdown', (e) => {
+    if (state.animating || state.gameOver) return;
     const cell = e.target.closest('.cell');
     if (!cell) return;
     e.preventDefault();
-    onCellClick(parseInt(cell.dataset.row), parseInt(cell.dataset.col));
+    Sound.resume();
+
+    const r = parseInt(cell.dataset.row);
+    const c = parseInt(cell.dataset.col);
+    const val = state.board[r][c];
+
+    if (val !== 0) {
+      // Click ball
+      if (state.selected && state.selected.row === r && state.selected.col === c) {
+        state.selected = null;
+        Sound.deselect();
+        Haptics.light();
+        clearPath();
+      } else {
+        state.selected = { row: r, col: c };
+        Sound.select();
+        Haptics.light();
+        clearHint();
+      }
+      isDragging = true;
+      lastHoveredCell = null;
+      renderBoard();
+    } else {
+      // Classic tap to move
+      if (state.selected) {
+        executeMove(r, c);
+      }
+      isDragging = false;
+      lastHoveredCell = null;
+    }
+  });
+
+  // pointermove on document to handle drag path preview (both desktop hover and mobile drag)
+  document.addEventListener('pointermove', (e) => {
+    if (!state.selected || state.animating || state.gameOver) return;
+
+    let cell = null;
+    if (e.pointerType === 'touch') {
+      const el = document.elementFromPoint(e.clientX, e.clientY);
+      cell = el ? el.closest('.cell') : null;
+    } else {
+      cell = e.target.closest('.cell');
+    }
+
+    if (!cell) {
+      clearPath();
+      lastHoveredCell = null;
+      return;
+    }
+
+    const r = parseInt(cell.dataset.row);
+    const c = parseInt(cell.dataset.col);
+
+    if (r === state.selected.row && c === state.selected.col) {
+      clearPath();
+      lastHoveredCell = null;
+      return;
+    }
+
+    if (state.board[r][c] === 0) {
+      const path = findPath(state.selected.row, state.selected.col, r, c);
+      if (path) {
+        const color = state.board[state.selected.row][state.selected.col];
+        drawPath(path, color);
+        lastHoveredCell = { row: r, col: c };
+      } else {
+        clearPath();
+        lastHoveredCell = null;
+      }
+    } else {
+      clearPath();
+      lastHoveredCell = null;
+    }
+  });
+
+  // pointerup on document to complete drag-to-drop action
+  document.addEventListener('pointerup', (e) => {
+    if (isDragging && lastHoveredCell) {
+      executeMove(lastHoveredCell.row, lastHoveredCell.col);
+    }
+    isDragging = false;
+    lastHoveredCell = null;
+    clearPath();
   });
 
   // Buttons
