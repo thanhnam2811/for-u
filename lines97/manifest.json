@@ -1,0 +1,18 @@
+{
+  "name": "Lines 97 — Góc Nhỏ Phép Thuật",
+  "short_name": "Lines 97",
+  "description": "Chơi game Lines 97 kinh điển offline không cần mạng.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#ffeef2",
+  "theme_color": "#ff7597",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
