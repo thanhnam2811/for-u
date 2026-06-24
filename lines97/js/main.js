@@ -95,6 +95,17 @@ function undo() {
   state.board = snap.board.map(r => [...r]);
   state.score = snap.score;
   state.nextBalls = snap.nextBalls.map(b => ({ ...b }));
+  
+  // Randomize only next spawn positions to let player reroll positions upon undo
+  const empties = getEmptyCells();
+  for (const ball of state.nextBalls) {
+    if (empties.length === 0) break;
+    const idx = Math.floor(Math.random() * empties.length);
+    const pos = empties.splice(idx, 1)[0];
+    ball.row = pos.row;
+    ball.col = pos.col;
+  }
+
   state.moves = snap.moves;
   state.ballsCleared = snap.ballsCleared;
   state.longestLine = snap.longestLine;
