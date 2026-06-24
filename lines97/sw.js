@@ -1,6 +1,6 @@
 // ── Lines 97 — PWA Service Worker ──
 
-const CACHE_NAME = 'lines97-cache-v5';
+const CACHE_NAME = 'lines97-cache-v6';
 const ASSETS = [
   './',
   './index.html',

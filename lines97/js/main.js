@@ -17,7 +17,7 @@ import { auth } from './firebase.js';
 import {
   signInAnonymously,
   GoogleAuthProvider,
-  signInWithPopup,
+  signInWithRedirect,
   linkWithPopup,
   signOut,
   onAuthStateChanged,
@@ -588,9 +588,7 @@ function setupFirebaseAuth() {
         if (confirm("Tài khoản Google này đã được liên kết với một tiến trình khác. Bạn có muốn chuyển sang tài khoản này (tiến trình hiện tại trên thiết bị sẽ bị thay thế)?")) {
           try {
             showToast("🔑 Đang chuyển tài khoản...");
-            await signInWithPopup(auth, provider);
-            showToast("👋 Đăng nhập Google thành công!");
-            accountModal.classList.remove('visible');
+            await signInWithRedirect(auth, provider);
           } catch (err) {
             console.error("Direct Google Sign-in error:", err);
             showToast(getFriendlyAuthErrorMessage(err.code));
