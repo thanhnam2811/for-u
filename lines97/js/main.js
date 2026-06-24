@@ -9,7 +9,19 @@ import {
   delay, buildPalettePanel, applyPalette, getCell, showLeaderboard, hideLeaderboard,
   renderCheckpointSlots, drawPath, clearPath,
 } from './render.js';
-import { autoSave, loadSavedGame, clearSave, saveCheckpoint, loadCheckpoint, saveToLeaderboard, getLeaderboard } from './save.js';
+import {
+  autoSave, loadSavedGame, clearSave, saveCheckpoint, loadCheckpoint, saveToLeaderboard, getLeaderboard,
+  syncUserProgress, getGlobalLeaderboard
+} from './save.js';
+import { auth } from './firebase.js';
+import {
+  signInAnonymously,
+  GoogleAuthProvider,
+  signInWithPopup,
+  linkWithPopup,
+  signOut,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { findBestHint, showHint, clearHint } from './hint.js';
 import { Haptics } from './haptics.js';
 
@@ -43,6 +55,9 @@ function init() {
         .catch(err => console.error('Service Worker registration failed:', err));
     });
   }
+
+  // Setup Google sign-in auth and sync
+  setupFirebaseAuth();
 }
 
 function loadSettings() {
@@ -435,8 +450,14 @@ function setupEvents() {
   });
 
   // Leaderboard Modal
-  $('#leaderboard-btn').addEventListener('click', () => {
+  $('#leaderboard-btn').addEventListener('click', async () => {
     showLeaderboard(getLeaderboard(), null);
+    try {
+      const globalData = await getGlobalLeaderboard();
+      showLeaderboard(globalData, null);
+    } catch (err) {
+      console.error("Could not fetch global leaderboard:", err);
+    }
   });
   $('#close-leaderboard-btn').addEventListener('click', hideLeaderboard);
   $('#leaderboard-overlay').addEventListener('click', (e) => {
@@ -495,6 +516,120 @@ function setupEvents() {
       e.returnValue = '';
     }
   });
+}
+
+// ── Firebase Auth & Sync ──
+function setupFirebaseAuth() {
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      console.log("Firebase Auth State: Logged in as", user.uid, user.isAnonymous ? "Anonymous" : user.displayName);
+      updateUserUI(user);
+      
+      // Show toast and synchronize progress
+      showToast("🔄 Đang đồng bộ dữ liệu...");
+      const needsReload = await syncUserProgress(user);
+      if (needsReload) {
+        showToast("✅ Đã đồng bộ tiến trình từ Cloud!");
+        if (loadSavedGame()) {
+          renderBoard();
+          renderPreview();
+          renderScore();
+          renderStats();
+          renderUndoHintUI();
+        }
+        renderCheckpointSlots();
+      } else {
+        showToast("✅ Tiến trình đã được đồng bộ!");
+      }
+    } else {
+      console.log("Firebase Auth State: No user. Signing in anonymously...");
+      try {
+        await signInAnonymously(auth);
+      } catch (err) {
+        console.error("Anonymous login error:", err);
+        showToast("❌ Lỗi đăng nhập Firebase!");
+      }
+    }
+  });
+
+  // Google Login button event listener
+  const loginBtn = $('#google-login-btn');
+  if (loginBtn) {
+    loginBtn.addEventListener('click', async () => {
+      const user = auth.currentUser;
+      if (!user) return;
+      
+      if (!user.isAnonymous) {
+        // Already logged in with Google, ask if they want to sign out
+        if (confirm(`Bạn có muốn đăng xuất khỏi tài khoản Google (${user.displayName || user.email}) không?`)) {
+          showToast("🚪 Đang đăng xuất...");
+          try {
+            await signOut(auth);
+            showToast("🚪 Đã đăng xuất thành công!");
+          } catch (err) {
+            console.error("Sign out error:", err);
+            showToast("❌ Lỗi đăng xuất!");
+          }
+        }
+      } else {
+        // Anonymous user, trigger Google Sign-In with linking
+        showToast("🔑 Đang mở đăng nhập Google...");
+        const provider = new GoogleAuthProvider();
+        try {
+          await linkWithPopup(user, provider);
+          showToast("🎉 Đã liên kết tài khoản Google thành công!");
+        } catch (error) {
+          if (error.code === 'auth/credential-already-in-use') {
+            // Already in use, sign in directly with Google and overwrite local progress if confirmed
+            if (confirm("Tài khoản Google này đã được liên kết với một tiến trình khác. Bạn có muốn chuyển sang tài khoản này (tiến trình hiện tại trên thiết bị sẽ bị thay thế)?")) {
+              try {
+                showToast("🔑 Đang chuyển tài khoản...");
+                await signInWithPopup(auth, provider);
+                showToast("👋 Đăng nhập tài khoản Google thành công!");
+              } catch (err) {
+                console.error("Direct Google Sign-in error:", err);
+                showToast("❌ Đăng nhập Google thất bại!");
+              }
+            }
+          } else {
+            console.error("Google linking error:", error);
+            showToast("❌ Liên kết Google thất bại!");
+          }
+        }
+      }
+    });
+  }
+}
+
+function updateUserUI(user) {
+  const avatarIcon = $('#user-avatar-icon');
+  const avatarImg = $('#user-avatar-img');
+  const loginBtn = $('#google-login-btn');
+  if (!loginBtn) return;
+
+  if (user.isAnonymous) {
+    if (avatarImg) avatarImg.style.display = 'none';
+    if (avatarIcon) {
+      avatarIcon.style.display = 'inline-block';
+      avatarIcon.textContent = 'account_circle';
+    }
+    loginBtn.title = "Đăng nhập Google để đồng bộ lưu trữ";
+  } else {
+    if (user.photoURL) {
+      if (avatarImg) {
+        avatarImg.src = user.photoURL;
+        avatarImg.style.display = 'inline-block';
+      }
+      if (avatarIcon) avatarIcon.style.display = 'none';
+    } else {
+      if (avatarImg) avatarImg.style.display = 'none';
+      if (avatarIcon) {
+        avatarIcon.style.display = 'inline-block';
+        avatarIcon.textContent = 'face';
+      }
+    }
+    loginBtn.title = `Tài khoản: ${user.displayName || user.email} (Click để đăng xuất)`;
+  }
 }
 
 // ── Boot ──

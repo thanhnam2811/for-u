@@ -28,6 +28,10 @@
       </a>
       <h1 class="game-title">Lines 97 🎱</h1>
       <div class="header-actions">
+        <button class="icon-btn" id="google-login-btn" aria-label="Đăng nhập Google">
+          <span class="material-icons-round" id="user-avatar-icon">account_circle</span>
+          <img id="user-avatar-img" src="" alt="Avatar" style="display: none; width: 100%; height: 100%; border-radius: 50%; object-fit: cover;" />
+        </button>
         <button class="icon-btn" id="checkpoint-toggle" aria-label="Checkpoint">
           <span class="material-icons-round">bookmark</span>
         </button>
@@ -120,7 +124,7 @@
       <div class="game-over-card leaderboard-card">
         <h2>🏆 Top 10</h2>
         <table class="lb-table">
-          <thead><tr><th>#</th><th>Điểm</th><th>Lượt</th><th>Ngày</th></tr></thead>
+          <thead><tr><th>#</th><th>Người chơi</th><th>Điểm</th><th>Ngày</th></tr></thead>
           <tbody id="leaderboard-body"></tbody>
         </table>
         <button class="restart-btn" id="close-leaderboard-btn">

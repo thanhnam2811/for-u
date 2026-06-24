@@ -1,6 +1,6 @@
 // ── Lines 97 — PWA Service Worker ──
 
-const CACHE_NAME = 'lines97-cache-v1';
+const CACHE_NAME = 'lines97-cache-v3';
 const ASSETS = [
   './',
   './index.html',
@@ -15,7 +15,8 @@ const ASSETS = [
   './js/render.js',
   './js/save.js',
   './js/hint.js',
-  './js/haptics.js'
+  './js/haptics.js',
+  './js/firebase.js'
 ];
 
 // Install Event — cache static assets
@@ -45,8 +46,9 @@ self.addEventListener('activate', (e) => {
 
 // Fetch Event — Stale-while-revalidate caching strategy
 self.addEventListener('fetch', (e) => {
-  // Only handle HTTP/HTTPS requests (avoid chrome-extension issues)
+  // Only handle HTTP/HTTPS GET requests (avoid caching POST or other request methods)
   if (!e.request.url.startsWith('http')) return;
+  if (e.request.method !== 'GET') return;
 
   e.respondWith(
     caches.match(e.request).then((cachedResponse) => {

@@ -343,7 +343,20 @@ export function showLeaderboard(data, highlightScore) {
       const tr = document.createElement('tr');
       if (e.score === highlightScore) tr.classList.add('highlight');
       const d = new Date(e.date);
-      tr.innerHTML = `<td>${i + 1}</td><td>${e.score}</td><td>${e.moves || '-'}</td><td>${d.toLocaleDateString('vi')}</td>`;
+      const name = e.displayName || "Bạn";
+      const photo = e.photoURL ? `<img class="lb-avatar" src="${e.photoURL}" alt="" />` : `<span class="material-icons-round lb-avatar-fallback">account_circle</span>`;
+      
+      tr.innerHTML = `
+        <td>${i + 1}</td>
+        <td>
+          <div class="lb-player-col">
+            ${photo}
+            <span>${name}</span>
+          </div>
+        </td>
+        <td>${e.score}</td>
+        <td>${d.toLocaleDateString('vi')}</td>
+      `;
       body.appendChild(tr);
     });
   }
