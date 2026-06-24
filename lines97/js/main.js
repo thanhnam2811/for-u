@@ -536,6 +536,31 @@ function generateRandomNickname() {
   return `${noun} ${adj} #${num}`;
 }
 
+function getFriendlyAuthErrorMessage(errorCode) {
+  switch (errorCode) {
+    case 'auth/invalid-email':
+      return "⚠️ Email không đúng định dạng!";
+    case 'auth/weak-password':
+      return "⚠️ Mật khẩu quá yếu (tối thiểu 6 ký tự)!";
+    case 'auth/email-already-in-use':
+      return "⚠️ Email này đã đăng ký tài khoản khác!";
+    case 'auth/user-not-found':
+    case 'auth/wrong-password':
+    case 'auth/invalid-credential':
+      return "❌ Sai Email hoặc Mật khẩu!";
+    case 'auth/operation-not-allowed':
+      return "❌ Đăng nhập Email chưa được bật!";
+    case 'auth/too-many-requests':
+      return "⚠️ Đăng nhập thất bại quá nhiều lần. Vui lòng thử lại sau!";
+    case 'auth/network-request-failed':
+      return "🌐 Lỗi kết nối mạng. Vui lòng kiểm tra lại!";
+    case 'auth/credential-already-in-use':
+      return "⚠️ Tài khoản đã liên kết với một tiến trình khác!";
+    default:
+      return "❌ Thao tác thất bại. Vui lòng thử lại!";
+  }
+}
+
 function setupFirebaseAuth() {
   const accountModal = $('#account-modal');
   if (!accountModal) {
@@ -568,12 +593,12 @@ function setupFirebaseAuth() {
             accountModal.classList.remove('visible');
           } catch (err) {
             console.error("Direct Google Sign-in error:", err);
-            showToast("❌ Đăng nhập Google thất bại!");
+            showToast(getFriendlyAuthErrorMessage(err.code));
           }
         }
       } else {
         console.error("Google linking error:", error);
-        showToast("❌ Liên kết Google thất bại!");
+        showToast(getFriendlyAuthErrorMessage(error.code));
       }
     }
   });
@@ -592,11 +617,7 @@ function setupFirebaseAuth() {
       $('#auth-password').value = '';
     } catch (err) {
       console.error("Email sign-in error:", err);
-      if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
-        showToast("❌ Sai Email hoặc Mật khẩu!");
-      } else {
-        showToast(`❌ Đăng nhập thất bại!`);
-      }
+      showToast(getFriendlyAuthErrorMessage(err.code));
     }
   });
 
@@ -625,11 +646,7 @@ function setupFirebaseAuth() {
       $('#auth-password').value = '';
     } catch (err) {
       console.error("Email sign-up error:", err);
-      if (err.code === 'auth/email-already-in-use') {
-        showToast("⚠️ Email này đã được sử dụng!");
-      } else {
-        showToast(`❌ Đăng ký thất bại!`);
-      }
+      showToast(getFriendlyAuthErrorMessage(err.code));
     }
   });
 
