@@ -24,7 +24,6 @@ import {
   EmailAuthProvider,
   linkWithCredential,
   signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
   updateProfile
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { findBestHint, showHint, clearHint } from './hint.js';
@@ -474,6 +473,10 @@ function setupEvents() {
 
   // Keyboard controls
   document.addEventListener('keydown', (e) => {
+    // Ignore hotkeys when typing in inputs
+    const tag = e.target.tagName.toLowerCase();
+    if (tag === 'input' || tag === 'textarea' || e.target.isContentEditable) return;
+
     if (e.ctrlKey && e.key === 'z') { e.preventDefault(); undo(); return; }
     switch (e.key.toLowerCase()) {
       case 'h': if (!e.ctrlKey) useHint(); break;
@@ -535,7 +538,12 @@ function generateRandomNickname() {
 
 function setupFirebaseAuth() {
   const accountModal = $('#account-modal');
-  $('#close-account-btn').addEventListener('click', () => accountModal.classList.remove('visible'));
+  if (!accountModal) {
+    console.warn("Account modal element not found in DOM.");
+    return;
+  }
+  const closeBtn = $('#close-account-btn');
+  if (closeBtn) closeBtn.addEventListener('click', () => accountModal.classList.remove('visible'));
   accountModal.addEventListener('click', (e) => {
     if (e.target === e.currentTarget) accountModal.classList.remove('visible');
   });
@@ -760,7 +768,8 @@ function updateUserUI(user) {
     loginBtn.title = `Tài khoản: ${user.displayName || user.email}`;
   }
   
-  if ($('#account-modal').classList.contains('visible')) {
+  const accountModal = $('#account-modal');
+  if (accountModal && accountModal.classList.contains('visible')) {
     updateAccountModalUI(user);
   }
 }
