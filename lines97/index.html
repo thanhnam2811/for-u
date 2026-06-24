@@ -2,16 +2,17 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Lines 97 🎱 — Góc Nhỏ Phép Thuật</title>
   <meta name="description" content="Chơi game Lines 97 kinh điển — xếp 5 viên bi cùng màu thành hàng để ghi điểm!">
 
-  <!-- Fonts (same as hub) -->
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@500;700&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
-
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -24,13 +25,45 @@
         <span>Về Hub</span>
       </a>
       <h1 class="game-title">Lines 97 🎱</h1>
-      <button class="settings-btn" id="palette-toggle" aria-label="Chọn bộ màu">
-        <span class="material-icons-round">palette</span>
-      </button>
+      <div class="header-actions">
+        <button class="icon-btn" id="checkpoint-toggle" aria-label="Checkpoint">
+          <span class="material-icons-round">bookmark</span>
+        </button>
+        <button class="icon-btn" id="palette-toggle" aria-label="Bộ màu">
+          <span class="material-icons-round">palette</span>
+        </button>
+      </div>
     </header>
 
-    <!-- Palette selector (collapsed) -->
+    <!-- Palette selector -->
     <div class="palette-panel" id="palette-panel"></div>
+
+    <!-- Checkpoint panel -->
+    <div class="palette-panel" id="checkpoint-panel">
+      <div class="palette-panel-inner">
+        <div class="cp-slot" data-slot="0">
+          <div class="cp-header"><span class="cp-label">Slot 1</span><span class="cp-info" data-slot="0">Trống</span></div>
+          <div class="cp-actions">
+            <button class="cp-save" data-slot="0"><span class="material-icons-round">save</span> Lưu</button>
+            <button class="cp-load" data-slot="0" disabled><span class="material-icons-round">play_arrow</span> Tải</button>
+          </div>
+        </div>
+        <div class="cp-slot" data-slot="1">
+          <div class="cp-header"><span class="cp-label">Slot 2</span><span class="cp-info" data-slot="1">Trống</span></div>
+          <div class="cp-actions">
+            <button class="cp-save" data-slot="1"><span class="material-icons-round">save</span> Lưu</button>
+            <button class="cp-load" data-slot="1" disabled><span class="material-icons-round">play_arrow</span> Tải</button>
+          </div>
+        </div>
+        <div class="cp-slot" data-slot="2">
+          <div class="cp-header"><span class="cp-label">Slot 3</span><span class="cp-info" data-slot="2">Trống</span></div>
+          <div class="cp-actions">
+            <button class="cp-save" data-slot="2"><span class="material-icons-round">save</span> Lưu</button>
+            <button class="cp-load" data-slot="2" disabled><span class="material-icons-round">play_arrow</span> Tải</button>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- Score / Preview -->
     <div class="score-section">
@@ -48,6 +81,13 @@
       </div>
     </div>
 
+    <!-- Stats bar -->
+    <div class="stats-bar">
+      <span id="stat-time">⏱ 00:00</span>
+      <span id="stat-moves">🎯 0</span>
+      <span id="stat-cleared">💥 0</span>
+    </div>
+
     <!-- Game Board -->
     <div class="board-wrapper">
       <div class="board" id="game-board"></div>
@@ -55,19 +95,33 @@
 
     <!-- Controls -->
     <div class="game-controls">
+      <button class="control-btn" id="undo-btn" disabled>
+        <span class="material-icons-round">undo</span>
+        <span>Hoàn tác</span>
+        <span class="badge" id="undo-count">5</span>
+      </button>
+      <button class="control-btn" id="hint-btn">
+        <span class="material-icons-round">lightbulb</span>
+        <span>Gợi ý</span>
+        <span class="badge" id="hint-count">3</span>
+      </button>
       <button class="control-btn" id="new-game-btn">
         <span class="material-icons-round">refresh</span>
-        <span>Ván mới</span>
+        <span>Mới</span>
       </button>
       <button class="control-btn" id="sound-toggle">
         <span class="material-icons-round" id="sound-icon">volume_up</span>
-        <span id="sound-label">Âm thanh</span>
+        <span id="sound-label">Âm</span>
+      </button>
+      <button class="control-btn" id="leaderboard-btn">
+        <span class="material-icons-round">emoji_events</span>
+        <span>Top</span>
       </button>
     </div>
 
     <!-- Instructions -->
     <div class="game-instructions">
-      <p>🎯 Click chọn bi → Click ô trống để di chuyển → Xếp 5+ bi cùng màu thành hàng!</p>
+      <p>🎯 Click bi → Click ô trống → Xếp 5+ bi cùng màu!</p>
     </div>
 
     <!-- Game Over Overlay -->
@@ -77,15 +131,35 @@
         <h2>Hết chỗ rồi!</h2>
         <p class="game-over-score">Điểm: <span id="final-score">0</span></p>
         <p class="game-over-high">Kỷ lục: <span id="final-high">0</span></p>
-        <button class="restart-btn" id="restart-btn">
-          <span class="material-icons-round">replay</span>
-          <span>Chơi lại</span>
+        <div class="game-over-actions">
+          <button class="restart-btn" id="restart-btn">
+            <span class="material-icons-round">replay</span> Chơi lại
+          </button>
+          <button class="restart-btn secondary" id="load-checkpoint-btn" style="display:none">
+            <span class="material-icons-round">bookmark</span> Tải checkpoint
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Leaderboard Overlay -->
+    <div class="game-over-overlay" id="leaderboard-overlay">
+      <div class="game-over-card leaderboard-card">
+        <h2>🏆 Top 10</h2>
+        <table class="lb-table">
+          <thead><tr><th>#</th><th>Điểm</th><th>Lượt</th><th>Ngày</th></tr></thead>
+          <tbody id="leaderboard-body"></tbody>
+        </table>
+        <button class="restart-btn" id="close-leaderboard-btn">
+          <span class="material-icons-round">close</span> Đóng
         </button>
       </div>
     </div>
 
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
   </div>
 
-  <script src="game.js"></script>
+  <script type="module" src="js/main.js"></script>
 </body>
 </html>
