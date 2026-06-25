@@ -313,3 +313,72 @@ html.settings-lock {
   border-color: rgba(var(--theme-color-rgb), 0.6);
   box-shadow: 0 0 40px rgba(var(--theme-color-rgb), 0.3);
 }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Explicit theme overrides to guarantee colors update across all browsers
+   ───────────────────────────────────────────────────────────────────────────── */
+.text-theme-color {
+  color: var(--theme-color) !important;
+}
+.bg-theme-color {
+  background-color: var(--theme-color) !important;
+}
+.border-theme-color {
+  border-color: var(--theme-color) !important;
+}
+.shadow-theme-glow {
+  box-shadow: var(--theme-glow) !important;
+}
+.to-theme-color {
+  --tw-gradient-to: var(--theme-color) !important;
+}
+.bg-theme-color\/10 {
+  background-color: rgba(var(--theme-color-rgb), 0.1) !important;
+}
+.hover\:border-theme-color:hover {
+  border-color: var(--theme-color) !important;
+}
+.hover\:shadow-theme-glow:hover {
+  box-shadow: var(--theme-glow) !important;
+}
+.hover\:shadow-\[0_0_20px_var\(--theme-color\)\]:hover {
+  box-shadow: 0 0 20px var(--theme-color) !important;
+}
+.hover\:shadow-\[0_0_24px_var\(--theme-color\)\]:hover {
+  box-shadow: 0 0 24px var(--theme-color) !important;
+}
+.hover\:bg-theme-color\/10:hover {
+  background-color: rgba(var(--theme-color-rgb), 0.1) !important;
+}
+.focus\:border-theme-color:focus {
+  border-color: var(--theme-color) !important;
+}
+.focus\:ring-theme-color:focus {
+  outline-color: var(--theme-color) !important;
+}
+.peer-checked\:bg-theme-color:checked ~ * {
+  background-color: var(--theme-color) !important;
+}
+.peer-checked\:shadow-theme-glow:checked ~ * {
+  box-shadow: var(--theme-glow) !important;
+}
+
+/* Color preset active states in settings popup */
+.settings-choice-btn.active {
+  background-color: rgba(var(--theme-color-rgb), 0.1) !important;
+  border-color: var(--theme-color) !important;
+  box-shadow: 0 0 12px rgba(var(--theme-color-rgb), 0.12) !important;
+}
+html.dark .settings-choice-btn.active {
+  color: var(--text-primary) !important;
+}
+
+/* Custom range sliders thumbs */
+input[type="range"]::-webkit-slider-thumb {
+  background-color: var(--theme-color) !important;
+  box-shadow: var(--theme-glow) !important;
+}
+input[type="range"]::-moz-range-thumb {
+  background-color: var(--theme-color) !important;
+  box-shadow: var(--theme-glow) !important;
+}
