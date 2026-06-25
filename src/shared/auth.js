@@ -90,9 +90,9 @@ function injectDOM() {
         <div id="shared-auth-profile-view" style="display: none;" class="text-center">
           <!-- Avatar -->
           <div class="relative w-20 h-20 mx-auto mb-4 select-none">
-            <img id="shared-auth-user-avatar" src="" alt="Avatar" class="w-full h-full rounded-full border-2 border-brand-pink dark:border-brand-purple shadow-md object-cover" style="display: none;">
-            <div id="shared-auth-user-icon" class="w-full h-full rounded-full border-2 border-brand-pink dark:border-brand-purple shadow-md bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 dark:text-slate-300">
-              <span class="material-icons-round text-4xl">face</span>
+            <img id="shared-auth-user-avatar" src="" alt="Avatar" referrerpolicy="no-referrer" class="w-full h-full rounded-full border-2 border-brand-pink dark:border-brand-purple shadow-md object-cover" style="display: none;">
+            <div id="shared-auth-user-icon" class="w-full h-full rounded-full border-2 border-brand-pink dark:border-brand-purple shadow-md bg-gradient-to-tr from-brand-pink to-brand-purple flex items-center justify-center text-white">
+              <span class="material-icons-round text-4xl">person</span>
             </div>
             <span id="shared-auth-user-badge" class="absolute -bottom-1 -right-1 text-[9px] font-bold text-white px-2 py-0.5 rounded-full shadow">Google</span>
           </div>
@@ -239,21 +239,32 @@ function updateAccountModalUI(user) {
   } else {
     showView('profile');
     
+    let photoURL = user.photoURL;
+    let displayName = user.displayName;
+    let email = user.email;
+
+    if (user.providerData && user.providerData.length > 0) {
+      for (const profile of user.providerData) {
+        if (!photoURL && profile.photoURL) photoURL = profile.photoURL;
+        if (!displayName && profile.displayName) displayName = profile.displayName;
+        if (!email && profile.email) email = profile.email;
+      }
+    }
+
     const avatarImg = $('#shared-auth-user-avatar');
     const avatarIcon = $('#shared-auth-user-icon');
     
-    if (user.photoURL) {
-      avatarImg.src = user.photoURL;
+    if (photoURL) {
+      avatarImg.src = photoURL;
       avatarImg.style.display = 'inline-block';
       avatarIcon.style.display = 'none';
     } else {
       avatarImg.style.display = 'none';
       avatarIcon.style.display = 'inline-block';
-      avatarIcon.firstElementChild.textContent = 'face';
     }
     
-    $('#shared-auth-user-name').textContent = user.displayName || "Người chơi";
-    $('#shared-auth-user-email').textContent = user.email || "";
+    $('#shared-auth-user-name').textContent = displayName || "Người chơi";
+    $('#shared-auth-user-email').textContent = email || "";
     
     const isGoogle = user.providerData.some(p => p.providerId === 'google.com');
     const badge = $('#shared-auth-user-badge');
