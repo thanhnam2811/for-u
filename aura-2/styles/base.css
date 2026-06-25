@@ -326,11 +326,31 @@ html.settings-lock {
 .border-theme-color {
   border-color: var(--theme-color) !important;
 }
+.border-theme-color\/10 {
+  border-color: rgba(var(--theme-color-rgb), 0.1) !important;
+}
+.border-theme-color\/20 {
+  border-color: rgba(var(--theme-color-rgb), 0.2) !important;
+}
 .shadow-theme-glow {
   box-shadow: var(--theme-glow) !important;
 }
+.from-theme-color {
+  --tw-gradient-from: var(--theme-color) !important;
+}
 .to-theme-color {
   --tw-gradient-to: var(--theme-color) !important;
+}
+
+/* Direct gradient overrides for progress bars to guarantee color syncing */
+#progress-bar {
+  background-image: linear-gradient(to right, var(--theme-color), #ffffff) !important;
+}
+#veil-progress-bar {
+  background-image: linear-gradient(to right, rgba(147, 197, 253, 0.8), var(--theme-color)) !important;
+}
+.urgent #veil-progress-bar {
+  background-image: linear-gradient(to right, rgba(254, 202, 202, 0.9), #ef4444) !important;
 }
 .bg-theme-color\/10 {
   background-color: rgba(var(--theme-color-rgb), 0.1) !important;
