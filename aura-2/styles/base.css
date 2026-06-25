@@ -1,0 +1,315 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@source "../index.html";
+@source "../scripts/**/*.js";
+@source "../../shared/**/*.js";
+
+@theme {
+  /* Tông màu ma thuật chủ đạo */
+  --color-brand-pink: #FF7597;
+  --color-brand-purple: #C193FF;
+  --color-brand-dark: #3F3B4F;
+  --color-brand-muted: #8773AF;
+
+  /* Font chữ */
+  --font-display: 'Comfortaa', sans-serif;
+  --font-body: 'Quicksand', sans-serif;
+
+  /* Ánh xạ biến màu động cho Tailwind */
+  --color-theme-color: var(--theme-color);
+
+  /* Bóng đổ */
+  --shadow-glass-light: 0 8px 32px 0 rgba(135, 115, 175, 0.08);
+  --shadow-glass-dark: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  --shadow-brand: 0 6px 20px rgba(255, 117, 151, 0.35);
+  --shadow-brand-hover: 0 10px 30px rgba(255, 117, 151, 0.45);
+  --shadow-theme-glow: var(--theme-glow);
+}
+
+:root {
+  /* Hằng số màu sắc nền (Light Mode làm mặc định) */
+  --bg-dark: #f8fafc;
+  --bg-card: rgba(255, 255, 255, 0.78);
+  --border-glass: rgba(15, 23, 42, 0.08);
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  
+  /* Chủ đề Hoàng Kim */
+  --theme-color: #d97706;
+  --theme-color-rgb: 217, 119, 6;
+  --theme-glow: 0 0 20px rgba(217, 119, 6, 0.35);
+  --theme-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 50%, #b45309 100%);
+}
+
+/* Các lớp chủ đề màu sắc động (Light Mode) */
+body.theme-gold {
+  --theme-color: #d97706;
+  --theme-color-rgb: 217, 119, 6;
+  --theme-glow: 0 0 25px rgba(217, 119, 6, 0.35);
+  --theme-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 50%, #b45309 100%);
+}
+
+body.theme-cosmic {
+  --theme-color: #9333ea;
+  --theme-color-rgb: 147, 51, 234;
+  --theme-glow: 0 0 25px rgba(147, 51, 234, 0.35);
+  --theme-gradient: linear-gradient(135deg, #a855f7 0%, #9333ea 50%, #7e22ce 100%);
+}
+
+body.theme-lotus {
+  --theme-color: #db2777;
+  --theme-color-rgb: 219, 39, 119;
+  --theme-glow: 0 0 25px rgba(219, 39, 119, 0.35);
+  --theme-gradient: linear-gradient(135deg, #ec4899 0%, #db2777 50%, #be185d 100%);
+}
+
+body.theme-emerald {
+  --theme-color: #059669;
+  --theme-color-rgb: 5, 150, 105;
+  --theme-glow: 0 0 25px rgba(5, 150, 105, 0.35);
+  --theme-gradient: linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%);
+}
+
+/* Dark Mode Overrides (khi html có class .dark) */
+html.dark {
+  --bg-dark: #0a0a0f;
+  --bg-card: rgba(18, 18, 28, 0.7);
+  --border-glass: rgba(255, 255, 255, 0.08);
+  --text-primary: #f0f0f5;
+  --text-secondary: #a0a0b5;
+  
+  --theme-color: #ffd700;
+  --theme-color-rgb: 255, 215, 0;
+  --theme-glow: 0 0 20px rgba(255, 215, 0, 0.4);
+  --theme-gradient: linear-gradient(135deg, #ffe066 0%, #ffd700 50%, #cca300 100%);
+}
+
+html.dark body.theme-gold {
+  --theme-color: #ffd700;
+  --theme-color-rgb: 255, 215, 0;
+  --theme-glow: 0 0 25px rgba(255, 215, 0, 0.4);
+  --theme-gradient: linear-gradient(135deg, #ffe066 0%, #ffd700 50%, #cca300 100%);
+}
+
+html.dark body.theme-cosmic {
+  --theme-color: #d05eff;
+  --theme-color-rgb: 208, 94, 255;
+  --theme-glow: 0 0 25px rgba(208, 94, 255, 0.45);
+  --theme-gradient: linear-gradient(135deg, #ecb3ff 0%, #d05eff 50%, #8c00cc 100%);
+}
+
+html.dark body.theme-lotus {
+  --theme-color: #ff7ebb;
+  --theme-color-rgb: 255, 126, 187;
+  --theme-glow: 0 0 25px rgba(255, 126, 187, 0.4);
+  --theme-gradient: linear-gradient(135deg, #ffb3d9 0%, #ff7ebb 50%, #cc3377 100%);
+}
+
+html.dark body.theme-emerald {
+  --theme-color: #2effa2;
+  --theme-color-rgb: 46, 255, 162;
+  --theme-glow: 0 0 25px rgba(46, 255, 162, 0.4);
+  --theme-gradient: linear-gradient(135deg, #a8ffd3 0%, #2effa2 50%, #00cc66 100%);
+}
+
+html.settings-lock {
+  overflow: hidden;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Aura Custom Core Keyframes & Animations
+   ───────────────────────────────────────────────────────────────────────────── */
+
+@keyframes phuoc-pop {
+  0% { transform: translateY(0) scale(1); }
+  35% {
+    transform: translateY(-2px) scale(1.18);
+    box-shadow: 0 0 30px rgba(var(--theme-color-rgb), 0.55);
+  }
+  62% { transform: translateY(0) scale(0.97); }
+  100% { transform: translateY(0) scale(1); }
+}
+
+@keyframes veil-pulse {
+  from {
+    box-shadow: 0 0 0 1px rgba(255, 110, 110, 0.12), 0 16px 36px rgba(65, 0, 0, 0.28);
+  }
+  to {
+    box-shadow: 0 0 0 1px rgba(255, 136, 136, 0.28), 0 22px 52px rgba(80, 0, 0, 0.48);
+  }
+}
+
+@keyframes lantern-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  50% { transform: translateX(4px); }
+  75% { transform: translateX(-4px); }
+}
+
+@keyframes lantern-pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(255, 170, 0, 0.6);
+  }
+  50% {
+    transform: scale(1.1);
+    box-shadow: 0 0 25px 10px rgba(255, 170, 0, 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(255, 170, 0, 0);
+  }
+}
+
+@keyframes phuoc-glow-pulse {
+  from {
+    border-color: rgba(var(--theme-color-rgb), 0.5);
+    box-shadow: 0 0 10px rgba(var(--theme-color-rgb), 0.2);
+  }
+  to {
+    border-color: var(--theme-color);
+    box-shadow: var(--theme-glow), 0 4px 15px rgba(0, 0, 0, 0.2);
+  }
+}
+
+@keyframes heart-beat {
+  from { transform: scale(1); }
+  to { transform: scale(1.15); }
+}
+
+@keyframes phuoc-plus-flight {
+  0% {
+    transform: translate(0, 0) scale(0.7);
+    opacity: 0;
+  }
+  18% {
+    opacity: 1;
+    transform: translate(calc(var(--phuoc-dx, 0px) * 0.16), calc(var(--phuoc-dy, 0px) * 0.16 - 22px)) scale(1.02);
+  }
+  72% {
+    opacity: 1;
+    transform: translate(calc(var(--phuoc-dx, 0px) * 0.88), calc(var(--phuoc-dy, 0px) * 0.88 - 16px)) scale(1);
+  }
+  100% {
+    transform: translate(var(--phuoc-dx, 0px), var(--phuoc-dy, 0px)) scale(0.92);
+    opacity: 0.9;
+  }
+}
+
+@keyframes phuoc-spark-burst {
+  0% {
+    transform: translateY(0) scale(0.2);
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(-8px) scale(1);
+  }
+  100% {
+    transform: translateY(-24px) scale(0.35);
+    opacity: 0;
+  }
+}
+
+@keyframes buy-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  50% { transform: translateX(4px); }
+  75% { transform: translateX(-4px); }
+}
+
+/* Video mirroring support */
+#webcam {
+  transform: scaleX(-1);
+}
+#webcam.no-mirror {
+  transform: scaleX(1);
+}
+
+/* Flash camera effect overlay */
+.flash-effect {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  background: radial-gradient(circle at center, #ffffff 0%, rgba(var(--theme-color-rgb), 0.9) 40%, transparent 100%);
+  z-index: 99;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.12s ease-out;
+}
+.flash-effect.flash {
+  opacity: 0.85;
+  transition: none;
+}
+
+/* Dynamic toast notifications transition */
+.toast-notification {
+  position: fixed;
+  bottom: max(18px, env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translate(-50%, 100px);
+  z-index: 101;
+  background: rgba(18, 18, 28, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--theme-color);
+  box-shadow: var(--theme-glow), 0 10px 30px rgba(0, 0, 0, 0.3);
+  border-radius: 16px;
+  width: max-content;
+  max-width: calc(100vw - 32px);
+  padding: 14px 22px;
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  line-height: 1.35;
+  text-align: center;
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s ease;
+  opacity: 0;
+  pointer-events: none;
+}
+.toast-notification.show {
+  transform: translate(-50%, 0);
+  opacity: 1;
+}
+
+/* Custom state overrides for components */
+.phuoc-badge.popping {
+  animation: phuoc-pop 0.9s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+.phuoc-badge.rewarding {
+  box-shadow: 0 0 0 1px rgba(var(--theme-color-rgb), 0.35), 0 18px 34px rgba(0, 0, 0, 0.28), 0 0 24px rgba(var(--theme-color-rgb), 0.24);
+  transition-duration: 0.85s;
+}
+.phuoc-badge.lantern-shake {
+  animation: lantern-shake 0.3s ease;
+  border-color: #ff6b6b;
+  color: #ff6b6b;
+}
+.phuoc-badge.lantern-pulse {
+  animation: lantern-pulse 0.5s ease-out;
+  border-color: #ffaa00;
+  color: #ffaa00;
+}
+.phuoc-badge span.material-icons-round {
+  animation: heart-beat 1s infinite alternate ease-in-out;
+}
+.btn-buy.error {
+  animation: buy-shake 0.4s ease-in-out;
+  background: rgba(255, 50, 50, 0.2);
+  color: #ff6b6b;
+  border-color: rgba(255, 50, 50, 0.4);
+}
+
+/* Camera dynamic state */
+.camera-wrapper.aura-active {
+  border-color: rgba(var(--theme-color-rgb), 0.6);
+  box-shadow: 0 0 40px rgba(var(--theme-color-rgb), 0.3);
+}

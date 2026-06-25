@@ -1,0 +1,303 @@
+// Quản lý trạng thái động của ứng dụng bằng một đối tượng mutable duy nhất
+// Giúp tránh các lỗi Read-Only Binding của ES Modules khi các file khác cập nhật biến
+
+import { auth, db } from "../../shared/firebase.js";
+import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+// Hàm đồng bộ điểm phước lên Cloud (Firestore)
+export async function syncPhuocToCloud() {
+	const user = auth.currentUser;
+	if (!user) return;
+	const userDocRef = doc(db, 'players', user.uid);
+	try {
+		await setDoc(userDocRef, {
+			auraData: {
+				phuocCount: state.phuocCount,
+				updatedAt: Date.now()
+			}
+		}, { merge: true });
+	} catch (err) {
+		console.error("Firestore syncPhuocToCloud error:", err);
+	}
+}
+
+// Đồng bộ/Tải dữ liệu điểm phước từ Firestore khi đăng nhập
+export async function syncUserAuraProgress(user) {
+	if (!user) return;
+	const userDocRef = doc(db, 'players', user.uid);
+	try {
+		const docSnap = await getDoc(userDocRef);
+		const localPhuoc = parseInt(localStorage.getItem('phuoc_count') || '0', 10);
+		if (docSnap.exists()) {
+			const cloudData = docSnap.data();
+			const cloudAura = cloudData.auraData || {};
+			const cloudPhuoc = cloudAura.phuocCount || 0;
+
+			if (cloudPhuoc > localPhuoc) {
+				// Cloud lớn hơn, cập nhật local
+				state.phuocCount = cloudPhuoc;
+				localStorage.setItem('phuoc_count', cloudPhuoc);
+				const phuocDisplay = document.getElementById('phuoc-count-display');
+				if (phuocDisplay) phuocDisplay.innerText = cloudPhuoc;
+			} else if (localPhuoc > cloudPhuoc) {
+				// Local lớn hơn, cập nhật cloud
+				await setDoc(userDocRef, {
+					auraData: {
+						phuocCount: localPhuoc,
+						updatedAt: Date.now()
+					}
+				}, { merge: true });
+			}
+		} else {
+			// Tài liệu chưa tồn tại, tạo mới bằng dữ liệu local
+			await setDoc(userDocRef, {
+				auraData: {
+					phuocCount: localPhuoc,
+					updatedAt: Date.now()
+				},
+				displayName: user.displayName || (user.isAnonymous ? "Người chơi ẩn danh" : "Google Player"),
+				photoURL: user.photoURL || "",
+				updatedAt: Date.now()
+			}, { merge: true });
+		}
+	} catch (err) {
+		console.error("Firestore syncUserAuraProgress error:", err);
+	}
+}
+
+export const state = {
+	// ─────────────────────────────────────────────
+	// Trạng thái mô hình AI & Camera
+	// ─────────────────────────────────────────────
+	handLandmarker: null,
+	webcamStream: null,
+	lastVideoTime: -1,
+	isModelLoaded: false,
+	isCameraActive: false,
+
+	// ─────────────────────────────────────────────
+	// Cấu hình người dùng (tải từ localStorage)
+	// ─────────────────────────────────────────────
+	activePreset: localStorage.getItem('active_preset') || 'lotus',
+	activeSound: localStorage.getItem('active_sound') || 'gong',
+	volume: localStorage.getItem('volume') !== null ? parseFloat(localStorage.getItem('volume')) : 0.7,
+	sensitivitySliderVal: localStorage.getItem('sensitivity_slider_val') !== null
+		? parseInt(localStorage.getItem('sensitivity_slider_val'), 10) : 28,
+	sensitivityThreshold: 0.7,
+	showSkeleton: localStorage.getItem('show_skeleton') !== null
+		? localStorage.getItem('show_skeleton') === 'true' : true,
+	mirrorCamera: localStorage.getItem('mirror_camera') !== null
+		? localStorage.getItem('mirror_camera') === 'true' : true,
+	activeFaceFilter: localStorage.getItem('active_face_filter') || 'none',
+	faceLandmarker: null,
+	faceLandmarks: null,
+	handResults: null,
+	lastCameraError: null,
+
+	// ─────────────────────────────────────────────
+	// Dark Veil settings (từ localStorage)
+	// ─────────────────────────────────────────────
+	// Chu kỳ sương (ms): 30000 / 45000 / 60000 / 90000
+	darkIntervalMs: localStorage.getItem('dark_interval_ms') !== null
+		? parseInt(localStorage.getItem('dark_interval_ms'), 10) : 45000,
+	// Tốc độ sương (ms để đạt mức tối đa): 15000 / 25000 / 40000
+	darkGrowMs: localStorage.getItem('dark_grow_ms') !== null
+		? parseInt(localStorage.getItem('dark_grow_ms'), 10) : 25000,
+
+	// ─────────────────────────────────────────────
+	// Trạng thái nhận diện cử chỉ
+	// ─────────────────────────────────────────────
+	gestureActive: false,
+	distanceNormalized: 999,
+	smoothedDistanceNormalized: 999,
+	lastHandsDetected: 0,
+	prevNormalizedDist: 999,     // Để tính signal convergence
+	stableTwoHandFrames: 0,
+	prayerCandidateFrames: 0,
+	gestureMissFrames: 0,
+	lastGestureRewardTime: 0,    // Timestamp lần gần nhất được cộng phước / phát feedback chính
+	gestureRewardCooldownMs: 700, // Cooldown ngắn để vòng chắp tay kế vẫn có chuông nhưng không spam khi detector rung
+
+	// ─────────────────────────────────────────────
+	// Chỉ số đo hiệu năng (FPS)
+	// ─────────────────────────────────────────────
+	lastFrameTime: performance.now(),
+	frameCount: 0,
+	currentFps: 0,
+	engine: {
+		frameId: 0,
+		lastDt: 16.67,
+		performance: {
+			averageFps: 60,
+			fogQuality: 'high',
+			effectQuality: 'high'
+		},
+		tasks: {
+			handDetect: {
+				lastRunAt: 0,
+				lastVideoTime: -1
+			},
+			faceDetect: {
+				lastRunAt: 0,
+				lastVideoTime: -1
+			},
+				lanternUpdate: {
+					lastRunAt: 0
+				},
+			lanternSave: {
+				lastRunAt: 0
+			}
+		},
+		dirtyFlags: {
+			lanterns: false
+		}
+	},
+
+	// ─────────────────────────────────────────────
+	// Mảng chứa các đối tượng hiệu ứng đang vẽ
+	// ─────────────────────────────────────────────
+	particles: [],
+	ripples: [],
+	bodyAuraWaves: [],
+	auraBursts: [],
+	bodyGlowPulses: [],          // Hiệu ứng glow từ viền cơ thể ra ngoài
+	prayerAuras: [],             // Timeline hào quang cinematic sau khi chắp tay
+	lanterns: [],                // Mảng chứa các Hoa Đăng đang trôi
+	lanternsLastAddedAt: 0,      // Cooldown click cho Hoa Đăng
+
+	// ─────────────────────────────────────────────
+	// Runtime data cho effect đang hoạt động
+	// ─────────────────────────────────────────────
+	// Điểm Tích Phước (localStorage)
+	// ─────────────────────────────────────────────
+	phuocCount: parseInt(localStorage.getItem('phuoc_count') || '0', 10),
+
+	// ─────────────────────────────────────────────
+	// Dark Veil runtime state
+	// ─────────────────────────────────────────────
+	darkPhase: 'idle',           // 'idle' | 'growing' | 'holding' | 'clearing'
+	darkOpacity: 0,              // Độ mờ hiện tại (0 → MAX_DARK_OPACITY)
+	darkStartTime: 0,            // Timestamp bắt đầu chu kỳ
+	darkHoldStartTime: 0,        // Timestamp khi đạt mức tối đa (bắt đầu hold)
+	darkClearRadius: 0,          // Bán kính vùng đã xóa khi chắp tay
+	darkClearCenterX: 0,
+	darkClearCenterY: 0,
+	darkClearActive: false,      // Đang trong quá trình clearing không
+	auraWaveCenterX: 0,
+	auraWaveCenterY: 0,
+	auraWaveRadius: 0,
+	auraWaveActive: false,
+
+	// ─────────────────────────────────────────────
+	// Web Audio Context
+	// ─────────────────────────────────────────────
+	audioCtx: null,
+
+	// ─────────────────────────────────────────────
+	// Continuous sparkle timer (dùng trong AI)
+	// ─────────────────────────────────────────────
+};
+
+// Hằng số Dark Veil
+export const MAX_DARK_OPACITY = 0.62; // Không bao giờ vượt mức sương này
+export const DARK_HOLD_MS = 5000;     // Giữ mức tối đa trước khi duy trì sương dày chờ user clear
+
+// Hằng số Hoa Đăng
+export const MAX_LANTERNS = 40;
+export const LANTERN_LIFESPAN_MS = 30 * 60 * 1000; // 30 phút
+
+export function getSensitivityThresholdForSlider(sliderVal) {
+	return 0.42 + (sliderVal / 100);
+}
+
+// Cập nhật ngưỡng độ nhạy ban đầu từ slider val
+state.sensitivityThreshold = getSensitivityThresholdForSlider(state.sensitivitySliderVal);
+
+// Hàm cập nhật và lưu phước đức vào localStorage
+export function incrementPhuoc() {
+	state.phuocCount++;
+	localStorage.setItem('phuoc_count', state.phuocCount);
+	void syncPhuocToCloud();
+	return state.phuocCount;
+}
+
+// Hàm tiêu phước
+export function spendPhuoc(amount) {
+	if (state.phuocCount >= amount) {
+		state.phuocCount -= amount;
+		localStorage.setItem('phuoc_count', state.phuocCount);
+		const phuocDisplay = document.getElementById('phuoc-count-display');
+		if (phuocDisplay) phuocDisplay.innerText = state.phuocCount;
+		void syncPhuocToCloud();
+		return true;
+	}
+	return false;
+}
+
+// ----------------------------------------------------
+// QUẢN LÝ HOA ĐĂNG (LANTERNS)
+// ----------------------------------------------------
+import { LANTERN_SVGS } from "./assets/lantern-svgs.js";
+
+function svgToDataUrl(svg) {
+	return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+}
+
+export const LANTERN_ASSETS = {
+	basic: {
+		svg: LANTERN_SVGS.basic,
+		dataUrl: svgToDataUrl(LANTERN_SVGS.basic)
+	},
+	crystal: {
+		svg: LANTERN_SVGS.crystal,
+		dataUrl: svgToDataUrl(LANTERN_SVGS.crystal)
+	},
+	dragon: {
+		svg: LANTERN_SVGS.dragon,
+		dataUrl: svgToDataUrl(LANTERN_SVGS.dragon)
+	}
+};
+
+export const LANTERN_TYPES = {
+	basic: {
+		name: "Hoa Sen Bình An",
+		desc: "Hoa sen hồng truyền thống, thanh tịnh mộc mạc. Xua tan sương mù nhẹ.",
+		price: 10,
+		scale: 1,
+		fogClearRadius: 100,
+		assetKey: "basic"
+	},
+	crystal: {
+		name: "Ngọc Liên Đăng",
+		desc: "Khối pha lê lục giác tinh khôi, ánh sáng thanh khiết.",
+		price: 50,
+		scale: 1.25,
+		fogClearRadius: 200,
+		assetKey: "crystal"
+	},
+	dragon: {
+		name: "Kim Long Đăng",
+		desc: "Hoa sen mạ vàng kim cao cấp, điểm xuyết vệt long văn mờ ảo ở lõi.",
+		price: 200,
+		scale: 1.6,
+		fogClearRadius: 400,
+		assetKey: "dragon"
+	}
+};
+
+// Lưu trữ Hoa Đăng
+export function saveLanternsState() {
+	const activeLanterns = state.lanterns
+		.filter(l => l.phase !== 'DONE' && l.id)
+		.map(l => ({
+			id: l.id,
+			type: l.type || 'basic',
+			spawnedAt: l.spawnedAt,
+			xRatio: l.xRatio,
+			baseYRatio: l.baseYRatio,
+			phaseSeed: l.phaseSeed,
+			startX: l.startX,
+			startY: l.startY
+		}));
+	localStorage.setItem('lanterns_data', JSON.stringify(activeLanterns));
+}
