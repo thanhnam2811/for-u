@@ -108,20 +108,4 @@ initSharedAuth({
   profileBtnSelector: '#google-login-btn'
 });
 
-// Register Service Worker (production environment only)
-if ('serviceWorker' in navigator) {
-  if (import.meta.env.DEV) {
-    navigator.serviceWorker.getRegistrations().then((registrations) => {
-      for (const reg of registrations) {
-        reg.unregister().then(() => console.log('Dev Service Worker unregistered.'));
-      }
-    });
-  } else {
-    window.addEventListener('load', () => {
-      const baseUrl = import.meta.env.BASE_URL || '/';
-      navigator.serviceWorker.register(`${baseUrl}sw.js`)
-        .then((reg) => console.log('Global Service Worker registered!', reg.scope))
-        .catch((err) => console.error('Global Service Worker failed to register!', err));
-    });
-  }
-}
+

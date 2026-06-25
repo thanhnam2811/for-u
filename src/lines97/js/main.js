@@ -14,6 +14,7 @@ import {
   syncUserProgress, getGlobalLeaderboard
 } from './save.js';
 import { initSharedAuth } from '../../shared/auth.js';
+import { auth } from '../../shared/firebase.js';
 import { findBestHint, showHint, clearHint } from './hint.js';
 import { Haptics } from './haptics.js';
 
@@ -56,6 +57,17 @@ function init() {
       });
     }
   }
+
+  // Lắng nghe trạng thái kết nối mạng phục vụ PWA offline
+  window.addEventListener('offline', () => {
+    showToast('Đã ngắt kết nối. Bạn vẫn có thể chơi offline bình thường! 🎮', 4000);
+  });
+  window.addEventListener('online', () => {
+    showToast('Đã khôi phục kết nối mạng! ⚡', 3000);
+    if (auth.currentUser) {
+      syncUserProgress(auth.currentUser);
+    }
+  });
 
   // Setup Google sign-in auth and sync via shared auth module
   initSharedAuth({
