@@ -73,7 +73,7 @@ function injectDOM() {
           <form id="shared-auth-email-form" class="space-y-3.5">
             <div>
               <label class="block text-xs font-semibold text-slate-400 mb-1.5 select-none">EMAIL</label>
-              <input type="email" id="shared-auth-email" required placeholder="example@email.com" class="w-full font-sans text-sm px-4 py-2.5 rounded-xl border border-white/50 dark:border-slate-700/50 bg-white/40 dark:bg-slate-900/30 text-slate-800 dark:text-slate-100 outline-none focus:border-brand-pink focus:bg-white focus:dark:bg-slate-900 focus:ring-4 focus:ring-brand-pink/15 transition-all">
+              <input type="email" id="shared-auth-email" required placeholder="example@email.com" autocomplete="username" class="w-full font-sans text-sm px-4 py-2.5 rounded-xl border border-white/50 dark:border-slate-700/50 bg-white/40 dark:bg-slate-900/30 text-slate-800 dark:text-slate-100 outline-none focus:border-brand-pink focus:bg-white focus:dark:bg-slate-900 focus:ring-4 focus:ring-brand-pink/15 transition-all">
             </div>
             <div>
               <label class="block text-xs font-semibold text-slate-400 mb-1.5 select-none">MẬT KHẨU</label>
@@ -104,6 +104,23 @@ function injectDOM() {
           <div class="border-t border-slate-200/50 dark:border-slate-800/50 pt-5">
             <button id="shared-auth-signout-btn" class="w-full font-sans font-bold text-sm text-white bg-brand-pink hover:bg-brand-pink/90 rounded-2xl py-3 shadow-brand hover:shadow-brand-hover transition-all cursor-pointer">
               Đăng Xuất Tài Khoản
+            </button>
+          </div>
+        </div>
+
+        <!-- View 3: Sync/Switch Account Conflict (shown when Google is already linked) -->
+        <div id="shared-auth-conflict-view" style="display: none;" class="text-center">
+          <div class="w-14 h-14 bg-amber-100 dark:bg-amber-950/30 rounded-full flex justify-center items-center mx-auto mb-3 text-amber-500">
+            <span class="material-icons-round text-3xl">warning</span>
+          </div>
+          <h4 class="font-display font-bold text-lg text-slate-800 dark:text-slate-100 mb-2">Tài khoản đã liên kết</h4>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mb-6 px-2 leading-relaxed font-sans">Tài khoản Google này đã được liên kết với một tiến trình khác. Bạn có muốn chuyển sang tài khoản này không? (Tiến trình chưa lưu trên máy này sẽ bị thay thế)</p>
+          <div class="space-y-2.5">
+            <button id="shared-auth-switch-btn" class="w-full font-sans font-bold text-sm text-white bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl py-3 shadow-md hover:shadow-lg transition-all cursor-pointer">
+              Xác Nhận Chuyển Tài Khoản
+            </button>
+            <button id="shared-auth-conflict-cancel-btn" class="w-full font-sans font-bold text-sm text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800/50 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-2xl py-3 transition-all cursor-pointer">
+              Hủy
             </button>
           </div>
         </div>
@@ -194,6 +211,16 @@ function generateRandomNickname() {
   return `${noun} ${adj} #${num}`;
 }
 
+// Show specific view in the modal
+function showView(viewId) {
+  const loginView = $('#shared-auth-login-view');
+  const profileView = $('#shared-auth-profile-view');
+  const conflictView = $('#shared-auth-conflict-view');
+  if (loginView) loginView.style.display = viewId === 'login' ? 'block' : 'none';
+  if (profileView) profileView.style.display = viewId === 'profile' ? 'block' : 'none';
+  if (conflictView) conflictView.style.display = viewId === 'conflict' ? 'block' : 'none';
+}
+
 // Update modal contents based on current user
 function updateAccountModalUI(user) {
   injectDOM();
@@ -202,18 +229,15 @@ function updateAccountModalUI(user) {
   if (!profileView || !loginView) return;
 
   if (!user) {
-    profileView.style.display = 'none';
-    loginView.style.display = 'none';
+    showView('none');
     return;
   }
 
   if (user.isAnonymous) {
-    profileView.style.display = 'none';
-    loginView.style.display = 'block';
+    showView('login');
     $('#shared-auth-anon-name').textContent = user.displayName || "Khách ẩn danh";
   } else {
-    profileView.style.display = 'block';
-    loginView.style.display = 'none';
+    showView('profile');
     
     const avatarImg = $('#shared-auth-user-avatar');
     const avatarIcon = $('#shared-auth-user-icon');
@@ -261,23 +285,33 @@ export function initSharedAuth({ onUserChanged, syncProgress, profileBtnSelector
       hideAuthModal();
     } catch (error) {
       if (error.code === 'auth/credential-already-in-use') {
-        if (confirm("Tài khoản Google này đã được liên kết với một tiến trình khác. Bạn có muốn chuyển sang tài khoản này (tiến trình hiện tại trên thiết bị sẽ bị thay thế)?")) {
-          try {
-            showToast("🔑 Đang chuyển tài khoản...");
-            sessionStorage.setItem('just_logged_in', 'true');
-            await signInWithPopup(auth, provider);
-            showToast("🎉 Đăng nhập Google thành công!");
-            hideAuthModal();
-          } catch (err) {
-            console.error("Direct Google Sign-in error:", err);
-            showToast(getFriendlyAuthErrorMessage(err.code));
-          }
-        }
+        showView('conflict');
       } else {
         console.error("Google linking error:", error);
         showToast(getFriendlyAuthErrorMessage(error.code));
       }
     }
+  });
+
+  // Conflict View: Switch button listener
+  $('#shared-auth-switch-btn').addEventListener('click', async () => {
+    showToast("🔑 Đang chuyển tài khoản...");
+    const provider = new GoogleAuthProvider();
+    try {
+      sessionStorage.setItem('just_logged_in', 'true');
+      await signInWithPopup(auth, provider);
+      showToast("🎉 Đăng nhập Google thành công!");
+      hideAuthModal();
+    } catch (err) {
+      console.error("Direct Google Sign-in error:", err);
+      showToast(getFriendlyAuthErrorMessage(err.code));
+      showView('login');
+    }
+  });
+
+  // Conflict View: Cancel button listener
+  $('#shared-auth-conflict-cancel-btn').addEventListener('click', () => {
+    showView('login');
   });
 
   // Email Sign In form submission
