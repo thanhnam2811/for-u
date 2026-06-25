@@ -10,8 +10,9 @@ import {
   signOut, 
   onAuthStateChanged, 
   updateProfile, 
-  signInWithRedirect 
+  signInWithPopup 
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
 
 // Helper selectors
 const $ = (selector) => document.querySelector(selector);
@@ -264,7 +265,9 @@ export function initSharedAuth({ onUserChanged, syncProgress, profileBtnSelector
           try {
             showToast("🔑 Đang chuyển tài khoản...");
             sessionStorage.setItem('just_logged_in', 'true');
-            await signInWithRedirect(auth, provider);
+            await signInWithPopup(auth, provider);
+            showToast("🎉 Đăng nhập Google thành công!");
+            hideAuthModal();
           } catch (err) {
             console.error("Direct Google Sign-in error:", err);
             showToast(getFriendlyAuthErrorMessage(err.code));
