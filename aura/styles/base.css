@@ -6,6 +6,20 @@
 @source "../scripts/**/*.js";
 @source "../../shared/**/*.js";
 
+@theme {
+  /* Tông màu ma thuật chủ đạo */
+  --color-brand-pink: #FF7597;
+  --color-brand-purple: #C193FF;
+  --color-brand-dark: #3F3B4F;
+  --color-brand-muted: #8773AF;
+
+  /* Bóng đổ kính mờ và nút */
+  --shadow-glass-light: 0 8px 32px 0 rgba(135, 115, 175, 0.08);
+  --shadow-glass-dark: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  --shadow-brand: 0 6px 20px rgba(255, 117, 151, 0.35);
+  --shadow-brand-hover: 0 10px 30px rgba(255, 117, 151, 0.45);
+}
+
 /* Reset và Cài đặt chung */
 * {
   box-sizing: border-box;

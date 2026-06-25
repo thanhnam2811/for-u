@@ -343,12 +343,20 @@ function updateAuraUserUI(user) {
 }
 
 function initAuthAndPWA() {
-	// 1. Register Service Worker for PWA (if supported)
+	// 1. Register Service Worker for PWA (chỉ chạy ở production)
 	if ('serviceWorker' in navigator) {
-		const baseUrl = import.meta.env.BASE_URL || '/';
-		navigator.serviceWorker.register(`${baseUrl}sw.js`)
-			.then(reg => console.log('Global Service Worker registered from Aura!', reg.scope))
-			.catch(err => console.error('Global Service Worker registration failed from Aura:', err));
+		if (import.meta.env.DEV) {
+			navigator.serviceWorker.getRegistrations().then((registrations) => {
+				for (const reg of registrations) {
+					reg.unregister().then(() => console.log('Dev Service Worker unregistered from Aura.'));
+				}
+			});
+		} else {
+			const baseUrl = import.meta.env.BASE_URL || '/';
+			navigator.serviceWorker.register(`${baseUrl}sw.js`)
+				.then(reg => console.log('Global Service Worker registered from Aura!', reg.scope))
+				.catch(err => console.error('Global Service Worker registration failed from Aura:', err));
+		}
 	}
 
 	// 2. Setup Google sign-in auth and sync via shared auth module

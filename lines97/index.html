@@ -80,25 +80,25 @@
     </div>
 
     <!-- Controls -->
-    <div class="grid grid-cols-5 gap-2 w-full mb-4">
-      <button class="flex flex-col items-center justify-center py-2.5 px-1 rounded-2xl bg-white/45 dark:bg-slate-900/40 border border-white/60 dark:border-slate-800/60 shadow-glass-light dark:shadow-glass-dark backdrop-blur-glass text-slate-600 dark:text-slate-300 hover:text-brand-pink dark:hover:text-brand-purple hover:scale-105 active:scale-95 transition-all select-none relative cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100" id="undo-btn" disabled>
+    <div class="grid grid-cols-6 sm:grid-cols-5 gap-2 w-full mb-4">
+      <button class="col-span-2 sm:col-span-1 flex flex-col items-center justify-center py-2.5 px-1 rounded-2xl bg-white/45 dark:bg-slate-900/40 border border-white/60 dark:border-slate-800/60 shadow-glass-light dark:shadow-glass-dark backdrop-blur-glass text-slate-600 dark:text-slate-300 hover:text-brand-pink dark:hover:text-brand-purple hover:scale-105 active:scale-95 transition-all select-none relative cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100" id="undo-btn" disabled>
         <span class="material-icons-round text-lg sm:text-xl mb-1">undo</span>
         <span class="font-display font-bold text-[10px] sm:text-xs tracking-wide">Hoàn tác</span>
       </button>
-      <button class="flex flex-col items-center justify-center py-2.5 px-1 rounded-2xl bg-white/45 dark:bg-slate-900/40 border border-white/60 dark:border-slate-800/60 shadow-glass-light dark:shadow-glass-dark backdrop-blur-glass text-slate-600 dark:text-slate-300 hover:text-brand-pink dark:hover:text-brand-purple hover:scale-105 active:scale-95 transition-all select-none relative cursor-pointer" id="hint-btn">
+      <button class="col-span-2 sm:col-span-1 flex flex-col items-center justify-center py-2.5 px-1 rounded-2xl bg-white/45 dark:bg-slate-900/40 border border-white/60 dark:border-slate-800/60 shadow-glass-light dark:shadow-glass-dark backdrop-blur-glass text-slate-600 dark:text-slate-300 hover:text-brand-pink dark:hover:text-brand-purple hover:scale-105 active:scale-95 transition-all select-none relative cursor-pointer" id="hint-btn">
         <span class="material-icons-round text-lg sm:text-xl mb-1">lightbulb</span>
         <span class="font-display font-bold text-[10px] sm:text-xs tracking-wide">Gợi ý</span>
         <span class="absolute -top-1.5 -right-1.5 bg-gradient-to-br from-brand-pink to-pink-600 text-white text-[9px] font-semibold px-2 py-0.5 rounded-full shadow-[0_2px_6px_rgba(255,117,151,0.4)]" id="hint-count">3</span>
       </button>
-      <button class="flex flex-col items-center justify-center py-2.5 px-1 rounded-2xl bg-white/45 dark:bg-slate-900/40 border border-white/60 dark:border-slate-800/60 shadow-glass-light dark:shadow-glass-dark backdrop-blur-glass text-slate-600 dark:text-slate-300 hover:text-brand-pink dark:hover:text-brand-purple hover:scale-105 active:scale-95 transition-all select-none relative cursor-pointer" id="new-game-btn">
+      <button class="col-span-2 sm:col-span-1 flex flex-col items-center justify-center py-2.5 px-1 rounded-2xl bg-white/45 dark:bg-slate-900/40 border border-white/60 dark:border-slate-800/60 shadow-glass-light dark:shadow-glass-dark backdrop-blur-glass text-slate-600 dark:text-slate-300 hover:text-brand-pink dark:hover:text-brand-purple hover:scale-105 active:scale-95 transition-all select-none relative cursor-pointer" id="new-game-btn">
         <span class="material-icons-round text-lg sm:text-xl mb-1">refresh</span>
         <span class="font-display font-bold text-[10px] sm:text-xs tracking-wide">Mới</span>
       </button>
-      <button class="flex flex-col items-center justify-center py-2.5 px-1 rounded-2xl bg-white/45 dark:bg-slate-900/40 border border-white/60 dark:border-slate-800/60 shadow-glass-light dark:shadow-glass-dark backdrop-blur-glass text-slate-600 dark:text-slate-300 hover:text-brand-pink dark:hover:text-brand-purple hover:scale-105 active:scale-95 transition-all select-none relative cursor-pointer" id="sound-toggle">
+      <button class="col-span-3 sm:col-span-1 flex flex-col items-center justify-center py-2.5 px-1 rounded-2xl bg-white/45 dark:bg-slate-900/40 border border-white/60 dark:border-slate-800/60 shadow-glass-light dark:shadow-glass-dark backdrop-blur-glass text-slate-600 dark:text-slate-300 hover:text-brand-pink dark:hover:text-brand-purple hover:scale-105 active:scale-95 transition-all select-none relative cursor-pointer" id="sound-toggle">
         <span class="material-icons-round text-lg sm:text-xl mb-1" id="sound-icon">volume_up</span>
         <span class="font-display font-bold text-[10px] sm:text-xs tracking-wide" id="sound-label">Âm</span>
       </button>
-      <button class="flex flex-col items-center justify-center py-2.5 px-1 rounded-2xl bg-white/45 dark:bg-slate-900/40 border border-white/60 dark:border-slate-800/60 shadow-glass-light dark:shadow-glass-dark backdrop-blur-glass text-slate-600 dark:text-slate-300 hover:text-brand-pink dark:hover:text-brand-purple hover:scale-105 active:scale-95 transition-all select-none relative cursor-pointer" id="leaderboard-btn">
+      <button class="col-span-3 sm:col-span-1 flex flex-col items-center justify-center py-2.5 px-1 rounded-2xl bg-white/45 dark:bg-slate-900/40 border border-white/60 dark:border-slate-800/60 shadow-glass-light dark:shadow-glass-dark backdrop-blur-glass text-slate-600 dark:text-slate-300 hover:text-brand-pink dark:hover:text-brand-purple hover:scale-105 active:scale-95 transition-all select-none relative cursor-pointer" id="leaderboard-btn">
         <span class="material-icons-round text-lg sm:text-xl mb-1">emoji_events</span>
         <span class="font-display font-bold text-[10px] sm:text-xs tracking-wide">Top</span>
       </button>

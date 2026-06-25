@@ -223,14 +223,22 @@
       profileBtnSelector: '#google-login-btn'
     });
 
-    // Đăng ký Service Worker dùng chung cho toàn project
+    // Đăng ký Service Worker dùng chung cho toàn project (chỉ chạy ở production)
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        const baseUrl = import.meta.env.BASE_URL || '/';
-        navigator.serviceWorker.register(`${baseUrl}sw.js`)
-          .then((reg) => console.log('Global Service Worker registered!', reg.scope))
-          .catch((err) => console.error('Global Service Worker failed to register!', err));
-      });
+      if (import.meta.env.DEV) {
+        navigator.serviceWorker.getRegistrations().then((registrations) => {
+          for (const reg of registrations) {
+            reg.unregister().then(() => console.log('Dev Service Worker unregistered.'));
+          }
+        });
+      } else {
+        window.addEventListener('load', () => {
+          const baseUrl = import.meta.env.BASE_URL || '/';
+          navigator.serviceWorker.register(`${baseUrl}sw.js`)
+            .then((reg) => console.log('Global Service Worker registered!', reg.scope))
+            .catch((err) => console.error('Global Service Worker failed to register!', err));
+        });
+      }
     }
   </script>
 </body>

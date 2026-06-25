@@ -39,14 +39,22 @@ function init() {
     startTimer();
   }
 
-  // Register Service Worker for offline play
+  // Register Service Worker for offline play (chỉ chạy ở production)
   if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      const baseUrl = import.meta.env.BASE_URL || '/';
-      navigator.serviceWorker.register(`${baseUrl}sw.js`)
-        .then(reg => console.log('Global Service Worker registered from Lines97!', reg.scope))
-        .catch(err => console.error('Global Service Worker registration failed:', err));
-    });
+    if (import.meta.env.DEV) {
+      navigator.serviceWorker.getRegistrations().then((registrations) => {
+        for (const reg of registrations) {
+          reg.unregister().then(() => console.log('Dev Service Worker unregistered from Lines97.'));
+        }
+      });
+    } else {
+      window.addEventListener('load', () => {
+        const baseUrl = import.meta.env.BASE_URL || '/';
+        navigator.serviceWorker.register(`${baseUrl}sw.js`)
+          .then(reg => console.log('Global Service Worker registered from Lines97!', reg.scope))
+          .catch(err => console.error('Global Service Worker registration failed:', err));
+      });
+    }
   }
 
   // Setup Google sign-in auth and sync via shared auth module
