@@ -262,6 +262,13 @@
 }
 .toast.visible { opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: auto; }
 
+/* === PREVIEW === */
+.preview-ball {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+}
+
 /* === MOBILE GAME OVERLAY GRID OPTIMIZATION === */
 @media (max-width: 480px) {
   #undo-btn { grid-column: span 2; }
@@ -269,6 +276,10 @@
   #new-game-btn { grid-column: span 2; }
   #sound-toggle { grid-column: span 3; }
   #leaderboard-btn { grid-column: span 3; }
+  .preview-ball {
+    width: 18px;
+    height: 18px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
