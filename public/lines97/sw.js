@@ -34,15 +34,35 @@ self.addEventListener('activate', (e) => {
   );
 });
 
-// Fetch Event — Stale-while-revalidate caching strategy
+// Fetch Event — Network-First for HTML/navigation, Stale-while-revalidate for static assets
 self.addEventListener('fetch', (e) => {
   if (!e.request.url.startsWith('http')) return;
   if (e.request.method !== 'GET') return;
 
+  // Network-First for navigate (HTML document) requests
+  if (e.request.mode === 'navigate') {
+    e.respondWith(
+      fetch(e.request)
+        .then((networkResponse) => {
+          if (networkResponse.status === 200) {
+            const clonedResponse = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(e.request, clonedResponse);
+            });
+          }
+          return networkResponse;
+        })
+        .catch(() => {
+          return caches.match(e.request);
+        })
+    );
+    return;
+  }
+
+  // Stale-while-revalidate for other static assets
   e.respondWith(
     caches.match(e.request).then((cachedResponse) => {
       if (cachedResponse) {
-        // Fetch new version in background and update cache
         fetch(e.request).then((networkResponse) => {
           if (networkResponse.status === 200) {
             caches.open(CACHE_NAME).then((cache) => {

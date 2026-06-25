@@ -51,8 +51,27 @@ function init() {
     } else {
       window.addEventListener('load', () => {
         const baseUrl = import.meta.env.BASE_URL || '/';
+        
+        let refreshing = false;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          if (!refreshing) {
+            refreshing = true;
+            window.location.reload();
+          }
+        });
+
         navigator.serviceWorker.register(`${baseUrl}lines97/sw.js`, { scope: `${baseUrl}lines97/` })
-          .then(reg => console.log('Lines 97 Service Worker registered!', reg.scope))
+          .then(reg => {
+            console.log('Lines 97 Service Worker registered!', reg.scope);
+            
+            // Check for updates on load
+            reg.update();
+            
+            // Periodically check for updates every 15 minutes
+            setInterval(() => {
+              reg.update();
+            }, 15 * 60 * 1000);
+          })
           .catch(err => console.error('Lines 97 Service Worker registration failed:', err));
       });
     }
