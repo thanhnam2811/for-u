@@ -356,10 +356,10 @@ html.settings-lock {
 .focus\:ring-theme-color:focus {
   outline-color: var(--theme-color) !important;
 }
-.peer-checked\:bg-theme-color:checked ~ * {
+.peer:checked ~ .peer-checked\:bg-theme-color {
   background-color: var(--theme-color) !important;
 }
-.peer-checked\:shadow-theme-glow:checked ~ * {
+.peer:checked ~ .peer-checked\:shadow-theme-glow {
   box-shadow: var(--theme-glow) !important;
 }
 
