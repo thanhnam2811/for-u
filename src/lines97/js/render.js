@@ -338,30 +338,55 @@ export function showToast(msg) {
 // ── Leaderboard UI ──
 export function showLeaderboard(data, highlightScore) {
   const ov = $('#leaderboard-overlay');
-  const body = $('#leaderboard-body');
-  body.innerHTML = '';
+  const list = $('#leaderboard-list');
+  if (!list) return;
+  list.innerHTML = '';
   if (!data.length) {
-    body.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-muted)">Chưa có dữ liệu</td></tr>';
+    list.innerHTML = '<div class="text-center py-8 text-sm text-slate-400 dark:text-slate-500 font-semibold select-none">Chưa có dữ liệu</div>';
   } else {
     data.forEach((e, i) => {
-      const tr = document.createElement('tr');
-      if (e.score === highlightScore) tr.classList.add('highlight');
-      const d = new Date(e.date);
-      const name = e.displayName || "Bạn";
-      const photo = e.photoURL ? `<img class="lb-avatar" src="${e.photoURL}" alt="" />` : `<span class="material-icons-round lb-avatar-fallback">account_circle</span>`;
+      const item = document.createElement('div');
+      item.className = 'lb-item flex items-center justify-between p-3.5 rounded-2xl bg-white/30 dark:bg-slate-900/35 border border-white/40 dark:border-slate-800/40 shadow-sm transition-all duration-300 select-none';
+      if (e.score === highlightScore) {
+        item.classList.add('highlight-item');
+      }
       
-      tr.innerHTML = `
-        <td>${i + 1}</td>
-        <td>
-          <div class="lb-player-col">
+      const rank = i + 1;
+      let rankBadge = '';
+      if (rank === 1) {
+        rankBadge = '<span class="flex items-center justify-center w-8 h-8 rounded-xl bg-gradient-to-br from-amber-300 to-amber-500 text-white font-display font-bold text-sm shadow-[0_2px_8px_rgba(245,158,11,0.25)]">🥇</span>';
+      } else if (rank === 2) {
+        rankBadge = '<span class="flex items-center justify-center w-8 h-8 rounded-xl bg-gradient-to-br from-slate-300 to-slate-450 text-white font-display font-bold text-sm shadow-[0_2px_8px_rgba(148,163,184,0.25)]">🥈</span>';
+      } else if (rank === 3) {
+        rankBadge = '<span class="flex items-center justify-center w-8 h-8 rounded-xl bg-gradient-to-br from-amber-600 to-amber-800 text-white font-display font-bold text-sm shadow-[0_2px_8px_rgba(180,83,9,0.25)]">🥉</span>';
+      } else {
+        rankBadge = `<span class="flex items-center justify-center w-8 h-8 rounded-xl bg-slate-100/60 dark:bg-slate-800/45 text-slate-500 dark:text-slate-400 font-display font-bold text-xs">#${rank}</span>`;
+      }
+      
+      const d = new Date(e.date);
+      const dateStr = d.toLocaleDateString('vi') + ' • ' + d.toLocaleTimeString('vi', { hour: '2-digit', minute: '2-digit' });
+      
+      const name = e.displayName || "Bạn";
+      const photo = e.photoURL 
+        ? `<img class="lb-avatar w-9 h-9 rounded-full object-cover border border-white/60 dark:border-slate-700/60 shadow-sm" src="${e.photoURL}" alt="" />` 
+        : `<span class="material-icons-round text-slate-400 dark:text-slate-500 text-3xl">account_circle</span>`;
+      
+      item.innerHTML = `
+        <div class="flex items-center gap-3">
+          ${rankBadge}
+          <div class="flex items-center gap-2">
             ${photo}
-            <span>${name}</span>
+            <div class="flex flex-col text-left">
+              <span class="font-sans font-bold text-sm text-slate-800 dark:text-slate-100 leading-tight">${name}</span>
+              <span class="font-sans text-[10px] text-slate-400 dark:text-slate-550 font-semibold mt-0.5">${dateStr}</span>
+            </div>
           </div>
-        </td>
-        <td>${e.score}</td>
-        <td>${d.toLocaleDateString('vi')}</td>
+        </div>
+        <div class="font-display font-bold text-base bg-gradient-to-r from-brand-pink to-brand-purple bg-clip-text text-transparent drop-shadow-sm pr-1">
+          ${e.score} <span class="text-[10px] font-sans font-semibold text-slate-400 dark:text-slate-500">đ</span>
+        </div>
       `;
-      body.appendChild(tr);
+      list.appendChild(item);
     });
   }
   ov.classList.add('visible');

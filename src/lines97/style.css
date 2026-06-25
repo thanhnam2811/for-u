@@ -199,27 +199,26 @@
 }
 
 /* === LEADERBOARD STYLING === */
-.lb-player-col {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  justify-content: flex-start;
+.lb-item {
+  transform: translateY(0);
+  will-change: transform;
 }
-.lb-avatar {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 1px solid var(--color-brand-pink, #FF7597);
-  box-shadow: 0 2px 6px rgba(255, 117, 151, 0.2);
+.lb-item:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.45);
 }
-.lb-avatar-fallback {
-  font-size: 1.25rem;
-  color: var(--color-brand-muted, #8773AF);
+.dark .lb-item:hover {
+  background: rgba(255, 255, 255, 0.05);
 }
-.lb-table tr.highlight td {
-  color: var(--color-brand-pink, #FF7597);
-  font-weight: 700;
+.lb-item.highlight-item {
+  background: rgba(255, 117, 151, 0.1) !important;
+  border-color: var(--color-brand-pink, #FF7597) !important;
+  box-shadow: 0 0 12px rgba(255, 117, 151, 0.15);
+}
+.dark .lb-item.highlight-item {
+  background: rgba(193, 147, 255, 0.1) !important;
+  border-color: var(--color-brand-purple, #C193FF) !important;
+  box-shadow: 0 0 12px rgba(193, 147, 255, 0.15);
 }
 
 /* === PALETTE STYLING === */
