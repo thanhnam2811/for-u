@@ -2,8 +2,17 @@
 <html lang="vi">
     <head>
         <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
         <title>Tích Phước Hào Quang</title>
+
+        <!-- script tối ưu tránh nhấp nháy FOUC khi chọn dark mode -->
+        <script>
+            if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        </script>
 
         <!-- Font chữ tròn trịa, hiện đại -->
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -17,6 +26,8 @@
         <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet" />
 
         <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg" />
+        <link rel="manifest" href="../manifest.json" />
+        <link rel="apple-touch-icon" href="../assets/icon.png" />
 
         <!-- CSS Stylesheets -->
         <link rel="stylesheet" href="styles/base.css" />
@@ -34,10 +45,17 @@
                 <span>Quay lại</span>
             </a>
 
-            <button id="btn-settings" class="btn-settings" aria-label="Mở cài đặt">
-                <span class="material-icons-round">tune</span>
-                <span>Cài đặt</span>
-            </button>
+            <div class="top-right-actions">
+                <button id="google-login-btn" class="btn-settings" aria-label="Tài khoản">
+                    <span class="material-icons-round" id="user-avatar-icon">account_circle</span>
+                    <img id="user-avatar-img" src="" alt="Avatar" class="w-5 h-5 rounded-full border border-brand-pink/20 dark:border-brand-purple/20 object-cover" style="display: none;" />
+                    <span id="google-login-text">Đăng nhập</span>
+                </button>
+                <button id="btn-settings" class="btn-settings" aria-label="Mở cài đặt">
+                    <span class="material-icons-round">tune</span>
+                    <span>Cài đặt</span>
+                </button>
+            </div>
 
             <!-- Nội dung chính -->
             <main class="main-layout">

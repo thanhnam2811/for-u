@@ -1,6 +1,70 @@
 // Quản lý trạng thái động của ứng dụng bằng một đối tượng mutable duy nhất
 // Giúp tránh các lỗi Read-Only Binding của ES Modules khi các file khác cập nhật biến
 
+import { auth, db } from "../../shared/firebase.js";
+import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+// Hàm đồng bộ điểm phước lên Cloud (Firestore)
+export async function syncPhuocToCloud() {
+	const user = auth.currentUser;
+	if (!user) return;
+	const userDocRef = doc(db, 'players', user.uid);
+	try {
+		await setDoc(userDocRef, {
+			auraData: {
+				phuocCount: state.phuocCount,
+				updatedAt: Date.now()
+			}
+		}, { merge: true });
+	} catch (err) {
+		console.error("Firestore syncPhuocToCloud error:", err);
+	}
+}
+
+// Đồng bộ/Tải dữ liệu điểm phước từ Firestore khi đăng nhập
+export async function syncUserAuraProgress(user) {
+	if (!user) return;
+	const userDocRef = doc(db, 'players', user.uid);
+	try {
+		const docSnap = await getDoc(userDocRef);
+		const localPhuoc = parseInt(localStorage.getItem('phuoc_count') || '0', 10);
+		if (docSnap.exists()) {
+			const cloudData = docSnap.data();
+			const cloudAura = cloudData.auraData || {};
+			const cloudPhuoc = cloudAura.phuocCount || 0;
+
+			if (cloudPhuoc > localPhuoc) {
+				// Cloud lớn hơn, cập nhật local
+				state.phuocCount = cloudPhuoc;
+				localStorage.setItem('phuoc_count', cloudPhuoc);
+				const phuocDisplay = document.getElementById('phuoc-count-display');
+				if (phuocDisplay) phuocDisplay.innerText = cloudPhuoc;
+			} else if (localPhuoc > cloudPhuoc) {
+				// Local lớn hơn, cập nhật cloud
+				await setDoc(userDocRef, {
+					auraData: {
+						phuocCount: localPhuoc,
+						updatedAt: Date.now()
+					}
+				}, { merge: true });
+			}
+		} else {
+			// Tài liệu chưa tồn tại, tạo mới bằng dữ liệu local
+			await setDoc(userDocRef, {
+				auraData: {
+					phuocCount: localPhuoc,
+					updatedAt: Date.now()
+				},
+				displayName: user.displayName || (user.isAnonymous ? "Người chơi ẩn danh" : "Google Player"),
+				photoURL: user.photoURL || "",
+				updatedAt: Date.now()
+			}, { merge: true });
+		}
+	} catch (err) {
+		console.error("Firestore syncUserAuraProgress error:", err);
+	}
+}
+
 export const state = {
 	// ─────────────────────────────────────────────
 	// Trạng thái mô hình AI & Camera
@@ -153,6 +217,7 @@ state.sensitivityThreshold = getSensitivityThresholdForSlider(state.sensitivityS
 export function incrementPhuoc() {
 	state.phuocCount++;
 	localStorage.setItem('phuoc_count', state.phuocCount);
+	void syncPhuocToCloud();
 	return state.phuocCount;
 }
 
@@ -163,6 +228,7 @@ export function spendPhuoc(amount) {
 		localStorage.setItem('phuoc_count', state.phuocCount);
 		const phuocDisplay = document.getElementById('phuoc-count-display');
 		if (phuocDisplay) phuocDisplay.innerText = state.phuocCount;
+		void syncPhuocToCloud();
 		return true;
 	}
 	return false;

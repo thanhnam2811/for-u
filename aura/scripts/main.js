@@ -1,4 +1,4 @@
-import { state, saveLanternsState } from "./state.js";
+import { state, saveLanternsState, syncUserAuraProgress } from "./state.js";
 import { setupUI, showToast } from "./ui.js";
 import { setupWebcam, getCameraDevices } from "./camera.js";
 import { loadHandLandmarkerModel, drawHandSkeleton } from "./ai.js";
@@ -9,6 +9,7 @@ import { createGameLoop, shouldRunTask } from "./game-loop.js";
 import { updateTracking } from "./runtime/tracking-system.js";
 import { updatePerformanceState } from "./runtime/perf-system.js";
 import { updateLanterns, renderLanterns } from "./runtime/lantern-system.js";
+import { initSharedAuth } from "../../shared/auth.js";
 
 const LANTERN_SAVE_INTERVAL_MS = 500;
 
@@ -304,9 +305,70 @@ async function startApp() {
 	}
 }
 
+function updateAuraUserUI(user) {
+	const avatarIcon = document.getElementById('user-avatar-icon');
+	const avatarImg = document.getElementById('user-avatar-img');
+	const loginBtn = document.getElementById('google-login-btn');
+	const loginText = document.getElementById('google-login-text');
+	if (!loginBtn) return;
+
+	if (user.isAnonymous) {
+		if (avatarImg) avatarImg.style.display = 'none';
+		if (avatarIcon) {
+			avatarIcon.style.display = 'inline-block';
+			avatarIcon.textContent = 'account_circle';
+		}
+		if (loginText) loginText.textContent = 'Đăng nhập';
+		loginBtn.title = "Tài khoản (Ẩn danh)";
+	} else {
+		if (user.photoURL) {
+			if (avatarImg) {
+				avatarImg.src = user.photoURL;
+				avatarImg.style.display = 'inline-block';
+			}
+			if (avatarIcon) avatarIcon.style.display = 'none';
+		} else {
+			if (avatarImg) avatarImg.style.display = 'none';
+			if (avatarIcon) {
+				avatarIcon.style.display = 'inline-block';
+				avatarIcon.textContent = 'face';
+			}
+		}
+		if (loginText) {
+			const name = user.displayName || user.email || "Đã đăng nhập";
+			loginText.textContent = name.split(' ')[0] || "Tài khoản";
+		}
+		loginBtn.title = `Tài khoản: ${user.displayName || user.email}`;
+	}
+}
+
+function initAuthAndPWA() {
+	// 1. Register Service Worker for PWA (if supported)
+	if ('serviceWorker' in navigator) {
+		const baseUrl = import.meta.env.BASE_URL || '/';
+		navigator.serviceWorker.register(`${baseUrl}sw.js`)
+			.then(reg => console.log('Global Service Worker registered from Aura!', reg.scope))
+			.catch(err => console.error('Global Service Worker registration failed from Aura:', err));
+	}
+
+	// 2. Setup Google sign-in auth and sync via shared auth module
+	initSharedAuth({
+		onUserChanged: (user) => {
+			updateAuraUserUI(user);
+		},
+		syncProgress: async (user) => {
+			showToast("🔄 Đang đồng bộ dữ liệu phước...");
+			await syncUserAuraProgress(user);
+			showToast("✅ Đã đồng bộ điểm phước!");
+		},
+		profileBtnSelector: '#google-login-btn'
+	});
+}
+
 function setupStartButton() {
 	initDomRefs();
 	setupDebugErrorOverlay();
+	initAuthAndPWA();
 	if (startButton) {
 		startButton.hidden = true;
 		startButton.addEventListener('click', () => {
