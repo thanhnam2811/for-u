@@ -361,9 +361,9 @@ function initAuthAndPWA() {
 			});
 		} else {
 			const baseUrl = import.meta.env.BASE_URL || '/';
-			navigator.serviceWorker.register(`${baseUrl}sw.js`)
-				.then(reg => console.log('Global Service Worker registered from Aura!', reg.scope))
-				.catch(err => console.error('Global Service Worker registration failed from Aura:', err));
+			navigator.serviceWorker.register(`${baseUrl}aura/sw.js`, { scope: `${baseUrl}aura/` })
+				.then(reg => console.log('Aura Service Worker registered!', reg.scope))
+				.catch(err => console.error('Aura Service Worker registration failed:', err));
 		}
 	}
 

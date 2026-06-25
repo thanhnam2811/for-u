@@ -1,6 +1,6 @@
-// ── Global Service Worker — Magic Playground ──
+// ── Service Worker — Aura ──
 
-const CACHE_NAME = 'magic-playground-cache-v1';
+const CACHE_NAME = 'aura-cache-v1';
 const ASSETS = [
   './',
   './index.html',

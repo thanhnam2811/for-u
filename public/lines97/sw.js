@@ -1,6 +1,6 @@
-// ── Global Service Worker — Magic Playground ──
+// ── Service Worker — Lines 97 ──
 
-const CACHE_NAME = 'magic-playground-cache-v1';
+const CACHE_NAME = 'lines97-cache-v1';
 const ASSETS = [
   './',
   './index.html',

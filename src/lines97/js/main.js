@@ -50,9 +50,9 @@ function init() {
     } else {
       window.addEventListener('load', () => {
         const baseUrl = import.meta.env.BASE_URL || '/';
-        navigator.serviceWorker.register(`${baseUrl}sw.js`)
-          .then(reg => console.log('Global Service Worker registered from Lines97!', reg.scope))
-          .catch(err => console.error('Global Service Worker registration failed:', err));
+        navigator.serviceWorker.register(`${baseUrl}lines97/sw.js`, { scope: `${baseUrl}lines97/` })
+          .then(reg => console.log('Lines 97 Service Worker registered!', reg.scope))
+          .catch(err => console.error('Lines 97 Service Worker registration failed:', err));
       });
     }
   }
