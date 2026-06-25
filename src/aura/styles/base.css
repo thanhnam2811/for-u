@@ -2,7 +2,7 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-@source "../index.html";
+@source "../../../aura/index.html";
 @source "../scripts/**/*.js";
 @source "../../shared/**/*.js";
 

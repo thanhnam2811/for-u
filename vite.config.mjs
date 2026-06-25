@@ -18,7 +18,6 @@ export default defineConfig({
         main: resolve(__dirname, 'index.html'),
         lines97: resolve(__dirname, 'lines97/index.html'),
         aura: resolve(__dirname, 'aura/index.html'),
-        aura2: resolve(__dirname, 'aura-2/index.html'),
       },
     },
   },

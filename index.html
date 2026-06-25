@@ -25,7 +25,7 @@
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
   <link rel="manifest" href="manifest.json">
   
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="src/style.css">
 </head>
 <body class="bg-gradient-to-br from-[#FFEBF0] to-[#E8F0FE] dark:from-[#0F0C1B] dark:to-[#1B1437] min-h-screen font-sans text-slate-700 dark:text-slate-100 flex justify-center items-center overflow-x-hidden relative transition-colors duration-500">
   <!-- Nút Tài khoản / Đăng nhập -->
@@ -55,7 +55,7 @@
     <main class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 w-full mb-12 sm:mb-16">
       
       <!-- CARD 1: Ứng dụng Hào Quang 🙏 -->
-      <a href="aura-2/index.html" class="group relative bg-white/45 dark:bg-slate-950/40 backdrop-blur-glass border border-white/60 dark:border-slate-800/60 shadow-glass-light dark:shadow-glass-dark rounded-3xl p-6 sm:p-8 flex flex-col transition-all duration-300 hover:-translate-y-2 hover:shadow-xl hover:bg-white/60 dark:hover:bg-slate-900/50 hover:border-brand-pink/30 dark:hover:border-brand-purple/30 overflow-hidden">
+      <a href="aura/index.html" class="group relative bg-white/45 dark:bg-slate-950/40 backdrop-blur-glass border border-white/60 dark:border-slate-800/60 shadow-glass-light dark:shadow-glass-dark rounded-3xl p-6 sm:p-8 flex flex-col transition-all duration-300 hover:-translate-y-2 hover:shadow-xl hover:bg-white/60 dark:hover:bg-slate-900/50 hover:border-brand-pink/30 dark:hover:border-brand-purple/30 overflow-hidden">
         <!-- Top line gradient indicator on hover -->
         <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-brand-pink to-brand-purple opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
         <div class="absolute top-5 right-5 bg-gradient-to-br from-brand-pink to-pink-600 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-[0_4px_10px_rgba(255,117,151,0.3)]">Mới Nhất ⚡</div>
@@ -113,133 +113,6 @@
     </footer>
   </div>
 
-  <!-- Script tạo trái tim trôi nổi ngẫu nhiên nền -->
-  <script>
-    const container = document.getElementById('hearts-container');
-    const heartSymbols = ['🎈', '🌸', '✨', '💕', '🥰', '☁️', '🌸'];
-    
-    function createHeart() {
-      const heart = document.createElement('div');
-      heart.className = 'floating-heart';
-      
-      // Chọn biểu tượng ngẫu nhiên
-      heart.innerText = heartSymbols[Math.floor(Math.random() * heartSymbols.length)];
-      
-      // Vị trí ngang ngẫu nhiên
-      heart.style.left = Math.random() * 100 + 'vw';
-      
-      // Kích thước ngẫu nhiên
-      const size = 14 + Math.random() * 20;
-      heart.style.fontSize = size + 'px';
-      
-      // Thời gian trôi ngẫu nhiên (8 - 18 giây)
-      const duration = 8 + Math.random() * 10;
-      heart.style.animationDuration = duration + 's';
-      
-      // Độ mờ ngẫu nhiên
-      heart.style.opacity = 0.25 + Math.random() * 0.45;
-      
-      container.appendChild(heart);
-      
-      // Tự hủy sau khi bay xong
-      setTimeout(() => {
-        heart.remove();
-      }, duration * 1000);
-    }
-
-    // Tạo các hạt bong bóng ban đầu
-    for (let i = 0; i < 12; i++) {
-      setTimeout(createHeart, Math.random() * 5000);
-    }
-
-    // Tạo liên tục theo chu kỳ
-    setInterval(createHeart, 1000);
-  </script>
-
-  <!-- Script bật tắt giao diện sáng tối -->
-  <script>
-    const themeToggleBtn = document.getElementById('theme-toggle');
-    const themeToggleIcon = document.getElementById('theme-toggle-icon');
-
-    function updateToggleIcon(isDark) {
-      if (isDark) {
-        themeToggleIcon.innerText = 'dark_mode';
-      } else {
-        themeToggleIcon.innerText = 'light_mode';
-      }
-    }
-
-    // Thiết lập biểu tượng ban đầu dựa trên class dark đang hoạt động
-    updateToggleIcon(document.documentElement.classList.contains('dark'));
-
-    themeToggleBtn.addEventListener('click', () => {
-      const isDark = document.documentElement.classList.toggle('dark');
-      localStorage.setItem('theme', isDark ? 'dark' : 'light');
-      updateToggleIcon(isDark);
-    });
-  </script>
-
-  <!-- Script khởi tạo PWA & Authentication -->
-  <script type="module">
-    import { initSharedAuth } from './shared/auth.js';
-
-    // Cập nhật giao diện nút tài khoản ở Hub chính
-    function updateHubUserUI(user) {
-      const avatarIcon = document.getElementById('user-avatar-icon');
-      const avatarImg = document.getElementById('user-avatar-img');
-      const loginBtn = document.getElementById('google-login-btn');
-      if (!loginBtn) return;
-
-      if (user.isAnonymous) {
-        if (avatarImg) avatarImg.style.display = 'none';
-        if (avatarIcon) {
-          avatarIcon.style.display = 'inline-block';
-          avatarIcon.textContent = 'account_circle';
-        }
-        loginBtn.title = "Tài khoản (Ẩn danh)";
-      } else {
-        if (user.photoURL) {
-          if (avatarImg) {
-            avatarImg.src = user.photoURL;
-            avatarImg.style.display = 'inline-block';
-          }
-          if (avatarIcon) avatarIcon.style.display = 'none';
-        } else {
-          if (avatarImg) avatarImg.style.display = 'none';
-          if (avatarIcon) {
-            avatarIcon.style.display = 'inline-block';
-            avatarIcon.textContent = 'face';
-          }
-        }
-        loginBtn.title = `Tài khoản: ${user.displayName || user.email}`;
-      }
-    }
-
-    // Khởi tạo Module Auth dùng chung
-    initSharedAuth({
-      onUserChanged: (user) => {
-        updateHubUserUI(user);
-      },
-      profileBtnSelector: '#google-login-btn'
-    });
-
-    // Đăng ký Service Worker dùng chung cho toàn project (chỉ chạy ở production)
-    if ('serviceWorker' in navigator) {
-      if (import.meta.env.DEV) {
-        navigator.serviceWorker.getRegistrations().then((registrations) => {
-          for (const reg of registrations) {
-            reg.unregister().then(() => console.log('Dev Service Worker unregistered.'));
-          }
-        });
-      } else {
-        window.addEventListener('load', () => {
-          const baseUrl = import.meta.env.BASE_URL || '/';
-          navigator.serviceWorker.register(`${baseUrl}sw.js`)
-            .then((reg) => console.log('Global Service Worker registered!', reg.scope))
-            .catch((err) => console.error('Global Service Worker failed to register!', err));
-        });
-      }
-    }
-  </script>
+  <script type="module" src="src/main.js"></script>
 </body>
 </html>

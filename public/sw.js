@@ -4,7 +4,6 @@ const CACHE_NAME = 'magic-playground-cache-v1';
 const ASSETS = [
   './',
   './index.html',
-  './style.css',
   './manifest.json',
   './assets/favicon.svg',
   './assets/icon.png',
