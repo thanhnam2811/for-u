@@ -8,13 +8,20 @@
   <title>Lines 97 🎱 — Góc Nhỏ Phép Thuật</title>
   <meta name="description" content="Chơi game Lines 97 kinh điển — xếp 5 viên bi cùng màu thành hàng để ghi điểm!">
 
-  <!-- script tối ưu tránh nhấp nháy FOUC khi chọn dark mode -->
+  <!-- script tối ưu tránh nhấp nháy FOUC khi chọn dark mode và thiết lập theme-color di động -->
   <script>
-    if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
+    (function() {
+      const isDark = localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      if (isDark) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+      const meta = document.createElement('meta');
+      meta.name = 'theme-color';
+      meta.content = isDark ? '#0F0C1B' : '#FFEBF0';
+      document.head.appendChild(meta);
+    })();
   </script>
 
   <!-- Fonts -->

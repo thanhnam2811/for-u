@@ -5,13 +5,20 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
         <title>Tích Phước Hào Quang - Tailwind Edition</title>
 
-        <!-- script tối ưu tránh nhấp nháy FOUC khi chọn dark mode -->
+        <!-- script tối ưu tránh nhấp nháy FOUC khi chọn dark mode và thiết lập theme-color di động -->
         <script>
-            if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-                document.documentElement.classList.add('dark');
-            } else {
-                document.documentElement.classList.remove('dark');
-            }
+            (function() {
+                const isDark = localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                if (isDark) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+                const meta = document.createElement('meta');
+                meta.name = 'theme-color';
+                meta.content = isDark ? '#0F0C1B' : '#FFEBF0';
+                document.head.appendChild(meta);
+            })();
         </script>
 
         <!-- Font chữ tròn trịa, hiện đại -->

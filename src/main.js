@@ -56,14 +56,27 @@ function updateToggleIcon(isDark) {
   }
 }
 
+function updateThemeColorMeta(isDark) {
+  let meta = document.querySelector('meta[name="theme-color"]');
+  if (!meta) {
+    meta = document.createElement('meta');
+    meta.name = 'theme-color';
+    document.head.appendChild(meta);
+  }
+  meta.content = isDark ? '#0F0C1B' : '#FFEBF0';
+}
+
 // Initialize icon state
 if (themeToggleBtn && themeToggleIcon) {
-  updateToggleIcon(document.documentElement.classList.contains('dark'));
+  const isCurrentlyDark = document.documentElement.classList.contains('dark');
+  updateToggleIcon(isCurrentlyDark);
+  updateThemeColorMeta(isCurrentlyDark);
 
   themeToggleBtn.addEventListener('click', () => {
     const isDark = document.documentElement.classList.toggle('dark');
     localStorage.setItem('theme', isDark ? 'dark' : 'light');
     updateToggleIcon(isDark);
+    updateThemeColorMeta(isDark);
   });
 }
 
