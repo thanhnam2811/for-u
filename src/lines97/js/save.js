@@ -186,6 +186,10 @@ export async function getGlobalLeaderboard() {
 }
 
 // ── Cloud Sync ──
+// Helper for document selection to avoid circular dependency with render.js
+const select = (s) => document.querySelector(s);
+
+// ── Cloud Sync ──
 export async function syncUserProgress(user) {
   if (!user) return false;
   const userDocRef = doc(db, 'players', user.uid);
@@ -203,97 +207,85 @@ export async function syncUserProgress(user) {
 
     if (docSnap.exists()) {
       const cloudData = docSnap.data();
-      let needsUpload = false;
-      let needsLocalReload = false;
 
-      // 1. High Score Sync
-      const cloudHighScore = cloudData.highScore || 0;
-      if (cloudHighScore > localHighScore) {
-        localStorage.setItem(LS_HIGH, cloudHighScore);
-        state.highScore = cloudHighScore;
-        needsLocalReload = true;
-      } else if (localHighScore > cloudHighScore) {
-        needsUpload = true;
+      // Check if we just logged in and if there is a conflict
+      const justLoggedIn = sessionStorage.getItem('just_logged_in') === 'true';
+      if (justLoggedIn) {
+        sessionStorage.removeItem('just_logged_in');
+
+        // Conflict check: both have active saves, or both have high scores and they are different
+        const hasLocalActive = !!localSaveRaw;
+        const hasCloudActive = !!cloudData.saveGame;
+        const hasLocalHighScore = localHighScore > 0;
+        const hasCloudHighScore = (cloudData.highScore || 0) > 0;
+
+        if ((hasLocalActive && hasCloudActive) || (hasLocalHighScore && hasCloudHighScore && localHighScore !== cloudData.highScore)) {
+          return new Promise((resolve) => {
+            const modal = select('#sync-conflict-modal');
+            if (!modal) {
+              // Fallback to confirm if modal is not in DOM
+              if (confirm("Phát hiện dữ liệu trên đám mây khác với máy này. Bạn muốn tải dữ liệu đám mây về? (Nhấn Cancel để đẩy dữ liệu máy này lên đám mây)")) {
+                resolve(applyCloudData(cloudData));
+              } else {
+                resolve(uploadLocalData(userDocRef, localHighScore, localSaveRaw, localCheckpoints, user));
+              }
+              return;
+            }
+
+            // Populate info on modal cards
+            let localInfo = `Kỷ lục: ${localHighScore}đ`;
+            if (localSaveRaw) {
+              try {
+                const s = JSON.parse(localSaveRaw);
+                localInfo += ` • Đang chơi: ${s.score || 0}đ`;
+              } catch (_) {}
+            }
+            const localText = select('#conflict-local-info');
+            if (localText) localText.textContent = localInfo;
+
+            let cloudInfo = `Kỷ lục: ${cloudData.highScore || 0}đ`;
+            if (cloudData.saveGame) {
+              try {
+                const s = JSON.parse(cloudData.saveGame);
+                cloudInfo += ` • Đang chơi: ${s.score || 0}đ`;
+              } catch (_) {}
+            }
+            const cloudText = select('#conflict-cloud-info');
+            if (cloudText) cloudText.textContent = cloudInfo;
+
+            // Show modal
+            modal.classList.add('visible');
+
+            const keepBtn = select('#keep-local-btn');
+            const restoreBtn = select('#restore-cloud-btn');
+
+            const handleKeepLocal = async () => {
+              modal.classList.remove('visible');
+              cleanup();
+              const needsReload = await uploadLocalData(userDocRef, localHighScore, localSaveRaw, localCheckpoints, user);
+              resolve(needsReload);
+            };
+
+            const handleRestoreCloud = async () => {
+              modal.classList.remove('visible');
+              cleanup();
+              const needsReload = await applyCloudData(cloudData);
+              resolve(needsReload);
+            };
+
+            if (keepBtn) keepBtn.addEventListener('click', handleKeepLocal);
+            if (restoreBtn) restoreBtn.addEventListener('click', handleRestoreCloud);
+
+            function cleanup() {
+              if (keepBtn) keepBtn.removeEventListener('click', handleKeepLocal);
+              if (restoreBtn) restoreBtn.removeEventListener('click', handleRestoreCloud);
+            }
+          });
+        }
       }
 
-      // 2. Save Game Sync
-      const cloudSave = cloudData.saveGame || null; // JSON String
-      if (cloudSave) {
-        let cloudSaveTime = 0;
-        try { cloudSaveTime = JSON.parse(cloudSave).timestamp || 0; } catch (_) {}
-
-        let localSaveTime = 0;
-        if (localSaveRaw) {
-          try { localSaveTime = JSON.parse(localSaveRaw).timestamp || 0; } catch (_) {}
-        }
-
-        if (cloudSaveTime > localSaveTime) {
-          localStorage.setItem(LS_SAVE, cloudSave);
-          needsLocalReload = true;
-        } else if (localSaveTime > cloudSaveTime) {
-          needsUpload = true;
-        }
-      } else if (localSaveRaw) {
-        needsUpload = true;
-      }
-
-      // 3. Checkpoints Sync
-      const cloudCheckpoints = cloudData.checkpoints || {};
-      const mergedCheckpoints = { ...cloudCheckpoints };
-
-      for (let i = 0; i < 3; i++) {
-        const cloudCp = cloudCheckpoints[i] || null; // JSON String
-        const localCp = localCheckpoints[i] || null; // JSON String
-        
-        let cloudCpTime = 0;
-        if (cloudCp) {
-          try { cloudCpTime = JSON.parse(cloudCp).timestamp || 0; } catch (_) {}
-        }
-        
-        let localCpTime = 0;
-        if (localCp) {
-          try { localCpTime = JSON.parse(localCp).timestamp || 0; } catch (_) {}
-        }
-
-        if (cloudCp) {
-          if (cloudCpTime > localCpTime) {
-            localStorage.setItem(LS_CHECKPOINT + i, cloudCp);
-            needsLocalReload = true;
-          } else if (localCpTime > cloudCpTime) {
-            needsUpload = true;
-            mergedCheckpoints[i] = localCp;
-          }
-        } else if (localCp) {
-          needsUpload = true;
-          mergedCheckpoints[i] = localCp;
-        }
-      }
-
-      // Update user profile info on Firestore if it has changed or is empty
-      if (
-        cloudData.displayName !== user.displayName ||
-        cloudData.photoURL !== user.photoURL
-      ) {
-        needsUpload = true;
-      }
-
-      if (needsUpload) {
-        const uploadData = {
-          updatedAt: Date.now(),
-          displayName: user.displayName || (user.isAnonymous ? "Người chơi ẩn danh" : "Google Player"),
-          photoURL: user.photoURL || "",
-          checkpoints: mergedCheckpoints
-        };
-        if (localHighScore > cloudHighScore) {
-          uploadData.highScore = localHighScore;
-        }
-        if (localSaveRaw) {
-          uploadData.saveGame = localSaveRaw;
-        }
-        await updateDoc(userDocRef, uploadData);
-      }
-
-      return needsLocalReload;
+      // Default: auto merge
+      return autoMergeUserProgress(userDocRef, cloudData, localHighScore, localSaveRaw, localCheckpoints, user);
     } else {
       // Create new document for user from local data
       const initialData = {
@@ -313,4 +305,137 @@ export async function syncUserProgress(user) {
     console.error("Sync error:", err);
     return false;
   }
+}
+
+// Overwrite cloud document with local device progress
+async function uploadLocalData(userDocRef, localHighScore, localSaveRaw, localCheckpoints, user) {
+  const uploadData = {
+    updatedAt: Date.now(),
+    displayName: user.displayName || "Google Player",
+    photoURL: user.photoURL || "",
+    checkpoints: localCheckpoints,
+    highScore: localHighScore,
+    saveGame: localSaveRaw || null
+  };
+  await setDoc(userDocRef, uploadData, { merge: true });
+  return false; // No local reload needed since we kept local device progress
+}
+
+// Overwrite local storage progress with cloud document progress
+async function applyCloudData(cloudData) {
+  const cloudHighScore = cloudData.highScore || 0;
+  localStorage.setItem(LS_HIGH, cloudHighScore);
+  state.highScore = cloudHighScore;
+
+  if (cloudData.saveGame) {
+    localStorage.setItem(LS_SAVE, cloudData.saveGame);
+  } else {
+    localStorage.removeItem(LS_SAVE);
+  }
+
+  const cloudCheckpoints = cloudData.checkpoints || {};
+  for (let i = 0; i < 3; i++) {
+    const cp = cloudCheckpoints[i];
+    if (cp) {
+      localStorage.setItem(LS_CHECKPOINT + i, cp);
+    } else {
+      localStorage.removeItem(LS_CHECKPOINT + i);
+    }
+  }
+  return true; // Reload is required to apply the newly loaded cloud progress
+}
+
+// Automatic merge logic (for already logged-in users on reload)
+async function autoMergeUserProgress(userDocRef, cloudData, localHighScore, localSaveRaw, localCheckpoints, user) {
+  let needsUpload = false;
+  let needsLocalReload = false;
+
+  // 1. High Score Sync
+  const cloudHighScore = cloudData.highScore || 0;
+  if (cloudHighScore > localHighScore) {
+    localStorage.setItem(LS_HIGH, cloudHighScore);
+    state.highScore = cloudHighScore;
+    needsLocalReload = true;
+  } else if (localHighScore > cloudHighScore) {
+    needsUpload = true;
+  }
+
+  // 2. Save Game Sync
+  const cloudSave = cloudData.saveGame || null;
+  let cloudSaveTime = 0;
+  if (cloudSave) {
+    try { cloudSaveTime = JSON.parse(cloudSave).timestamp || 0; } catch (_) {}
+  }
+  let localSaveTime = 0;
+  if (localSaveRaw) {
+    try { localSaveTime = JSON.parse(localSaveRaw).timestamp || 0; } catch (_) {}
+  }
+
+  if (cloudSave) {
+    if (cloudSaveTime > localSaveTime) {
+      localStorage.setItem(LS_SAVE, cloudSave);
+      needsLocalReload = true;
+    } else if (localSaveTime > cloudSaveTime) {
+      needsUpload = true;
+    }
+  } else if (localSaveRaw) {
+    needsUpload = true;
+  }
+
+  // 3. Checkpoints Sync
+  const cloudCheckpoints = cloudData.checkpoints || {};
+  const mergedCheckpoints = { ...cloudCheckpoints };
+
+  for (let i = 0; i < 3; i++) {
+    const cloudCp = cloudCheckpoints[i] || null;
+    const localCp = localCheckpoints[i] || null;
+
+    let cloudCpTime = 0;
+    if (cloudCp) {
+      try { cloudCpTime = JSON.parse(cloudCp).timestamp || 0; } catch (_) {}
+    }
+
+    let localCpTime = 0;
+    if (localCp) {
+      try { localCpTime = JSON.parse(localCp).timestamp || 0; } catch (_) {}
+    }
+
+    if (cloudCp) {
+      if (cloudCpTime > localCpTime) {
+        localStorage.setItem(LS_CHECKPOINT + i, cloudCp);
+        needsLocalReload = true;
+      } else if (localCpTime > cloudCpTime) {
+        needsUpload = true;
+        mergedCheckpoints[i] = localCp;
+      }
+    } else if (localCp) {
+      needsUpload = true;
+      mergedCheckpoints[i] = localCp;
+    }
+  }
+
+  if (
+    cloudData.displayName !== user.displayName ||
+    cloudData.photoURL !== user.photoURL
+  ) {
+    needsUpload = true;
+  }
+
+  if (needsUpload) {
+    const uploadData = {
+      updatedAt: Date.now(),
+      displayName: user.displayName || (user.isAnonymous ? "Người chơi ẩn danh" : "Google Player"),
+      photoURL: user.photoURL || "",
+      checkpoints: mergedCheckpoints
+    };
+    if (localHighScore > cloudHighScore) {
+      uploadData.highScore = localHighScore;
+    }
+    if (localSaveRaw) {
+      uploadData.saveGame = localSaveRaw;
+    }
+    await updateDoc(userDocRef, uploadData);
+  }
+
+  return needsLocalReload;
 }

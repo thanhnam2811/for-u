@@ -255,6 +255,7 @@ export function initSharedAuth({ onUserChanged, syncProgress, profileBtnSelector
     const provider = new GoogleAuthProvider();
     try {
       await linkWithPopup(user, provider);
+      sessionStorage.setItem('just_logged_in', 'true');
       showToast("🎉 Liên kết tài khoản Google thành công!");
       hideAuthModal();
     } catch (error) {
@@ -262,6 +263,7 @@ export function initSharedAuth({ onUserChanged, syncProgress, profileBtnSelector
         if (confirm("Tài khoản Google này đã được liên kết với một tiến trình khác. Bạn có muốn chuyển sang tài khoản này (tiến trình hiện tại trên thiết bị sẽ bị thay thế)?")) {
           try {
             showToast("🔑 Đang chuyển tài khoản...");
+            sessionStorage.setItem('just_logged_in', 'true');
             await signInWithRedirect(auth, provider);
           } catch (err) {
             console.error("Direct Google Sign-in error:", err);
@@ -283,6 +285,7 @@ export function initSharedAuth({ onUserChanged, syncProgress, profileBtnSelector
     showToast("🔐 Đang đăng nhập...");
     try {
       await signInWithEmailAndPassword(auth, email, password);
+      sessionStorage.setItem('just_logged_in', 'true');
       showToast("👋 Đăng nhập thành công!");
       hideAuthModal();
       $('#shared-auth-email').value = '';
@@ -312,6 +315,7 @@ export function initSharedAuth({ onUserChanged, syncProgress, profileBtnSelector
     try {
       const credential = EmailAuthProvider.credential(email, password);
       await linkWithCredential(user, credential);
+      sessionStorage.setItem('just_logged_in', 'true');
       showToast("🎉 Đã tạo và liên kết tài khoản Email!");
       hideAuthModal();
       $('#shared-auth-email').value = '';
