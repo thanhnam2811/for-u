@@ -1,25 +1,20 @@
-// ── Lines 97 — PWA Service Worker ──
+// ── Global Service Worker — Magic Playground ──
 
-const CACHE_NAME = 'lines97-cache-v6';
+const CACHE_NAME = 'magic-playground-cache-v1';
 const ASSETS = [
   './',
   './index.html',
   './style.css',
-  './icon.png',
   './manifest.json',
-  './js/main.js',
-  './js/constants.js',
-  './js/state.js',
-  './js/sound.js',
-  './js/logic.js',
-  './js/render.js',
-  './js/save.js',
-  './js/hint.js',
-  './js/haptics.js',
-  './js/firebase.js'
+  './assets/favicon.svg',
+  './assets/icon.png',
+  './lines97/',
+  './lines97/index.html',
+  './aura/',
+  './aura/index.html'
 ];
 
-// Install Event — cache static assets
+// Install Event — cache core static assets
 self.addEventListener('install', (e) => {
   self.skipWaiting();
   e.waitUntil(
@@ -46,7 +41,6 @@ self.addEventListener('activate', (e) => {
 
 // Fetch Event — Stale-while-revalidate caching strategy
 self.addEventListener('fetch', (e) => {
-  // Only handle HTTP/HTTPS GET requests (avoid caching POST or other request methods)
   if (!e.request.url.startsWith('http')) return;
   if (e.request.method !== 'GET') return;
 

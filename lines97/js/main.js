@@ -13,19 +13,7 @@ import {
   autoSave, loadSavedGame, clearSave, saveCheckpoint, loadCheckpoint, saveToLeaderboard, getLeaderboard,
   syncUserProgress, getGlobalLeaderboard
 } from './save.js';
-import { auth } from './firebase.js';
-import {
-  signInAnonymously,
-  GoogleAuthProvider,
-  signInWithRedirect,
-  linkWithPopup,
-  signOut,
-  onAuthStateChanged,
-  EmailAuthProvider,
-  linkWithCredential,
-  signInWithEmailAndPassword,
-  updateProfile
-} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { initSharedAuth } from '../../shared/auth.js';
 import { findBestHint, showHint, clearHint } from './hint.js';
 import { Haptics } from './haptics.js';
 
@@ -54,14 +42,37 @@ function init() {
   // Register Service Worker for offline play
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js')
-        .then(reg => console.log('Service Worker registered!', reg))
-        .catch(err => console.error('Service Worker registration failed:', err));
+      const baseUrl = import.meta.env.BASE_URL || '/';
+      navigator.serviceWorker.register(`${baseUrl}sw.js`)
+        .then(reg => console.log('Global Service Worker registered from Lines97!', reg.scope))
+        .catch(err => console.error('Global Service Worker registration failed:', err));
     });
   }
 
-  // Setup Google sign-in auth and sync
-  setupFirebaseAuth();
+  // Setup Google sign-in auth and sync via shared auth module
+  initSharedAuth({
+    onUserChanged: (user) => {
+      updateGameUserUI(user);
+    },
+    syncProgress: async (user) => {
+      showToast("🔄 Đang đồng bộ dữ liệu...");
+      const needsReload = await syncUserProgress(user);
+      if (needsReload) {
+        showToast("✅ Đã đồng bộ tiến trình từ Cloud!");
+        if (loadSavedGame()) {
+          renderBoard();
+          renderPreview();
+          renderScore();
+          renderStats();
+          renderUndoHintUI();
+        }
+        renderCheckpointSlots();
+      } else {
+        showToast("✅ Tiến trình đã được đồng bộ!");
+      }
+    },
+    profileBtnSelector: '#google-login-btn'
+  });
 }
 
 function loadSettings() {
@@ -526,234 +537,8 @@ function setupEvents() {
   });
 }
 
-// ── Firebase Auth & Sync ──
-function generateRandomNickname() {
-  const adjs = ["Thần Bí", "Lấp Lánh", "Kỳ Diệu", "Huyền Thoại", "Ma Thuật", "Siêu Cấp", "Vô Địch", "Thần Tốc", "Nhiệm Màu", "Vui Vẻ"];
-  const nouns = ["Phù Thủy", "Chiến Binh", "Tinh Linh", "Hiệp Sĩ", "Thần Thú", "Ninja", "Ảo Thuật Gia", "Nhà Thám Hiểm", "Phi Hành Gia", "Học Giả"];
-  const adj = adjs[Math.floor(Math.random() * adjs.length)];
-  const noun = nouns[Math.floor(Math.random() * nouns.length)];
-  const num = Math.floor(1000 + Math.random() * 9000);
-  return `${noun} ${adj} #${num}`;
-}
-
-function getFriendlyAuthErrorMessage(errorCode) {
-  switch (errorCode) {
-    case 'auth/invalid-email':
-      return "⚠️ Email không đúng định dạng!";
-    case 'auth/weak-password':
-      return "⚠️ Mật khẩu quá yếu (tối thiểu 6 ký tự)!";
-    case 'auth/email-already-in-use':
-      return "⚠️ Email này đã đăng ký tài khoản khác!";
-    case 'auth/user-not-found':
-    case 'auth/wrong-password':
-    case 'auth/invalid-credential':
-      return "❌ Sai Email hoặc Mật khẩu!";
-    case 'auth/operation-not-allowed':
-      return "❌ Đăng nhập Email chưa được bật!";
-    case 'auth/too-many-requests':
-      return "⚠️ Đăng nhập thất bại quá nhiều lần. Vui lòng thử lại sau!";
-    case 'auth/network-request-failed':
-      return "🌐 Lỗi kết nối mạng. Vui lòng kiểm tra lại!";
-    case 'auth/credential-already-in-use':
-      return "⚠️ Tài khoản đã liên kết với một tiến trình khác!";
-    default:
-      return "❌ Thao tác thất bại. Vui lòng thử lại!";
-  }
-}
-
-function setupFirebaseAuth() {
-  const accountModal = $('#account-modal');
-  if (!accountModal) {
-    console.warn("Account modal element not found in DOM.");
-    return;
-  }
-  const closeBtn = $('#close-account-btn');
-  if (closeBtn) closeBtn.addEventListener('click', () => accountModal.classList.remove('visible'));
-  accountModal.addEventListener('click', (e) => {
-    if (e.target === e.currentTarget) accountModal.classList.remove('visible');
-  });
-
-  // Google Sign-in button listener (inside account modal)
-  $('#modal-google-btn').addEventListener('click', async () => {
-    const user = auth.currentUser;
-    if (!user) return;
-    showToast("🔑 Đang mở đăng nhập Google...");
-    const provider = new GoogleAuthProvider();
-    try {
-      await linkWithPopup(user, provider);
-      showToast("🎉 Liên kết tài khoản Google thành công!");
-      accountModal.classList.remove('visible');
-    } catch (error) {
-      if (error.code === 'auth/credential-already-in-use') {
-        if (confirm("Tài khoản Google này đã được liên kết với một tiến trình khác. Bạn có muốn chuyển sang tài khoản này (tiến trình hiện tại trên thiết bị sẽ bị thay thế)?")) {
-          try {
-            showToast("🔑 Đang chuyển tài khoản...");
-            await signInWithRedirect(auth, provider);
-          } catch (err) {
-            console.error("Direct Google Sign-in error:", err);
-            showToast(getFriendlyAuthErrorMessage(err.code));
-          }
-        }
-      } else {
-        console.error("Google linking error:", error);
-        showToast(getFriendlyAuthErrorMessage(error.code));
-      }
-    }
-  });
-
-  // Email Sign In form submission
-  $('#email-auth-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const email = $('#auth-email').value;
-    const password = $('#auth-password').value;
-    showToast("🔐 Đang đăng nhập...");
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-      showToast("👋 Đăng nhập thành công!");
-      accountModal.classList.remove('visible');
-      $('#auth-email').value = '';
-      $('#auth-password').value = '';
-    } catch (err) {
-      console.error("Email sign-in error:", err);
-      showToast(getFriendlyAuthErrorMessage(err.code));
-    }
-  });
-
-  // Email Sign Up button action
-  $('#email-signup-btn').addEventListener('click', async () => {
-    const email = $('#auth-email').value;
-    const password = $('#auth-password').value;
-    if (!email || !password) {
-      showToast("⚠️ Vui lòng điền đầy đủ Email và Mật khẩu!");
-      return;
-    }
-    if (password.length < 6) {
-      showToast("⚠️ Mật khẩu phải có tối thiểu 6 ký tự!");
-      return;
-    }
-    const user = auth.currentUser;
-    if (!user) return;
-
-    showToast("📝 Đang đăng ký...");
-    try {
-      const credential = EmailAuthProvider.credential(email, password);
-      await linkWithCredential(user, credential);
-      showToast("🎉 Đã tạo và liên kết tài khoản Email!");
-      accountModal.classList.remove('visible');
-      $('#auth-email').value = '';
-      $('#auth-password').value = '';
-    } catch (err) {
-      console.error("Email sign-up error:", err);
-      showToast(getFriendlyAuthErrorMessage(err.code));
-    }
-  });
-
-  // Sign out button
-  $('#account-signout-btn').addEventListener('click', async () => {
-    if (confirm("Bạn có muốn đăng xuất khỏi tài khoản hiện tại không?")) {
-      showToast("🚪 Đang đăng xuất...");
-      try {
-        await signOut(auth);
-        accountModal.classList.remove('visible');
-        showToast("🚪 Đã đăng xuất!");
-      } catch (err) {
-        console.error("Sign out error:", err);
-        showToast("❌ Lỗi đăng xuất!");
-      }
-    }
-  });
-
-  // Firebase Auth Observer
-  onAuthStateChanged(auth, async (user) => {
-    if (user) {
-      console.log("Firebase Auth State: Logged in as", user.uid, user.isAnonymous ? "Anonymous" : user.displayName);
-      
-      if (user.isAnonymous && !user.displayName) {
-        const nickname = generateRandomNickname();
-        try {
-          await updateProfile(user, { displayName: nickname });
-          console.log("Profile updated with nickname:", nickname);
-        } catch (err) {
-          console.error("Profile update error:", err);
-        }
-      }
-
-      updateUserUI(user);
-      
-      // Show toast and synchronize progress
-      showToast("🔄 Đang đồng bộ dữ liệu...");
-      const needsReload = await syncUserProgress(user);
-      if (needsReload) {
-        showToast("✅ Đã đồng bộ tiến trình từ Cloud!");
-        if (loadSavedGame()) {
-          renderBoard();
-          renderPreview();
-          renderScore();
-          renderStats();
-          renderUndoHintUI();
-        }
-        renderCheckpointSlots();
-      } else {
-        showToast("✅ Tiến trình đã được đồng bộ!");
-      }
-    } else {
-      console.log("Firebase Auth State: No user. Signing in anonymously...");
-      try {
-        await signInAnonymously(auth);
-      } catch (err) {
-        console.error("Anonymous login error:", err);
-        showToast("❌ Lỗi đăng nhập Firebase!");
-      }
-    }
-  });
-
-  // Profile button listener on header
-  const loginBtn = $('#google-login-btn');
-  if (loginBtn) {
-    loginBtn.addEventListener('click', () => {
-      accountModal.classList.add('visible');
-      updateAccountModalUI(auth.currentUser);
-    });
-  }
-}
-
-function updateAccountModalUI(user) {
-  const profileView = $('#account-profile-view');
-  const loginView = $('#account-login-view');
-  if (!user) return;
-
-  if (user.isAnonymous) {
-    profileView.style.display = 'none';
-    loginView.style.display = 'block';
-    $('#modal-anon-name').textContent = user.displayName || "Khách ẩn danh";
-  } else {
-    profileView.style.display = 'block';
-    loginView.style.display = 'none';
-    
-    const avatarImg = $('#modal-user-avatar');
-    const avatarIcon = $('#modal-user-icon');
-    
-    if (user.photoURL) {
-      avatarImg.src = user.photoURL;
-      avatarImg.style.display = 'inline-block';
-      avatarIcon.style.display = 'none';
-    } else {
-      avatarImg.style.display = 'none';
-      avatarIcon.style.display = 'inline-block';
-      avatarIcon.textContent = 'face';
-    }
-    
-    $('#modal-user-name').textContent = user.displayName || "Người chơi";
-    $('#modal-user-email').textContent = user.email || "";
-    
-    const isGoogle = user.providerData.some(p => p.providerId === 'google.com');
-    const badge = $('#modal-user-badge');
-    badge.textContent = isGoogle ? "Google" : "Email";
-    badge.style.background = isGoogle ? "#4285F4" : "var(--primary-pink)";
-  }
-}
-
-function updateUserUI(user) {
+// ── updateGameUserUI ──
+function updateGameUserUI(user) {
   const avatarIcon = $('#user-avatar-icon');
   const avatarImg = $('#user-avatar-img');
   const loginBtn = $('#google-login-btn');
@@ -781,11 +566,6 @@ function updateUserUI(user) {
       }
     }
     loginBtn.title = `Tài khoản: ${user.displayName || user.email}`;
-  }
-  
-  const accountModal = $('#account-modal');
-  if (accountModal && accountModal.classList.contains('visible')) {
-    updateAccountModalUI(user);
   }
 }
 

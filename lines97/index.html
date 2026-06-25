@@ -8,239 +8,191 @@
   <title>Lines 97 🎱 — Góc Nhỏ Phép Thuật</title>
   <meta name="description" content="Chơi game Lines 97 kinh điển — xếp 5 viên bi cùng màu thành hàng để ghi điểm!">
 
+  <!-- script tối ưu tránh nhấp nháy FOUC khi chọn dark mode -->
+  <script>
+    if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  </script>
+
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@500;700&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
-  <link rel="manifest" href="manifest.json">
-  <link rel="apple-touch-icon" href="icon.png">
+  <link rel="manifest" href="../manifest.json">
+  <link rel="apple-touch-icon" href="../assets/icon.png">
 </head>
-<body>
-  <div class="game-container">
+<body class="bg-gradient-to-br from-[#FFEBF0] to-[#E8F0FE] dark:from-[#0F0C1B] dark:to-[#1B1437] min-h-screen font-sans text-slate-700 dark:text-slate-100 flex justify-center overflow-x-hidden relative transition-colors duration-500 pb-[safe-area-inset-bottom]">
+  
+  <div class="w-full max-w-[520px] px-3.5 py-4 sm:py-6 md:py-8 z-10 flex flex-col items-center select-none">
 
     <!-- Header -->
-    <header class="game-header">
-      <a href="../index.html" class="back-btn">
-        <span class="material-icons-round">arrow_back</span>
+    <header class="w-full flex items-center justify-between mb-4 select-none">
+      <a href="../index.html" class="flex items-center gap-1 text-slate-500 hover:text-brand-pink dark:text-slate-400 dark:hover:text-brand-purple font-display text-xs sm:text-sm font-bold px-3 py-2 rounded-xl bg-white/45 dark:bg-slate-900/40 backdrop-blur-glass border border-white/60 dark:border-slate-800/60 shadow-glass-light dark:shadow-glass-dark transition-all hover:-translate-x-0.5 cursor-pointer">
+        <span class="material-icons-round text-base sm:text-lg">arrow_back</span>
         <span>Về Hub</span>
       </a>
-      <h1 class="game-title">Lines 97 🎱</h1>
-      <div class="header-actions">
-        <button class="icon-btn" id="google-login-btn" aria-label="Đăng nhập Google">
-          <span class="material-icons-round" id="user-avatar-icon">account_circle</span>
-          <img id="user-avatar-img" src="" alt="Avatar" style="display: none; width: 100%; height: 100%; border-radius: 50%; object-fit: cover;" />
+      <h1 class="font-display font-bold text-xl sm:text-2xl tracking-wide bg-gradient-to-r from-brand-pink to-brand-purple bg-clip-text text-transparent drop-shadow-sm">Lines 97 🎱</h1>
+      <div class="flex gap-2">
+        <button class="flex items-center justify-center w-10 h-10 border border-white/60 dark:border-slate-800/60 rounded-xl bg-white/45 dark:bg-slate-900/40 text-slate-500 dark:text-slate-400 hover:text-brand-pink dark:hover:text-brand-purple hover:scale-105 active:scale-95 transition-all shadow-glass-light dark:shadow-glass-dark cursor-pointer pointer-events-auto" id="google-login-btn" aria-label="Đăng nhập">
+          <span class="material-icons-round text-xl" id="user-avatar-icon">account_circle</span>
+          <img id="user-avatar-img" src="" alt="Avatar" class="w-full h-full rounded-full border border-brand-pink/20 dark:border-brand-purple/20 object-cover" style="display: none;" />
         </button>
-        <button class="icon-btn" id="checkpoint-toggle" aria-label="Checkpoint">
-          <span class="material-icons-round">bookmark</span>
+        <button class="flex items-center justify-center w-10 h-10 border border-white/60 dark:border-slate-800/60 rounded-xl bg-white/45 dark:bg-slate-900/40 text-slate-500 dark:text-slate-400 hover:text-brand-pink dark:hover:text-brand-purple hover:scale-105 active:scale-95 transition-all shadow-glass-light dark:shadow-glass-dark cursor-pointer pointer-events-auto" id="checkpoint-toggle" aria-label="Checkpoint">
+          <span class="material-icons-round text-xl">bookmark</span>
         </button>
-        <button class="icon-btn" id="palette-toggle" aria-label="Bộ màu">
-          <span class="material-icons-round">palette</span>
+        <button class="flex items-center justify-center w-10 h-10 border border-white/60 dark:border-slate-800/60 rounded-xl bg-white/45 dark:bg-slate-900/40 text-slate-500 dark:text-slate-400 hover:text-brand-pink dark:hover:text-brand-purple hover:scale-105 active:scale-95 transition-all shadow-glass-light dark:shadow-glass-dark cursor-pointer pointer-events-auto" id="palette-toggle" aria-label="Bộ màu">
+          <span class="material-icons-round text-xl">palette</span>
         </button>
       </div>
     </header>
 
-
-
-    <!-- Score / Preview -->
-    <div class="score-section">
-      <div class="score-card">
-        <span class="score-label">Điểm</span>
-        <span class="score-value" id="score">0</span>
+    <!-- Score / Preview Section -->
+    <div class="grid grid-cols-3 gap-3 w-full mb-4">
+      <div class="bg-white/45 dark:bg-slate-900/40 backdrop-blur-glass border border-white/60 dark:border-slate-800/60 shadow-glass-light dark:shadow-glass-dark rounded-2xl py-3 px-2 flex flex-col items-center justify-center transition-all duration-300">
+        <span class="text-[10px] sm:text-xs font-semibold text-brand-muted dark:text-brand-purple/70 uppercase tracking-wider mb-1">Điểm</span>
+        <span class="font-display font-bold text-lg sm:text-2xl text-slate-800 dark:text-slate-100" id="score">0</span>
       </div>
-      <div class="preview-card">
-        <span class="preview-label">Tiếp theo</span>
-        <div class="preview-balls" id="next-preview"></div>
+      <div class="bg-white/45 dark:bg-slate-900/40 backdrop-blur-glass border border-white/60 dark:border-slate-800/60 shadow-glass-light dark:shadow-glass-dark rounded-2xl py-3 px-2 flex flex-col items-center justify-center transition-all duration-300">
+        <span class="text-[10px] sm:text-xs font-semibold text-brand-muted dark:text-brand-purple/70 uppercase tracking-wider mb-1.5">Tiếp theo</span>
+        <div class="flex gap-1.5 h-6 items-center justify-center" id="next-preview"></div>
       </div>
-      <div class="score-card">
-        <span class="score-label">Kỷ lục</span>
-        <span class="score-value" id="high-score">0</span>
+      <div class="bg-white/45 dark:bg-slate-900/40 backdrop-blur-glass border border-white/60 dark:border-slate-800/60 shadow-glass-light dark:shadow-glass-dark rounded-2xl py-3 px-2 flex flex-col items-center justify-center transition-all duration-300">
+        <span class="text-[10px] sm:text-xs font-semibold text-brand-muted dark:text-brand-purple/70 uppercase tracking-wider mb-1">Kỷ lục</span>
+        <span class="font-display font-bold text-lg sm:text-2xl text-slate-800 dark:text-slate-100" id="high-score">0</span>
       </div>
     </div>
 
     <!-- Stats bar -->
-    <div class="stats-bar">
+    <div class="w-full flex items-center justify-around bg-white/30 dark:bg-slate-900/25 backdrop-blur-sm border border-white/30 dark:border-slate-800/30 rounded-xl py-2.5 px-3 mb-4 text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-300 select-none shadow-inner">
       <span id="stat-time">⏱ 00:00</span>
       <span id="stat-moves">🎯 0</span>
       <span id="stat-cleared">💥 0</span>
     </div>
 
     <!-- Game Board -->
-    <div class="board-wrapper">
-      <div class="board" id="game-board"></div>
+    <div class="relative w-full aspect-square max-w-[460px] bg-white/45 dark:bg-slate-950/40 backdrop-blur-glass border border-white/60 dark:border-slate-800/60 shadow-glass-light dark:shadow-glass-dark rounded-[24px] sm:rounded-[32px] p-2 sm:p-3 mb-4 transition-all duration-300">
+      <div class="w-full h-full grid grid-cols-9 grid-rows-9 gap-[1px] sm:gap-[2px] bg-slate-200/50 dark:bg-slate-800/30 rounded-[16px] sm:rounded-[22px] overflow-hidden" id="game-board"></div>
     </div>
 
     <!-- Controls -->
-    <div class="game-controls">
-      <button class="control-btn" id="undo-btn" disabled>
-        <span class="material-icons-round">undo</span>
-        <span>Hoàn tác</span>
+    <div class="grid grid-cols-5 gap-2 w-full mb-4">
+      <button class="flex flex-col items-center justify-center py-2.5 px-1 rounded-2xl bg-white/45 dark:bg-slate-900/40 border border-white/60 dark:border-slate-800/60 shadow-glass-light dark:shadow-glass-dark backdrop-blur-glass text-slate-600 dark:text-slate-300 hover:text-brand-pink dark:hover:text-brand-purple hover:scale-105 active:scale-95 transition-all select-none relative cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100" id="undo-btn" disabled>
+        <span class="material-icons-round text-lg sm:text-xl mb-1">undo</span>
+        <span class="font-display font-bold text-[10px] sm:text-xs tracking-wide">Hoàn tác</span>
       </button>
-      <button class="control-btn" id="hint-btn">
-        <span class="material-icons-round">lightbulb</span>
-        <span>Gợi ý</span>
-        <span class="badge" id="hint-count">3</span>
+      <button class="flex flex-col items-center justify-center py-2.5 px-1 rounded-2xl bg-white/45 dark:bg-slate-900/40 border border-white/60 dark:border-slate-800/60 shadow-glass-light dark:shadow-glass-dark backdrop-blur-glass text-slate-600 dark:text-slate-300 hover:text-brand-pink dark:hover:text-brand-purple hover:scale-105 active:scale-95 transition-all select-none relative cursor-pointer" id="hint-btn">
+        <span class="material-icons-round text-lg sm:text-xl mb-1">lightbulb</span>
+        <span class="font-display font-bold text-[10px] sm:text-xs tracking-wide">Gợi ý</span>
+        <span class="absolute -top-1.5 -right-1.5 bg-gradient-to-br from-brand-pink to-pink-600 text-white text-[9px] font-semibold px-2 py-0.5 rounded-full shadow-[0_2px_6px_rgba(255,117,151,0.4)]" id="hint-count">3</span>
       </button>
-      <button class="control-btn" id="new-game-btn">
-        <span class="material-icons-round">refresh</span>
-        <span>Mới</span>
+      <button class="flex flex-col items-center justify-center py-2.5 px-1 rounded-2xl bg-white/45 dark:bg-slate-900/40 border border-white/60 dark:border-slate-800/60 shadow-glass-light dark:shadow-glass-dark backdrop-blur-glass text-slate-600 dark:text-slate-300 hover:text-brand-pink dark:hover:text-brand-purple hover:scale-105 active:scale-95 transition-all select-none relative cursor-pointer" id="new-game-btn">
+        <span class="material-icons-round text-lg sm:text-xl mb-1">refresh</span>
+        <span class="font-display font-bold text-[10px] sm:text-xs tracking-wide">Mới</span>
       </button>
-      <button class="control-btn" id="sound-toggle">
-        <span class="material-icons-round" id="sound-icon">volume_up</span>
-        <span id="sound-label">Âm</span>
+      <button class="flex flex-col items-center justify-center py-2.5 px-1 rounded-2xl bg-white/45 dark:bg-slate-900/40 border border-white/60 dark:border-slate-800/60 shadow-glass-light dark:shadow-glass-dark backdrop-blur-glass text-slate-600 dark:text-slate-300 hover:text-brand-pink dark:hover:text-brand-purple hover:scale-105 active:scale-95 transition-all select-none relative cursor-pointer" id="sound-toggle">
+        <span class="material-icons-round text-lg sm:text-xl mb-1" id="sound-icon">volume_up</span>
+        <span class="font-display font-bold text-[10px] sm:text-xs tracking-wide" id="sound-label">Âm</span>
       </button>
-      <button class="control-btn" id="leaderboard-btn">
-        <span class="material-icons-round">emoji_events</span>
-        <span>Top</span>
+      <button class="flex flex-col items-center justify-center py-2.5 px-1 rounded-2xl bg-white/45 dark:bg-slate-900/40 border border-white/60 dark:border-slate-800/60 shadow-glass-light dark:shadow-glass-dark backdrop-blur-glass text-slate-600 dark:text-slate-300 hover:text-brand-pink dark:hover:text-brand-purple hover:scale-105 active:scale-95 transition-all select-none relative cursor-pointer" id="leaderboard-btn">
+        <span class="material-icons-round text-lg sm:text-xl mb-1">emoji_events</span>
+        <span class="font-display font-bold text-[10px] sm:text-xs tracking-wide">Top</span>
       </button>
     </div>
 
     <!-- Instructions -->
-    <div class="game-instructions">
+    <div class="w-full text-center bg-white/20 dark:bg-slate-900/10 backdrop-blur-sm border border-white/30 dark:border-slate-800/30 rounded-xl py-2 px-3 text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400 select-none shadow-sm">
       <p>🎯 Click bi → Click ô trống → Xếp 5+ bi cùng màu!</p>
     </div>
 
     <!-- Game Over Overlay -->
-    <div class="game-over-overlay" id="game-over-overlay">
-      <div class="game-over-card">
-        <span class="game-over-icon">😢</span>
-        <h2>Hết chỗ rồi!</h2>
-        <p class="game-over-score">Điểm: <span id="final-score">0</span></p>
-        <p class="game-over-high">Kỷ lục: <span id="final-high">0</span></p>
-        <div class="game-over-actions">
-          <button class="restart-btn" id="restart-btn">
-            <span class="material-icons-round">replay</span> Chơi lại
+    <div class="game-over-overlay fixed inset-0 bg-slate-900/45 dark:bg-slate-950/60 backdrop-blur-sm z-[99] flex items-center justify-center pointer-events-none opacity-0 invisible transition-all duration-300" id="game-over-overlay">
+      <div class="w-[90%] max-w-[420px] bg-white/75 dark:bg-slate-900/50 backdrop-blur-md border border-white/60 dark:border-slate-800/60 shadow-glass-light dark:shadow-glass-dark rounded-[28px] sm:rounded-[36px] p-6 sm:p-8 flex flex-col items-center transform scale-95 transition-all duration-300 relative pointer-events-auto">
+        <span class="text-4xl mb-4">😢</span>
+        <h2 class="font-display font-bold text-xl sm:text-2xl text-slate-800 dark:text-slate-100 mb-3 select-none">Hết chỗ rồi!</h2>
+        <p class="font-sans font-semibold text-slate-600 dark:text-slate-300 text-sm mb-1">Điểm: <span id="final-score">0</span></p>
+        <p class="font-sans font-semibold text-slate-400 dark:text-slate-500 text-xs mb-6">Kỷ lục: <span id="final-high">0</span></p>
+        <div class="flex flex-col gap-3 w-full">
+          <button class="w-full font-display font-bold text-sm sm:text-base text-white bg-gradient-to-r from-brand-pink to-brand-purple rounded-2xl py-3 shadow-brand hover:shadow-brand-hover hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 cursor-pointer" id="restart-btn">
+            <span class="material-icons-round align-middle text-lg mr-1">replay</span> Chơi lại
           </button>
-          <button class="restart-btn secondary" id="load-checkpoint-btn" style="display:none">
-            <span class="material-icons-round">bookmark</span> Tải checkpoint
+          <button class="w-full font-sans font-bold text-sm sm:text-base text-slate-700 dark:text-slate-200 bg-white/30 dark:bg-slate-800/30 border border-white/40 dark:border-slate-700/40 rounded-2xl py-3 hover:bg-white/50 dark:hover:bg-slate-800/50 transition-all cursor-pointer" id="load-checkpoint-btn" style="display:none">
+            <span class="material-icons-round align-middle text-lg mr-1">bookmark</span> Tải checkpoint
           </button>
         </div>
       </div>
     </div>
 
     <!-- Leaderboard Overlay -->
-    <div class="game-over-overlay" id="leaderboard-overlay">
-      <div class="game-over-card leaderboard-card">
-        <h2>🏆 Top 10</h2>
-        <table class="lb-table">
-          <thead><tr><th>#</th><th>Người chơi</th><th>Điểm</th><th>Ngày</th></tr></thead>
-          <tbody id="leaderboard-body"></tbody>
-        </table>
-        <button class="restart-btn" id="close-leaderboard-btn">
-          <span class="material-icons-round">close</span> Đóng
+    <div class="game-over-overlay fixed inset-0 bg-slate-900/45 dark:bg-slate-950/60 backdrop-blur-sm z-[99] flex items-center justify-center pointer-events-none opacity-0 invisible transition-all duration-300" id="leaderboard-overlay">
+      <div class="w-[95%] max-w-[460px] bg-white/75 dark:bg-slate-900/50 backdrop-blur-md border border-white/60 dark:border-slate-800/60 shadow-glass-light dark:shadow-glass-dark rounded-[28px] sm:rounded-[36px] p-5 sm:p-8 flex flex-col items-center transform scale-95 transition-all duration-300 relative pointer-events-auto">
+        <h2 class="font-display font-bold text-xl sm:text-2xl text-slate-800 dark:text-slate-100 mb-4 select-none">🏆 Top 10</h2>
+        <div class="w-full overflow-x-auto mb-6">
+          <table class="w-full text-left text-xs sm:text-sm font-sans text-slate-600 dark:text-slate-300 border-collapse">
+            <thead>
+              <tr class="text-brand-muted dark:text-brand-purple/70 uppercase tracking-wider font-bold border-b border-slate-200/50 dark:border-slate-800/50">
+                <th class="py-2 px-1">#</th>
+                <th class="py-2 px-2">Người chơi</th>
+                <th class="py-2 px-2">Điểm</th>
+                <th class="py-2 px-1.5 text-right">Ngày</th>
+              </tr>
+            </thead>
+            <tbody id="leaderboard-body"></tbody>
+          </table>
+        </div>
+        <button class="w-full font-display font-bold text-sm sm:text-base text-white bg-gradient-to-r from-brand-pink to-brand-purple rounded-2xl py-3 shadow-brand hover:shadow-brand-hover hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 cursor-pointer" id="close-leaderboard-btn">
+          <span class="material-icons-round align-middle text-lg mr-1">close</span> Đóng
         </button>
       </div>
     </div>
 
     <!-- Palette Modal -->
-    <div class="game-over-overlay" id="palette-modal">
-      <div class="game-over-card modal-card">
-        <div class="modal-header">
-          <h2>🎨 Chọn bộ màu</h2>
-          <button class="modal-close-btn" id="close-palette-btn" aria-label="Đóng">
+    <div class="game-over-overlay fixed inset-0 bg-slate-900/45 dark:bg-slate-950/60 backdrop-blur-sm z-[99] flex items-center justify-center pointer-events-none opacity-0 invisible transition-all duration-300" id="palette-modal">
+      <div class="w-[90%] max-w-[420px] bg-white/75 dark:bg-slate-900/50 backdrop-blur-md border border-white/60 dark:border-slate-800/60 shadow-glass-light dark:shadow-glass-dark rounded-[28px] sm:rounded-[36px] p-6 sm:p-8 flex flex-col transform scale-95 transition-all duration-300 relative pointer-events-auto">
+        <div class="w-full flex items-center justify-between border-b border-slate-200/50 dark:border-slate-800/50 pb-3 mb-5 select-none">
+          <h2 class="font-display font-bold text-lg sm:text-xl text-slate-800 dark:text-slate-100">🎨 Chọn bộ màu</h2>
+          <button class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer" id="close-palette-btn" aria-label="Đóng">
             <span class="material-icons-round">close</span>
           </button>
         </div>
-        <div class="palette-panel-inner" id="palette-options-container"></div>
+        <div class="max-h-[300px] overflow-y-auto space-y-3.5" id="palette-options-container"></div>
       </div>
     </div>
 
     <!-- Checkpoint Modal -->
-    <div class="game-over-overlay" id="checkpoint-modal">
-      <div class="game-over-card modal-card">
-        <div class="modal-header">
-          <h2>📌 Checkpoint</h2>
-          <button class="modal-close-btn" id="close-checkpoint-btn" aria-label="Đóng">
+    <div class="game-over-overlay fixed inset-0 bg-slate-900/45 dark:bg-slate-950/60 backdrop-blur-sm z-[99] flex items-center justify-center pointer-events-none opacity-0 invisible transition-all duration-300" id="checkpoint-modal">
+      <div class="w-[90%] max-w-[420px] bg-white/75 dark:bg-slate-900/50 backdrop-blur-md border border-white/60 dark:border-slate-800/60 shadow-glass-light dark:shadow-glass-dark rounded-[28px] sm:rounded-[36px] p-6 sm:p-8 flex flex-col transform scale-95 transition-all duration-300 relative pointer-events-auto">
+        <div class="w-full flex items-center justify-between border-b border-slate-200/50 dark:border-slate-800/50 pb-3 mb-5 select-none">
+          <h2 class="font-display font-bold text-lg sm:text-xl text-slate-800 dark:text-slate-100">📌 Checkpoint</h2>
+          <button class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer" id="close-checkpoint-btn" aria-label="Đóng">
             <span class="material-icons-round">close</span>
           </button>
         </div>
-        <div class="palette-panel-inner">
-          <div class="cp-slot" data-slot="0">
-            <div class="cp-header"><span class="cp-label">Slot 1</span><span class="cp-info" data-slot="0">Trống</span></div>
-            <div class="cp-actions">
-              <button class="cp-save" data-slot="0"><span class="material-icons-round">save</span> Lưu</button>
-              <button class="cp-load" data-slot="0" disabled><span class="material-icons-round">play_arrow</span> Tải</button>
+        <div class="space-y-4">
+          <div class="bg-white/40 dark:bg-slate-900/20 border border-slate-200/40 dark:border-slate-800/40 rounded-2xl p-4 flex items-center justify-between" data-slot="0">
+            <div class="flex flex-col"><span class="font-display font-bold text-sm text-slate-800 dark:text-slate-200">Slot 1</span><span class="text-[11px] text-slate-400 dark:text-slate-500 font-semibold" data-slot="0">Trống</span></div>
+            <div class="flex gap-2">
+              <button class="cp-save font-sans font-bold text-xs text-white bg-brand-pink hover:bg-brand-pink/90 px-3.5 py-2 rounded-xl shadow-sm transition-all cursor-pointer"><span class="material-icons-round text-sm align-middle mr-0.5">save</span> Lưu</button>
+              <button class="cp-load font-sans font-bold text-xs text-slate-700 dark:text-slate-200 bg-white/30 dark:bg-slate-800/30 border border-white/40 dark:border-slate-700/40 px-3.5 py-2 rounded-xl transition-all cursor-pointer" disabled><span class="material-icons-round text-sm align-middle mr-0.5">play_arrow</span> Tải</button>
             </div>
           </div>
-          <div class="cp-slot" data-slot="1">
-            <div class="cp-header"><span class="cp-label">Slot 2</span><span class="cp-info" data-slot="1">Trống</span></div>
-            <div class="cp-actions">
-              <button class="cp-save" data-slot="1"><span class="material-icons-round">save</span> Lưu</button>
-              <button class="cp-load" data-slot="1" disabled><span class="material-icons-round">play_arrow</span> Tải</button>
+          <div class="bg-white/40 dark:bg-slate-900/20 border border-slate-200/40 dark:border-slate-800/40 rounded-2xl p-4 flex items-center justify-between" data-slot="1">
+            <div class="flex flex-col"><span class="font-display font-bold text-sm text-slate-800 dark:text-slate-200">Slot 2</span><span class="text-[11px] text-slate-400 dark:text-slate-500 font-semibold" data-slot="1">Trống</span></div>
+            <div class="flex gap-2">
+              <button class="cp-save font-sans font-bold text-xs text-white bg-brand-pink hover:bg-brand-pink/90 px-3.5 py-2 rounded-xl shadow-sm transition-all cursor-pointer"><span class="material-icons-round text-sm align-middle mr-0.5">save</span> Lưu</button>
+              <button class="cp-load font-sans font-bold text-xs text-slate-700 dark:text-slate-200 bg-white/30 dark:bg-slate-800/30 border border-white/40 dark:border-slate-700/40 px-3.5 py-2 rounded-xl transition-all cursor-pointer" disabled><span class="material-icons-round text-sm align-middle mr-0.5">play_arrow</span> Tải</button>
             </div>
           </div>
-          <div class="cp-slot" data-slot="2">
-            <div class="cp-header"><span class="cp-label">Slot 3</span><span class="cp-info" data-slot="2">Trống</span></div>
-            <div class="cp-actions">
-              <button class="cp-save" data-slot="2"><span class="material-icons-round">save</span> Lưu</button>
-              <button class="cp-load" data-slot="2" disabled><span class="material-icons-round">play_arrow</span> Tải</button>
+          <div class="bg-white/40 dark:bg-slate-900/20 border border-slate-200/40 dark:border-slate-800/40 rounded-2xl p-4 flex items-center justify-between" data-slot="2">
+            <div class="flex flex-col"><span class="font-display font-bold text-sm text-slate-800 dark:text-slate-200">Slot 3</span><span class="text-[11px] text-slate-400 dark:text-slate-500 font-semibold" data-slot="2">Trống</span></div>
+            <div class="flex gap-2">
+              <button class="cp-save font-sans font-bold text-xs text-white bg-brand-pink hover:bg-brand-pink/90 px-3.5 py-2 rounded-xl shadow-sm transition-all cursor-pointer"><span class="material-icons-round text-sm align-middle mr-0.5">save</span> Lưu</button>
+              <button class="cp-load font-sans font-bold text-xs text-slate-700 dark:text-slate-200 bg-white/30 dark:bg-slate-800/30 border border-white/40 dark:border-slate-700/40 px-3.5 py-2 rounded-xl transition-all cursor-pointer" disabled><span class="material-icons-round text-sm align-middle mr-0.5">play_arrow</span> Tải</button>
             </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Account Modal -->
-    <div class="game-over-overlay" id="account-modal">
-      <div class="game-over-card modal-card">
-        <div class="modal-header">
-          <h2>👤 Tài khoản</h2>
-          <button class="modal-close-btn" id="close-account-btn" aria-label="Đóng">
-            <span class="material-icons-round">close</span>
-          </button>
-        </div>
-        <div class="account-modal-body">
-          <!-- Profile View (shown when logged in with Google/Email) -->
-          <div id="account-profile-view" style="display: none;">
-            <div class="user-profile-info">
-              <img id="modal-user-avatar" src="" alt="Avatar" style="display:none;" />
-              <span class="material-icons-round" id="modal-user-icon">account_circle</span>
-              <div class="user-profile-details">
-                <h3 id="modal-user-name">Người chơi</h3>
-                <p id="modal-user-email">email@domain.com</p>
-                <span class="badge" id="modal-user-badge">Google</span>
-              </div>
-            </div>
-            <button class="restart-btn" id="account-signout-btn" style="width: 100%; margin-top: 14px;">
-              <span class="material-icons-round">logout</span> Đăng xuất
-            </button>
-          </div>
-
-          <!-- Login/Link Form (shown when anonymous) -->
-          <div id="account-login-view">
-            <div class="user-profile-info">
-              <span class="material-icons-round" id="modal-anon-icon">account_circle</span>
-              <div class="user-profile-details">
-                <h3 id="modal-anon-name">Khách</h3>
-                <p class="text-muted">Chế độ chơi ẩn danh</p>
-              </div>
-            </div>
-            <p class="modal-info-text">💡 Đăng nhập để lưu tiến trình chơi và điểm kỷ lục vĩnh viễn trên nhiều thiết bị.</p>
-            
-            <!-- Google Sign-in -->
-            <button class="restart-btn google-btn" id="modal-google-btn" style="width: 100%; display: flex; align-items: center; justify-content: center;">
-              <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="" style="width: 18px; margin-right: 8px;" />
-              Liên kết tài khoản Google
-            </button>
-
-            <div class="divider"><span>HOẶC EMAIL</span></div>
-
-            <!-- Email Form -->
-            <form id="email-auth-form" style="text-align: left;">
-              <div class="form-group">
-                <label for="auth-email">Email</label>
-                <input type="email" id="auth-email" required placeholder="nhap@email.com" />
-              </div>
-              <div class="form-group">
-                <label for="auth-password">Mật khẩu (tối thiểu 6 ký tự)</label>
-                <input type="password" id="auth-password" required placeholder="••••••" minlength="6" />
-              </div>
-              <div class="form-actions-row">
-                <button type="button" class="restart-btn secondary" id="email-signup-btn">Đăng ký</button>
-                <button type="submit" class="restart-btn" id="email-signin-btn">Đăng nhập</button>
-              </div>
-            </form>
           </div>
         </div>
       </div>

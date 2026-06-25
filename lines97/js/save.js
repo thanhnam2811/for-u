@@ -1,7 +1,7 @@
 // ── Lines 97 — Save / Checkpoint / Leaderboard ──
 import { LS_SAVE, LS_LEADERBOARD, LS_CHECKPOINT, LS_HIGH } from './constants.js';
 import { state, cloneSnapshot, restoreSnapshot } from './state.js';
-import { auth, db } from './firebase.js';
+import { auth, db } from '../../shared/firebase.js';
 import {
   doc, getDoc, setDoc, updateDoc, collection, query, orderBy, limit, getDocs
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
