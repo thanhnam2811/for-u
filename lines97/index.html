@@ -32,7 +32,7 @@
   <div class="game-container z-10 flex flex-col items-center select-none">
 
     <!-- Header -->
-    <header class="w-full flex items-center justify-between mb-4 select-none">
+    <header class="game-header w-full flex items-center justify-between mb-4 select-none">
       <h1 class="font-display font-bold text-xl sm:text-2xl tracking-wide bg-gradient-to-r from-brand-pink to-brand-purple bg-clip-text text-transparent drop-shadow-sm">Lines 97 🎱</h1>
       <div class="flex gap-2">
         <button class="flex items-center justify-center w-10 h-10 border border-white/60 dark:border-slate-800/60 rounded-xl bg-white/45 dark:bg-slate-900/40 text-slate-500 dark:text-slate-400 hover:text-brand-pink dark:hover:text-brand-purple hover:scale-105 active:scale-95 transition-all shadow-glass-light dark:shadow-glass-dark cursor-pointer pointer-events-auto" id="google-login-btn" aria-label="Đăng nhập">
@@ -49,7 +49,7 @@
     </header>
 
     <!-- Score / Preview Section -->
-    <div class="grid grid-cols-3 gap-3 w-full mb-4">
+    <div class="game-score-container grid grid-cols-3 gap-3 w-full mb-4">
       <div class="bg-white/45 dark:bg-slate-900/40 backdrop-blur-glass border border-white/60 dark:border-slate-800/60 shadow-glass-light dark:shadow-glass-dark rounded-2xl py-3 px-2 flex flex-col items-center justify-center transition-all duration-300">
         <span class="text-[10px] sm:text-xs font-semibold text-brand-muted dark:text-brand-purple/70 uppercase tracking-wider mb-1">Điểm</span>
         <span class="font-display font-bold text-lg sm:text-2xl text-slate-800 dark:text-slate-100" id="score">0</span>
@@ -65,19 +65,19 @@
     </div>
 
     <!-- Stats bar -->
-    <div class="w-full flex items-center justify-around bg-white/30 dark:bg-slate-900/25 backdrop-blur-sm border border-white/30 dark:border-slate-800/30 rounded-xl py-2.5 px-3 mb-4 text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-300 select-none shadow-inner">
+    <div class="game-stats-bar w-full flex items-center justify-around bg-white/30 dark:bg-slate-900/25 backdrop-blur-sm border border-white/30 dark:border-slate-800/30 rounded-xl py-2.5 px-3 mb-4 text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-300 select-none shadow-inner">
       <span id="stat-time">⏱ 00:00</span>
       <span id="stat-moves">🎯 0</span>
       <span id="stat-cleared">💥 0</span>
     </div>
 
     <!-- Game Board -->
-    <div class="relative w-full aspect-square max-w-[460px] bg-white/45 dark:bg-slate-950/40 backdrop-blur-glass border border-white/60 dark:border-slate-800/60 shadow-glass-light dark:shadow-glass-dark rounded-[24px] sm:rounded-[32px] p-2 sm:p-3 mb-4 transition-all duration-300">
+    <div class="game-board-container relative w-full aspect-square max-w-[460px] bg-white/45 dark:bg-slate-950/40 backdrop-blur-glass border border-white/60 dark:border-slate-800/60 shadow-glass-light dark:shadow-glass-dark rounded-[24px] sm:rounded-[32px] p-2 sm:p-3 mb-4 transition-all duration-300">
       <div class="w-full h-full grid grid-cols-9 grid-rows-9 gap-[1px] sm:gap-[2px] bg-slate-200/50 dark:bg-slate-800/30 rounded-[16px] sm:rounded-[22px] overflow-hidden" id="game-board"></div>
     </div>
 
     <!-- Controls -->
-    <div class="grid grid-cols-6 sm:grid-cols-5 gap-2 w-full mb-4">
+    <div class="game-controls-container grid grid-cols-6 sm:grid-cols-5 gap-2 w-full mb-4">
       <button class="col-span-2 sm:col-span-1 flex flex-col items-center justify-center py-2.5 px-1 rounded-2xl bg-white/45 dark:bg-slate-900/40 border border-white/60 dark:border-slate-800/60 shadow-glass-light dark:shadow-glass-dark backdrop-blur-glass text-slate-600 dark:text-slate-300 hover:text-brand-pink dark:hover:text-brand-purple hover:scale-105 active:scale-95 transition-all select-none relative cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100" id="undo-btn" disabled>
         <span class="material-icons-round text-lg sm:text-xl mb-1">undo</span>
         <span class="font-display font-bold text-[10px] sm:text-xs tracking-wide">Hoàn tác</span>
@@ -102,7 +102,7 @@
     </div>
 
     <!-- Instructions -->
-    <div class="w-full text-center bg-white/20 dark:bg-slate-900/10 backdrop-blur-sm border border-white/30 dark:border-slate-800/30 rounded-xl py-2 px-3 text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400 select-none shadow-sm">
+    <div class="game-instructions-container w-full text-center bg-white/20 dark:bg-slate-900/10 backdrop-blur-sm border border-white/30 dark:border-slate-800/30 rounded-xl py-2 px-3 text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400 select-none shadow-sm">
       <p>🎯 Click bi → Click ô trống → Xếp 5+ bi cùng màu!</p>
     </div>
 

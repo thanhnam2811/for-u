@@ -32,6 +32,12 @@
   --shadow-brand-hover: 0 10px 30px rgba(255, 117, 151, 0.45);
 }
 
+html, body {
+  min-height: 100vh;
+  min-height: 100dvh;
+  overscroll-behavior: none;
+}
+
 :root {
   --ball-1: #FF7F8E; --ball-1-light: #FFB8C1; --ball-1-dark: #CC5F6E; --ball-1-glow: rgba(255,127,142,0.45);
   --ball-2: #7EC8E3; --ball-2-light: #B4E0F2; --ball-2-dark: #5A9AB8; --ball-2-glow: rgba(126,200,227,0.45);
@@ -317,4 +323,57 @@
     animation-duration: 0.01ms !important; animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* === HEIGHT RESPONSIVE STYLING FOR MOBILE === */
+@media (max-height: 780px) {
+  .game-container {
+    padding-top: calc(0.5rem + env(safe-area-inset-top, 0px));
+    padding-bottom: 0.5rem;
+  }
+  .game-header { margin-bottom: 0.5rem; }
+  .game-score-container { margin-bottom: 0.5rem; }
+  .game-stats-bar { margin-bottom: 0.5rem; padding-top: 0.5rem; padding-bottom: 0.5rem; }
+  .game-board-container { margin-bottom: 0.5rem; }
+  .game-controls-container { margin-bottom: 0.5rem; }
+}
+
+@media (max-height: 720px) {
+  :root {
+    --board-size: min(420px, calc(100vh - 280px), calc(100vw - 28px));
+  }
+  .game-header { margin-bottom: 0.35rem; }
+  .game-score-container { margin-bottom: 0.35rem; }
+  .game-stats-bar { margin-bottom: 0.35rem; padding-top: 0.4rem; padding-bottom: 0.4rem; }
+  .game-board-container { margin-bottom: 0.35rem; }
+  .game-controls-container { margin-bottom: 0.35rem; }
+  
+  /* Shrink elements inside containers slightly */
+  .game-header h1 { font-size: 1.25rem; }
+  .game-header button { width: 2.25rem; height: 2.25rem; border-radius: 0.75rem; }
+  .game-header button span { font-size: 1.2rem; }
+  
+  .game-score-container > div { 
+    padding-top: 0.5rem; 
+    padding-bottom: 0.5rem; 
+    border-radius: 0.875rem; 
+  }
+  
+  /* Hide instructions on very short screens to avoid vertical scroll */
+  .game-instructions-container { display: none; }
+}
+
+@media (max-height: 640px) {
+  :root {
+    --board-size: min(340px, calc(100vh - 240px), calc(100vw - 24px));
+  }
+  .game-header { margin-bottom: 0.25rem; }
+  .game-score-container { margin-bottom: 0.25rem; }
+  .game-stats-bar { margin-bottom: 0.25rem; padding-top: 0.25rem; padding-bottom: 0.25rem; }
+  .game-board-container { margin-bottom: 0.25rem; }
+  .game-controls-container { margin-bottom: 0.25rem; }
+  
+  .game-header h1 { font-size: 1.1rem; }
+  .game-header button { width: 2rem; height: 2rem; border-radius: 0.5rem; }
+  .game-header button span { font-size: 1rem; }
 }
