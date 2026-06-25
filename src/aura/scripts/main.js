@@ -351,6 +351,21 @@ function updateAuraUserUI(user) {
 }
 
 function initAuthAndPWA() {
+	// 1. Unregister any active root-level Service Worker to resolve old caching traps
+	if ('serviceWorker' in navigator) {
+		navigator.serviceWorker.getRegistrations().then((registrations) => {
+			for (const reg of registrations) {
+				const scope = reg.scope;
+				if (scope.endsWith('/for-u/') || scope.endsWith('/for-u/index.html')) {
+					reg.unregister().then(() => {
+						console.log('Root Service Worker active registration cleared from Aura:', scope);
+						window.location.reload();
+					});
+				}
+			}
+		});
+	}
+
 	// 2. Setup Google sign-in auth and sync via shared auth module
 	initSharedAuth({
 		onUserChanged: (user) => {
