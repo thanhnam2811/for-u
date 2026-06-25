@@ -28,7 +28,13 @@ export function cloneSnapshot() {
   return {
     board: state.board.map(r => [...r]),
     score: state.score,
-    nextBalls: state.nextBalls.map(b => ({ ...b })),
+    nextBalls: state.nextBalls.map(b => {
+      if (typeof b === 'object' && b !== null) {
+        return { color: b.color, row: b.row, col: b.col };
+      } else {
+        return { color: Number(b), row: 0, col: 0 };
+      }
+    }),
     moves: state.moves,
     ballsCleared: state.ballsCleared,
     longestLine: state.longestLine,
@@ -42,7 +48,13 @@ export function cloneSnapshot() {
 export function restoreSnapshot(snap) {
   state.board = snap.board.map(r => [...r]);
   state.score = snap.score;
-  state.nextBalls = snap.nextBalls.map(b => ({ ...b }));
+  state.nextBalls = snap.nextBalls.map(b => {
+    if (typeof b === 'object' && b !== null && b.color !== undefined) {
+      return { color: b.color, row: b.row !== undefined ? b.row : 0, col: b.col !== undefined ? b.col : 0 };
+    } else {
+      return { color: Number(b), row: 0, col: 0 };
+    }
+  });
   state.moves = snap.moves;
   state.ballsCleared = snap.ballsCleared;
   state.longestLine = snap.longestLine;

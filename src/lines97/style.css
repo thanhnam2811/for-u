@@ -267,6 +267,36 @@
   width: 22px;
   height: 22px;
   border-radius: 50%;
+  flex-shrink: 0;
+  display: inline-block;
+}
+
+/* === GAME CONTAINER WITH iOS SAFE AREAS === */
+.game-container {
+  width: 100%;
+  max-width: 520px;
+  padding-left: 0.875rem; /* px-3.5 */
+  padding-right: 0.875rem; /* px-3.5 */
+  padding-top: calc(1rem + env(safe-area-inset-top, 0px));
+  padding-bottom: 1rem; /* pb-4 */
+}
+
+@media (min-width: 640px) {
+  .game-container {
+    padding-top: calc(1.5rem + env(safe-area-inset-top, 0px));
+    padding-bottom: 1.5rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .game-container {
+    padding-top: calc(2rem + env(safe-area-inset-top, 0px));
+    padding-bottom: 2rem;
+  }
+}
+
+.ios-body-pb {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 /* === MOBILE GAME OVERLAY GRID OPTIMIZATION === */
@@ -279,6 +309,7 @@
   .preview-ball {
     width: 18px;
     height: 18px;
+    flex-shrink: 0;
   }
 }
 

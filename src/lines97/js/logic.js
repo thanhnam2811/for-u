@@ -91,13 +91,14 @@ export function spawnBalls(count) {
   } else {
     const toSpawn = [];
     for (const ball of state.nextBalls) {
-      if (state.board[ball.row][ball.col] === 0) {
+      if (ball && typeof ball === 'object' && ball.row !== undefined && ball.col !== undefined && state.board[ball.row][ball.col] === 0) {
         toSpawn.push(ball);
       } else {
+        const color = (ball && typeof ball === 'object') ? ball.color : ball;
         const empties = getEmptyCells().filter(e => !toSpawn.some(s => s.row === e.row && s.col === e.col));
         if (empties.length) {
           const pos = empties[Math.floor(Math.random() * empties.length)];
-          toSpawn.push({ color: ball.color, row: pos.row, col: pos.col });
+          toSpawn.push({ color: color, row: pos.row, col: pos.col });
         }
       }
     }

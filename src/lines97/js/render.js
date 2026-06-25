@@ -49,10 +49,14 @@ export function renderBoard() {
 
 export function renderPreview() {
   const c = $('#next-preview');
+  if (!c) return;
   c.innerHTML = '';
   for (const nb of state.nextBalls) {
+    if (!nb) continue;
+    const color = (typeof nb === 'object' && nb !== null) ? nb.color : nb;
+    if (color === undefined || isNaN(color)) continue;
     const d = document.createElement('div');
-    d.className = `preview-ball ball-${nb.color}`;
+    d.className = `preview-ball ball-${color}`;
     c.appendChild(d);
   }
 }
