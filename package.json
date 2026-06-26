@@ -17,5 +17,8 @@
     "postcss": "^8.5.15",
     "tailwindcss": "^4.3.1",
     "vite": "^5.3.1"
+  },
+  "dependencies": {
+    "pixi.js": "^8.19.0"
   }
 }
