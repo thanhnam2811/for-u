@@ -1,5 +1,21 @@
 // ── Lines 98 Remastered — Constants & Themes Registry ──
 
+/**
+ * Theme class — defines look, feel, and audio for a visual style.
+ * @param {{ board, balls, particles, audio, ambient, hud, animation }} config
+ */
+export class Theme {
+  constructor(config) {
+    this.board = config.board;
+    this.balls = config.balls;
+    this.particles = config.particles;
+    this.audio = config.audio;
+    this.ambient = config.ambient;
+    this.hud = config.hud;
+    this.animation = config.animation;
+  }
+}
+
 export const SIZE = 9;
 export const NUM_COLORS = 7;
 export const MIN_LINE = 5;
@@ -14,8 +30,12 @@ export const LS_SOUND = 'lines98_sound';
 export const LS_SAVE = 'lines98_save';
 export const LS_CHECKPOINT = 'lines98_checkpoint_';
 
+function _theme(config) {
+  return new Theme(config);
+}
+
 export const THEMES = {
-	classic: {
+	classic: _theme({
 		name: 'Classic CRT 🕹️',
 		board: { cellBg: 'rgba(255, 255, 255, 0.28)', gridLine: 'rgba(255, 255, 255, 0.4)' },
 		balls: [
@@ -32,8 +52,8 @@ export const THEMES = {
 		ambient: { style: 'retro', color: '#FFEBF0' },
 		hud: { pressureColor: 'rgba(239,68,68,0.65)', textColor: '#EF4444', accentColor: '#3B82F6' },
 		animation: { pulseSpeed: 1.0, shakePower: 1.0, glowIntensity: 0.6 }
-	},
-	win98: {
+	}),
+	win98: _theme({
 		name: 'Windows 98 🖥️',
 		board: { cellBg: 'rgba(192, 192, 192, 0.35)', gridLine: 'rgba(128, 128, 128, 0.5)' },
 		balls: [
@@ -50,8 +70,8 @@ export const THEMES = {
 		ambient: { style: 'chiptune', color: '#C0C0C0' },
 		hud: { pressureColor: 'rgba(255,0,0,0.5)', textColor: '#0000FF', accentColor: '#008000' },
 		animation: { pulseSpeed: 0.7, shakePower: 0.6, glowIntensity: 0.4 }
-	},
-	crystal: {
+	}),
+	crystal: _theme({
 		name: 'Crystal ✨',
 		board: { cellBg: 'rgba(255, 255, 255, 0.15)', gridLine: 'rgba(255, 255, 255, 0.25)' },
 		balls: [
@@ -68,8 +88,8 @@ export const THEMES = {
 		ambient: { style: 'ethereal', color: '#E8F0FE' },
 		hud: { pressureColor: 'rgba(255,127,142,0.6)', textColor: '#FF7F8E', accentColor: '#7EC8E3' },
 		animation: { pulseSpeed: 1.2, shakePower: 0.8, glowIntensity: 0.8 }
-	},
-	neon: {
+	}),
+	neon: _theme({
 		name: 'Neon Cyber 💡',
 		board: { cellBg: 'rgba(15, 12, 27, 0.4)', gridLine: 'rgba(47, 42, 74, 0.6)' },
 		balls: [
@@ -86,8 +106,8 @@ export const THEMES = {
 		ambient: { style: 'synthwave', color: '#0F0C1B' },
 		hud: { pressureColor: 'rgba(255,45,106,0.7)', textColor: '#00D4FF', accentColor: '#FF2D6A' },
 		animation: { pulseSpeed: 1.4, shakePower: 1.2, glowIntensity: 1.0 }
-	},
-	galaxy: {
+	}),
+	galaxy: _theme({
 		name: 'Galaxy Space 🌌',
 		board: { cellBg: 'rgba(10, 6, 30, 0.45)', gridLine: 'rgba(90, 60, 180, 0.35)' },
 		balls: [
@@ -104,8 +124,8 @@ export const THEMES = {
 		ambient: { style: 'cosmic', color: '#0A061E' },
 		hud: { pressureColor: 'rgba(123,104,238,0.65)', textColor: '#FF6B9D', accentColor: '#7B68EE' },
 		animation: { pulseSpeed: 1.1, shakePower: 0.9, glowIntensity: 0.9 }
-	},
-	zen: {
+	}),
+	zen: _theme({
 		name: 'Zen Garden 🌿',
 		board: { cellBg: 'rgba(245, 235, 220, 0.3)', gridLine: 'rgba(180, 160, 130, 0.35)' },
 		balls: [
@@ -122,5 +142,5 @@ export const THEMES = {
 		ambient: { style: 'nature', color: '#F5EBDC' },
 		hud: { pressureColor: 'rgba(192,57,43,0.5)', textColor: '#2E86C1', accentColor: '#27AE60' },
 		animation: { pulseSpeed: 0.8, shakePower: 0.7, glowIntensity: 0.5 }
-	}
+	})
 };

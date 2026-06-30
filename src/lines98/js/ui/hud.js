@@ -22,6 +22,7 @@ export const hud = {
 		this.clearedEl = document.getElementById('stat-cleared');
 		this.undoBtn = document.getElementById('undo-btn');
 		this.boardContainer = document.getElementById('game-board');
+		this.setupHintEl = document.getElementById('setup-hint');
 
 		// Dynamically inject pressure overlay Vignette inside the board container
 		if (this.boardContainer && !document.getElementById('pressure-overlay')) {
@@ -148,5 +149,22 @@ export const hud = {
 			ctx.drawImage(sprite, 0, 0, 22, 22);
 			container.appendChild(canvas);
 		});
+	},
+
+	showSetupHint(text, type) {
+		if (!this.setupHintEl) return;
+		this.setupHintEl.textContent = text;
+		this.setupHintEl.className =
+			'w-full mb-2 text-center text-[11px] font-semibold select-none transition-all duration-200 h-4 ' +
+			(type === 'chain'
+				? 'text-emerald-600 dark:text-emerald-400'
+				: 'text-amber-600 dark:text-amber-400');
+	},
+
+	hideSetupHint() {
+		if (!this.setupHintEl) return;
+		this.setupHintEl.textContent = '';
+		this.setupHintEl.className =
+			'w-full mb-2 text-center text-[11px] font-semibold text-transparent select-none transition-all duration-200 h-4';
 	}
 };

@@ -1,5 +1,19 @@
 import { THEMES } from '../core/constants.js';
 
+/**
+ * Create an offscreen canvas — uses OffscreenCanvas if available,
+ * falls back to regular canvas for compatibility.
+ */
+function _createCanvas(w, h) {
+  if (typeof OffscreenCanvas !== 'undefined') {
+    return new OffscreenCanvas(w, h);
+  }
+  const c = document.createElement('canvas');
+  c.width = w;
+  c.height = h;
+  return c;
+}
+
 // 5 ball scale states for pulse animation (pre-rendered at DPR)
 export const BALL_STATE_SCALES = [0.70, 0.82, 0.94, 1.06, 1.18];
 
@@ -61,9 +75,7 @@ export const spriteCache = {
   createBallSprite(c, scaleFactor) {
     const size = Math.round(this.ballSize * scaleFactor);
     const dpr = this.dpr;
-    const canvas = document.createElement('canvas');
-    canvas.width = size;
-    canvas.height = size;
+    const canvas = _createCanvas(size, size);
     const ctx = canvas.getContext('2d');
     const r = size / 2;
     const pad = Math.round(4 * this.dpr * scaleFactor);
@@ -220,9 +232,7 @@ export const spriteCache = {
   },
 
   createGhostSprite(c) {
-    const canvas = document.createElement('canvas');
-    canvas.width = this.ballSize;
-    canvas.height = this.ballSize;
+    const canvas = _createCanvas(this.ballSize, this.ballSize);
     const ctx = canvas.getContext('2d');
     const r = this.ballSize / 2;
     const pad = Math.round(5 * this.dpr);
@@ -252,10 +262,8 @@ export const spriteCache = {
   },
 
   createGlowSprite(c, alpha) {
-    const canvas = document.createElement('canvas');
     const totalSize = Math.round(this.ballSize * 1.5);
-    canvas.width = totalSize;
-    canvas.height = totalSize;
+    const canvas = _createCanvas(totalSize, totalSize);
     const ctx = canvas.getContext('2d');
     const center = totalSize / 2;
     const r = this.ballSize / 2;
@@ -283,9 +291,7 @@ export const spriteCache = {
     const shardSize = Math.round(16 * this.dpr);
 
     for (let s = 0; s < shardCount; s++) {
-      const canvas = document.createElement('canvas');
-      canvas.width = shardSize;
-      canvas.height = shardSize;
+      const canvas = _createCanvas(shardSize, shardSize);
       const ctx = canvas.getContext('2d');
 
       ctx.clearRect(0, 0, shardSize, shardSize);

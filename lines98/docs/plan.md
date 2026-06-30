@@ -50,7 +50,7 @@ src/lines98/js/
  │    └── tween.js          ← Bộ điều khiển Tween deterministic nội bộ
  │
  ├── ui/
- │    ├── hud.js            ← Điều khiển HUD áp lực (Near Death), thông báo nước đi, Setup
+ │    ├── hud.js            ← Điều khiển HUD áp lực (Near Death), thông báo nước đi
  │    ├── modal.js          ← Popup menu, bảng chọn màu, bảng xếp hạng
  │    ├── challenge.js      ← Logic Thử thách ngày (Daily Challenge) theo mã Seed
  │    └── profiler.js       ← HUD hiển thị hiệu năng thời gian thực (chỉ chạy ở dev build)
@@ -143,9 +143,8 @@ export class GameScheduler {
 *   **Potential Line (Soft Glow):** Các bóng nằm trong hàng 4 quả cùng màu sẽ phát ra vầng hào quang nhẹ tỏa sáng dịu mắt.
 *   **Near Complete Highlight:** Hiển thị một tia sáng chạy ngang qua hàng 4 quả cờ.
 
-### B. Chỉ báo Setup & Theme Engine
-*   **Wording chỉ báo:** Khi hover ô đích, HUD hiển thị dòng chữ `Chain available` hoặc `Potential setup` thay cho các từ mang tính hướng dẫn AI.
-*   **Theme Class Contract:** Cấu trúc theme hóa được quy chuẩn:
+### B. Theme Engine
+*   **Theme Class Contract: Cấu trúc theme hóa được quy chuẩn:
     ```javascript
     class Theme {
       constructor({ board, balls, particles, audio, ambient, hud, animation }) {

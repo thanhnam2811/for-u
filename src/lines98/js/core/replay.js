@@ -38,6 +38,8 @@ export function exportReplay() {
       } else if (e.type === 'CLEAR') {
         compact.c = e.cells; // [[r, c], ...]
         compact.d = e.scoreDelta;
+      } else if (e.type === 'SCORE') {
+        compact.s = e.delta;
       }
       return compact;
     })
@@ -75,6 +77,9 @@ export function importReplay(base64Str) {
         event.type = 'CLEAR';
         event.cells = e.c;
         event.scoreDelta = e.d;
+      } else if (e.t === 'SCORE') {
+        event.type = 'SCORE';
+        event.delta = e.s;
       }
       return event;
     });
@@ -112,6 +117,7 @@ export function generateHeatmap() {
         heatmap[r][c] += 1.5; // clear locations are hot spots
       }
     }
+    // SCORE events don't affect heatmap
   }
 
   return heatmap;

@@ -1,5 +1,5 @@
 import { state, resetState, cloneSnapshot, restoreSnapshot } from './core/state.js';
-import { generateNextBalls, spawnBalls, checkLines, checkAllNewBalls, calculateScore, analyzeMove } from './core/logic.js';
+import { generateNextBalls, spawnBalls, checkLines, checkAllNewBalls, calculateScore, analyzeMove, detectSetup } from './core/logic.js';
 import { findPath } from './core/pathfinding.js';
 import { clearHistory, logEvent, exportReplay, getHistory } from './core/replay.js';
 import { viewport } from './render/viewport.js';
@@ -274,17 +274,38 @@ function setupInputListeners(canvas) {
 		if (cell) {
 			viewport.hoveredCell = cell;
 
-			// Dynamic path preview (P0)
+			// Dynamic path preview + setup hint
 			if (state.selected) {
 				if (state.selected.row === cell.row && state.selected.col === cell.col) {
 					window.currentPath = null;
+					hud.hideSetupHint();
+				} else if (state.board[cell.row][cell.col] === 0) {
+					const path = findPath(state.selected.row, state.selected.col, cell.row, cell.col);
+					window.currentPath = path;
+					if (path) {
+						const color = state.board[state.selected.row][state.selected.col];
+						const setup = detectSetup(cell.row, cell.col, color);
+						if (setup?.chain) {
+							hud.showSetupHint(`⛓️ Chain available! (${setup.count + 1})`, 'chain');
+						} else if (setup) {
+							hud.showSetupHint(`💡 Potential setup (${setup.count + 1})`, 'setup');
+						} else {
+							hud.hideSetupHint();
+						}
+					} else {
+						hud.hideSetupHint();
+					}
 				} else {
-					window.currentPath = findPath(state.selected.row, state.selected.col, cell.row, cell.col);
+					window.currentPath = null;
+					hud.hideSetupHint();
 				}
+			} else {
+				hud.hideSetupHint();
 			}
 		} else {
 			viewport.hoveredCell = null;
 			window.currentPath = null;
+			hud.hideSetupHint();
 		}
 	};
 
@@ -307,11 +328,13 @@ function setupInputListeners(canvas) {
 				state.selected = null;
 				window.currentPath = null;
 				Sound.deselect();
+				hud.hideSetupHint();
 				return;
 			}
 			state.selected = { row: cell.row, col: cell.col };
 			window.currentPath = null;
 			Sound.select();
+			hud.hideSetupHint();
 			// Add a small scale bounce tween on selection
 			tweenManager.killTweensOf(state.selected);
 			// Selected pulse is handled continuously inside viewport
@@ -319,12 +342,14 @@ function setupInputListeners(canvas) {
 			// 2. Move Ball (if path exists)
 			const path = findPath(state.selected.row, state.selected.col, cell.row, cell.col);
 			if (path) {
+				hud.hideSetupHint();
 				executeMovement(path);
 			} else {
 				Sound.noPath();
 				// Shake the cell to show blocked path
 				state.selected = null;
 				window.currentPath = null;
+				hud.hideSetupHint();
 			}
 		}
 	};
@@ -455,6 +480,7 @@ function handleLineClears(cells) {
 	state.totalLinesCleared++;
 
 	logEvent({ type: 'CLEAR', cells: cells.map(c => [c.row, c.col]), scoreDelta });
+	logEvent({ type: 'SCORE', delta: scoreDelta });
 
 	// Camera Shake on eating balls
 	screenTransform.shake(8, 400);

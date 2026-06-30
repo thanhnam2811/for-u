@@ -86,8 +86,38 @@ export function checkAllNewBalls(positions) {
 }
 
 export function calculateScore(count) {
-  // Original Lines 98 formula: 5 -> 10, 6 -> 18, 7 -> 28, 8 -> 40, 9 -> 54
-  return count * 2 * (count - 4);
+  // Original Lines 98 classic formula: n*(n-3) => 5→10, 6→18, 7→28, 8→40, 9→54
+  return count * (count - 3);
+}
+
+/**
+ * Analyze if placing a ball of `color` at (row, col) creates a strategic setup.
+ * @returns {{ chain: boolean, count: number }|null} null if no setup, or { chain: true, count } if chain-available, { chain: false, count } if potential setup.
+ */
+export function detectSetup(row, col, color) {
+  const DIRS = [[0, 1], [1, 0], [1, 1], [1, -1]];
+  let maxSame = 0;
+
+  for (const [dr, dc] of DIRS) {
+    let count = 0;
+    // Forward
+    let r = row + dr, c = col + dc;
+    while (r >= 0 && r < SIZE && c >= 0 && c < SIZE && state.board[r][c] === color) {
+      count++;
+      r += dr; c += dc;
+    }
+    // Backward
+    r = row - dr; c = col - dc;
+    while (r >= 0 && r < SIZE && c >= 0 && c < SIZE && state.board[r][c] === color) {
+      count++;
+      r -= dr; c -= dc;
+    }
+    if (count > maxSame) maxSame = count;
+  }
+
+  if (maxSame >= 4) return { chain: true, count: maxSame };
+  if (maxSame >= 2) return { chain: false, count: maxSame };
+  return null;
 }
 
 /**

@@ -104,7 +104,7 @@ export function simulateGame(initialSeed, events) {
 				board[r][c] = 0;
 			}
 			if (ev.scoreDelta !== undefined) {
-				const expected = cellCount * 2 * (cellCount - 4);
+				const expected = cellCount * (cellCount - 3);
 				if (ev.scoreDelta !== expected) {
 					errors.push(`Event ${i}: CLEAR scoreDelta ${ev.scoreDelta} != expected ${expected}`);
 				}
