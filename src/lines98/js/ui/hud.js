@@ -1,4 +1,5 @@
 import { state } from '../core/state.js';
+import { THEMES } from '../core/constants.js';
 import { Sound } from '../audio/sound.js';
 
 export const hud = {
@@ -35,6 +36,7 @@ export const hud = {
 	},
 
 	update() {
+		this.renderNextPreview();
 		if (this.scoreEl) this.scoreEl.textContent = state.score;
 		if (this.highScoreEl) this.highScoreEl.textContent = state.highScore;
 
@@ -125,5 +127,24 @@ export const hud = {
 		setTimeout(() => {
 			floatingText.remove();
 		}, 1800);
+	},
+
+	renderNextPreview() {
+		const container = document.getElementById('next-preview');
+		if (!container) return;
+
+		container.innerHTML = '';
+		const theme = THEMES[state.theme] || THEMES.classic;
+
+		state.nextBalls.forEach(ball => {
+			const c = theme.balls[ball.color - 1];
+			const main = c?.main || '#888';
+			const light = c?.light || '#aaa';
+
+			const dot = document.createElement('div');
+			dot.className = 'w-5 h-5 rounded-full shadow-sm transition-all duration-300';
+			dot.style.background = `radial-gradient(circle at 35% 35%, ${light}, ${main})`;
+			container.appendChild(dot);
+		});
 	}
 };
