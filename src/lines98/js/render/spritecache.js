@@ -72,72 +72,148 @@ export const spriteCache = {
 
     // ── 1. Soft drop shadow ──
     ctx.save();
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
-    ctx.shadowBlur = Math.round(6 * this.dpr * scaleFactor);
-    ctx.shadowOffsetY = Math.round(3 * this.dpr * scaleFactor);
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.35)';
+    ctx.shadowBlur = Math.round(8 * dpr * scaleFactor);
+    ctx.shadowOffsetY = Math.round(4 * dpr * scaleFactor);
     ctx.beginPath();
     ctx.arc(r, r, radius, 0, Math.PI * 2);
     ctx.fillStyle = 'rgba(0,0,0,0.01)';
     ctx.fill();
     ctx.restore();
 
-    // ── 2. Main sphere body (multi-stop radial gradient) ──
+    // ── 2. Main sphere body — richer multi-stop gradient ──
     ctx.beginPath();
     ctx.arc(r, r, radius, 0, Math.PI * 2);
+    ctx.save();
+    ctx.clip();
 
     const gradient = ctx.createRadialGradient(
-      r * 0.65, r * 0.55, Math.max(1, r * 0.05),
+      r * 0.62, r * 0.48, Math.max(1, r * 0.03),
       r, r, radius
     );
     gradient.addColorStop(0, '#FFFFFF');
-    gradient.addColorStop(0.15, c.light);
-    gradient.addColorStop(0.5, c.main);
-    gradient.addColorStop(0.85, c.dark);
-    gradient.addColorStop(1, c.dark);
+    gradient.addColorStop(0.08, c.light);
+    gradient.addColorStop(0.35, c.main);
+    gradient.addColorStop(0.7, c.dark);
+    gradient.addColorStop(0.92, c.dark);
+    gradient.addColorStop(1, '#000000');
 
     ctx.fillStyle = gradient;
     ctx.fill();
 
-    // ── 3. Primary specular highlight (big, soft) ──
-    ctx.beginPath();
-    ctx.arc(r * 0.7, r * 0.52, Math.max(1, radius * 0.22), 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
-    ctx.fill();
-
-    // ── 4. Secondary specular (small, sharp) ──
-    ctx.beginPath();
-    ctx.arc(r * 0.6, r * 0.42, Math.max(1, radius * 0.08), 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-    ctx.fill();
-
-    // ── 5. Rim light (bottom edge reflection) ──
-    ctx.beginPath();
-    ctx.arc(r * 1.25, r * 1.15, radius * 0.95, 0, Math.PI * 2);
-    const rimGrad = ctx.createRadialGradient(
-      r * 1.15, r * 1.1, 0,
-      r * 1.15, r * 1.1, radius * 0.9
+    // ── 3. Subsurface scattering glow (backlit edge) ──
+    const sss = ctx.createRadialGradient(
+      r * 1.3, r * 1.4, 0,
+      r * 1.3, r * 1.4, radius * 0.9
     );
-    rimGrad.addColorStop(0, 'rgba(255, 255, 255, 0.18)');
-    rimGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
-    ctx.fillStyle = rimGrad;
+    sss.addColorStop(0, 'rgba(255, 255, 255, 0.12)');
+    sss.addColorStop(0.5, 'rgba(255, 255, 255, 0.04)');
+    sss.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    ctx.beginPath();
+    ctx.arc(r * 1.3, r * 1.4, radius * 0.9, 0, Math.PI * 2);
+    ctx.fillStyle = sss;
     ctx.fill();
 
-    // ── 6. Subtle inner shadow on top edge ──
+    // ── 4. Primary specular highlight (elliptical) ──
     ctx.beginPath();
-    ctx.arc(r * 0.5, r * 0.5, radius, 0, Math.PI * 2);
-    ctx.save();
-    ctx.clip();
+    ctx.ellipse(
+      r * 0.68, r * 0.48,
+      radius * 0.28, radius * 0.2,
+      -0.3, 0, Math.PI * 2
+    );
+    const spec1 = ctx.createRadialGradient(
+      r * 0.66, r * 0.46, 0,
+      r * 0.66, r * 0.46, radius * 0.28
+    );
+    spec1.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
+    spec1.addColorStop(0.4, 'rgba(255, 255, 255, 0.55)');
+    spec1.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    ctx.fillStyle = spec1;
+    ctx.fill();
+
+    // ── 5. Secondary specular (sharp hotspot) ──
+    ctx.beginPath();
+    ctx.ellipse(
+      r * 0.6, r * 0.4,
+      radius * 0.1, radius * 0.07,
+      -0.3, 0, Math.PI * 2
+    );
+    const spec2 = ctx.createRadialGradient(
+      r * 0.6, r * 0.4, 0,
+      r * 0.6, r * 0.4, radius * 0.1
+    );
+    spec2.addColorStop(0, 'rgba(255, 255, 255, 1)');
+    spec2.addColorStop(0.5, 'rgba(255, 255, 255, 0.5)');
+    spec2.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    ctx.fillStyle = spec2;
+    ctx.fill();
+
+    // ── 6. Environment reflection strip ──
+    ctx.beginPath();
+    ctx.ellipse(
+      r * 1.05, r * 0.75,
+      radius * 0.5, radius * 0.08,
+      0.4, 0, Math.PI * 2
+    );
+    const env = ctx.createLinearGradient(
+      r * 1.05 - radius * 0.5, 0,
+      r * 1.05 + radius * 0.5, 0
+    );
+    env.addColorStop(0, 'rgba(255, 255, 255, 0)');
+    env.addColorStop(0.3, 'rgba(255, 255, 255, 0.08)');
+    env.addColorStop(0.5, 'rgba(255, 255, 255, 0.15)');
+    env.addColorStop(0.7, 'rgba(255, 255, 255, 0.08)');
+    env.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    ctx.fillStyle = env;
+    ctx.fill();
+
+    // ── 7. Fresnel edge glow ──
+    const fresnel = ctx.createRadialGradient(
+      r, r, radius * 0.65,
+      r, r, radius
+    );
+    fresnel.addColorStop(0, 'rgba(255, 255, 255, 0)');
+    fresnel.addColorStop(0.8, 'rgba(255, 255, 255, 0)');
+    fresnel.addColorStop(0.94, 'rgba(255, 255, 255, 0.12)');
+    fresnel.addColorStop(1, 'rgba(255, 255, 255, 0.08)');
+    ctx.beginPath();
+    ctx.arc(r, r, radius, 0, Math.PI * 2);
+    ctx.fillStyle = fresnel;
+    ctx.fill();
+
+    // ── 8. Inner shadow (top-left occlusion) ──
     const innerShadow = ctx.createRadialGradient(
-      r * 0.45, r * 0.4, radius * 0.3,
-      r * 0.45, r * 0.4, radius * 1.2
+      r * 0.4, r * 0.35, radius * 0.4,
+      r * 0.4, r * 0.35, radius * 1.2
     );
     innerShadow.addColorStop(0, 'rgba(0, 0, 0, 0)');
-    innerShadow.addColorStop(1, 'rgba(0, 0, 0, 0.15)');
-    ctx.fillStyle = innerShadow;
+    innerShadow.addColorStop(0.7, 'rgba(0, 0, 0, 0.02)');
+    innerShadow.addColorStop(1, 'rgba(0, 0, 0, 0.2)');
     ctx.beginPath();
-    ctx.arc(r * 0.45, r * 0.4, radius * 1.2, 0, Math.PI * 2);
+    ctx.arc(r * 0.4, r * 0.35, radius * 1.2, 0, Math.PI * 2);
+    ctx.fillStyle = innerShadow;
     ctx.fill();
-    ctx.restore();
+
+    ctx.restore(); // end clip
+
+    // ── 9. Anti-aliased edge ──
+    ctx.beginPath();
+    ctx.arc(r, r, radius - 0.5 / dpr, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(0,0,0,0.08)';
+    ctx.lineWidth = 1 / dpr;
+    ctx.stroke();
+
+    // ── 10. Subtle rim highlight on top-right ──
+    const rimTop = ctx.createRadialGradient(
+      r * 1.05, r * 0.3, 0,
+      r * 1.05, r * 0.3, radius * 0.3
+    );
+    rimTop.addColorStop(0, 'rgba(255, 255, 255, 0.06)');
+    rimTop.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    ctx.beginPath();
+    ctx.arc(r * 1.05, r * 0.3, radius * 0.3, 0, Math.PI * 2);
+    ctx.fillStyle = rimTop;
+    ctx.fill();
 
     return canvas;
   },
