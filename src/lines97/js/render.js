@@ -171,7 +171,8 @@ export function buildPalettePanel() {
     pal.colors.forEach(c => {
       const dot = document.createElement('div');
       dot.className = 'palette-dot';
-      dot.style.background = c.main;
+      dot.style.background = `radial-gradient(circle at 35% 30%, ${c.light}, ${c.main} 55%, ${c.dark})`;
+      dot.style.boxShadow = `0 1.5px 4px ${c.glow}, inset 0 -1.5px 3px rgba(0,0,0,0.12), inset 0 1px 2px rgba(255,255,255,0.3)`;
       preview.appendChild(dot);
     });
     opt.appendChild(name);

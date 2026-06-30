@@ -415,8 +415,13 @@ function buildPalettePanel() {
     btn.dataset.palette = key;
     btn.innerHTML = `
       <span class="font-display font-bold text-sm text-slate-800 dark:text-slate-200">${value.name}</span>
-      <div class="flex gap-1">
-        ${value.colors.slice(0, 5).map(c => `<span class="w-4 h-4 rounded-full" style="background: ${c.main}"></span>`).join('')}
+      <div class="flex gap-1.5">
+        ${value.colors.slice(0, 5).map(c => `
+          <span class="palette-dot relative w-4 h-4 rounded-full block" 
+                style="background: radial-gradient(circle at 35% 30%, ${c.light}, ${c.main} 55%, ${c.dark}); 
+                       box-shadow: 0 1.5px 4px ${c.glow}, inset 0 -1.5px 3px rgba(0,0,0,0.12), inset 0 1px 2px rgba(255,255,255,0.3);">
+          </span>
+        `).join('')}
       </div>
     `;
     btn.addEventListener('click', () => selectPaletteHandler(key));

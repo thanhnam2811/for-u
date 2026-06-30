@@ -253,6 +253,7 @@ html, body {
 .palette-dot {
   width: 16px; height: 16px; border-radius: 50%;
   box-shadow: 0 2px 5px rgba(0,0,0,0.12); border: 1.5px solid rgba(255,255,255,0.8);
+  position: relative;
 }
 
 /* === TOAST === */
@@ -274,6 +275,18 @@ html, body {
   border-radius: 50%;
   flex-shrink: 0;
   display: inline-block;
+  position: relative;
+}
+.preview-ball::after, .palette-dot::after {
+  content: "";
+  position: absolute;
+  top: 24%;
+  left: 29%;
+  width: 12%;
+  height: 12%;
+  background: rgba(255, 255, 255, 0.35);
+  border-radius: 50%;
+  pointer-events: none;
 }
 
 /* === GAME CONTAINER WITH iOS SAFE AREAS === */
