@@ -38,6 +38,43 @@ html, body {
   overscroll-behavior: none;
 }
 
+/* === Custom Scrollbar === */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(193, 147, 255, 0.3) transparent;
+}
+html::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+html::-webkit-scrollbar-track {
+  background: transparent;
+}
+html::-webkit-scrollbar-thumb {
+  background: rgba(193, 147, 255, 0.3);
+  border-radius: 999px;
+  transition: background 0.2s;
+}
+html::-webkit-scrollbar-thumb:hover {
+  background: rgba(193, 147, 255, 0.5);
+}
+/* Scrollable containers in modals */
+#palette-options-container, #leaderboard-list, .challenge-goals {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(193, 147, 255, 0.2) transparent;
+}
+#palette-options-container::-webkit-scrollbar,
+#leaderboard-list::-webkit-scrollbar,
+.challenge-goals::-webkit-scrollbar {
+  width: 4px;
+}
+#palette-options-container::-webkit-scrollbar-thumb,
+#leaderboard-list::-webkit-scrollbar-thumb,
+.challenge-goals::-webkit-scrollbar-thumb {
+  background: rgba(193, 147, 255, 0.2);
+  border-radius: 999px;
+}
+
 :root {
   --ball-1: #FF7F8E; --ball-1-light: #FFB8C1; --ball-1-dark: #CC5F6E; --ball-1-glow: rgba(255,127,142,0.45);
   --ball-2: #7EC8E3; --ball-2-light: #B4E0F2; --ball-2-dark: #5A9AB8; --ball-2-glow: rgba(126,200,227,0.45);
