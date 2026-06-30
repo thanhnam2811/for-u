@@ -1,5 +1,5 @@
-import { state } from '../core/state.js';
-import { THEMES, LS_THEME } from '../core/constants.js';
+import { state, restoreSnapshot, cloneSnapshot } from '../core/state.js';
+import { THEMES, LS_THEME, LS_CHECKPOINT } from '../core/constants.js';
 import { spriteCache } from '../render/spritecache.js';
 
 /**
@@ -14,6 +14,7 @@ export const modal = {
 		this._wirePaletteClose();
 		this._wireCheckpointToggle();
 		this._wireCheckpointClose();
+		this._wireCheckpointSlots();
 		this._wireChallengeToggle();
 		this._wireChallengeClose();
 		this._populatePaletteOptions();
@@ -53,6 +54,81 @@ export const modal = {
 		const closeBtn = document.getElementById('close-checkpoint-btn');
 		if (!closeBtn) return;
 		closeBtn.addEventListener('click', () => this._closeModal());
+	},
+
+	_wireCheckpointSlots() {
+		document.querySelectorAll('.cp-save').forEach(btn => {
+			btn.addEventListener('click', () => {
+				const slot = btn.dataset.slot;
+				if (slot !== undefined) this._saveToSlot(parseInt(slot));
+			});
+		});
+		document.querySelectorAll('.cp-load').forEach(btn => {
+			btn.addEventListener('click', () => {
+				const slot = btn.dataset.slot;
+				if (slot !== undefined) this._loadFromSlot(parseInt(slot));
+			});
+		});
+		// Init display for all slots
+		[0, 1, 2].forEach(slot => this._updateSlotInfo(slot));
+	},
+
+	_saveToSlot(slot) {
+		const raw = {
+			...cloneSnapshot(),
+			undoStack: state.undoStack.map(snap => ({ ...snap })),
+			_savedAt: Date.now(),
+			_savedScore: state.score,
+			_savedTurn: state.turn,
+		};
+		localStorage.setItem(LS_CHECKPOINT + slot, JSON.stringify(raw));
+		this._updateSlotInfo(slot);
+	},
+
+	async _loadFromSlot(slot) {
+		const raw = localStorage.getItem(LS_CHECKPOINT + slot);
+		if (!raw) return;
+		try {
+			const data = JSON.parse(raw);
+			restoreSnapshot(data);
+			if (data.undoStack) {
+				state.undoStack = data.undoStack.map(snap => ({ ...snap }));
+			}
+			// Update HUD after restore
+			const { hud } = await import('../ui/hud.js');
+			if (hud) hud.update();
+
+			this._closeModal();
+		} catch (err) {
+			console.error('Checkpoint load error:', err);
+		}
+	},
+
+	async _updateSlotInfo(slot) {
+		const infoEl = document.querySelector(`.cp-info[data-slot="${slot}"]`);
+		const loadBtn = document.querySelector(`.cp-load[data-slot="${slot}"]`);
+		if (!infoEl) return;
+
+		const raw = localStorage.getItem(LS_CHECKPOINT + slot);
+
+		if (raw) {
+			try {
+				const data = JSON.parse(raw);
+				const time = data._savedAt
+					? new Date(data._savedAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+					: '';
+				infoEl.textContent = `🎯 ${data._savedScore || 0} · 🎮 ${data._savedTurn || 0} · ${time}`;
+				infoEl.style.color = '';
+				if (loadBtn) loadBtn.disabled = false;
+			} catch {
+				infoEl.textContent = '❌ Hỏng';
+				if (loadBtn) loadBtn.disabled = true;
+			}
+		} else {
+			infoEl.textContent = 'Trống';
+			infoEl.style.color = '';
+			if (loadBtn) loadBtn.disabled = true;
+		}
 	},
 
 	// ── Challenge Modal ──
