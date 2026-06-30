@@ -118,6 +118,7 @@ function init() {
 	initSharedAuth({
 		onUserChanged: (user) => {
 			currentUser = user;
+			bestSubmittedScore = 0; // reset khi user thay đổi (anonymous → google)
 			_updateUserAvatar(user);
 			if (!user.isAnonymous) {
 				_autoCloudSync(user);
@@ -292,6 +293,9 @@ function setupInputListeners(canvas) {
 		if (state.gameOver || state.animating || isMoving) return;
 
 		const cell = getCellFromEvent(e);
+		if (cell) {
+			viewport.hoveredCell = cell; // highlight ngay khi chạm
+		}
 		if (!cell) return;
 
 		const color = state.board[cell.row][cell.col];
@@ -330,6 +334,14 @@ function setupInputListeners(canvas) {
 
 	canvas.addEventListener('touchmove', handlePointerMove);
 	canvas.addEventListener('touchstart', handlePointerDown);
+	canvas.addEventListener('touchend', () => {
+		viewport.hoveredCell = null;
+		window.currentPath = null;
+	});
+	canvas.addEventListener('mouseup', () => {
+		viewport.hoveredCell = null;
+		window.currentPath = null;
+	});
 }
 
 function executeMovement(path) {
