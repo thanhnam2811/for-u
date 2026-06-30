@@ -1,15 +1,14 @@
 # Phase 4 Roadmap: Online Leaderboard & Replay Sharing 🌐
 
-Mục tiêu của giai đoạn 4 là thiết lập bảng xếp hạng trực tuyến online thông qua API REST gọn nhẹ (Supabase/Cloudflare Workers), xây dựng cơ chế chia sẻ mã Replay và thiết lập quy trình Golden Replay Test để chống gian lận.
+Mục tiêu của giai đoạn 4 là tích hợp bảng xếp hạng trực tuyến online và cơ chế đồng bộ hóa đám mây (qua Firebase/Firestore hiện tại của dự án), xây dựng cơ chế chia sẻ mã Replay và thiết lập quy trình Golden Replay Test để chống gian lận.
 
 ---
 
 ## 📅 Danh Sách Nhiệm Vụ Chi Tiết
 
-### 1. Bảng xếp hạng Supabase REST (`storage/leaderboard.js`)
-* Tạo bảng xếp hạng trực tuyến online.
-* Sử dụng API Fetch REST gọn nhẹ của Supabase để tải và lưu điểm kỷ lục.
-* Giới hạn kích thước bundle bằng cách loại bỏ các bộ SDK nặng.
+### 1. Bảng xếp hạng Firebase/Firestore (`storage/leaderboard.js` & `storage/save.js`)
+* Kết nối bảng xếp hạng trực tuyến online với Firestore (sử dụng cấu hình SDK gọn nhẹ sẵn có của dự án).
+* Đồng bộ điểm kỷ lục và trạng thái trò chơi (đồng nhất với logic đồng bộ cờ của Lines 97).
 
 ### 2. Chia sẻ và phát Replay trận đấu (`core/replay.js` & `ui/modal.js`)
 * Thiết kế mã hóa chuỗi sự kiện `GameEvent` và hạt giống sinh số `Seed` thành một chuỗi văn bản base64 ngắn gọn.

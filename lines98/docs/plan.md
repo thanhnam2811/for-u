@@ -60,7 +60,7 @@ src/lines98/js/
  │
  └── storage/
       ├── save.js           ← Tự động lưu tiến trình cục bộ (Auto Save)
-      └── leaderboard.js    ← Đọc/ghi điểm số trực tuyến gọn nhẹ qua Supabase/REST
+      └── leaderboard.js    ← Đọc/ghi điểm số trực tuyến qua Firebase/Firestore (tương tự bản cũ)
 ```
 
 ---
