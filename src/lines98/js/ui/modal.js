@@ -78,28 +78,12 @@ export const modal = {
 		for (const [key, theme] of Object.entries(THEMES)) {
 			const card = document.createElement('button');
 			card.className =
-				'w-full flex items-center gap-3 p-3 rounded-2xl border border-slate-200/40 dark:border-slate-800/40 bg-white/30 dark:bg-slate-900/20 hover:bg-white/60 dark:hover:bg-slate-900/40 hover:border-brand-pink dark:hover:border-brand-purple transition-all cursor-pointer text-left';
+				'w-full flex flex-col p-3 rounded-2xl border border-slate-200/40 dark:border-slate-800/40 bg-white/30 dark:bg-slate-900/20 hover:bg-white/60 dark:hover:bg-slate-900/40 hover:border-brand-pink dark:hover:border-brand-purple transition-all cursor-pointer';
 			card.dataset.theme = key;
 
-			// Color swatches row (actual ball sprites)
-			const swatches = document.createElement('div');
-			swatches.className = 'flex gap-1 flex-shrink-0';
-			theme.balls.forEach((_, i) => {
-				const sprite = spriteCache.balls[i + 1]?.[2];
-				if (!sprite) return;
-
-				const canvas = document.createElement('canvas');
-				canvas.className = 'rounded-full border border-white/20 dark:border-slate-700/20';
-				canvas.width = 18;
-				canvas.height = 18;
-				const ctx = canvas.getContext('2d');
-				ctx.drawImage(sprite, 0, 0, 18, 18);
-				swatches.appendChild(canvas);
-			});
-
-			// Label + checkmark
-			const label = document.createElement('div');
-			label.className = 'flex-1 flex items-center justify-between';
+			// Name row (label + checkmark)
+			const header = document.createElement('div');
+			header.className = 'flex items-center justify-between mb-2';
 
 			const nameSpan = document.createElement('span');
 			nameSpan.className = 'font-display font-bold text-sm text-slate-800 dark:text-slate-200';
@@ -110,10 +94,40 @@ export const modal = {
 				'material-icons-round text-brand-pink dark:text-brand-purple text-lg transition-all duration-300';
 			check.textContent = key === state.theme ? 'check_circle' : 'radio_button_unchecked';
 
-			label.appendChild(nameSpan);
-			label.appendChild(check);
+			header.appendChild(nameSpan);
+			header.appendChild(check);
+
+			// Ball row (7 balls using theme's own colors)
+			const swatches = document.createElement('div');
+			swatches.className = 'flex gap-1.5';
+
+			theme.balls.forEach(c => {
+				const canvas = document.createElement('canvas');
+				canvas.className = 'rounded-full border border-white/20 dark:border-slate-700/20';
+				canvas.width = 18;
+				canvas.height = 18;
+				const ctx = canvas.getContext('2d');
+				const r = 9;
+				// Quick 3D ball render using theme colors (not spriteCache)
+				const grad = ctx.createRadialGradient(r * 0.65, r * 0.55, 1, r, r, r);
+				grad.addColorStop(0, '#FFFFFF');
+				grad.addColorStop(0.15, c.light);
+				grad.addColorStop(0.5, c.main);
+				grad.addColorStop(1, c.dark);
+				ctx.beginPath();
+				ctx.arc(r, r, r - 1, 0, Math.PI * 2);
+				ctx.fillStyle = grad;
+				ctx.fill();
+				// Highlight
+				ctx.beginPath();
+				ctx.arc(r * 0.7, r * 0.52, r * 0.22, 0, Math.PI * 2);
+				ctx.fillStyle = 'rgba(255,255,255,0.4)';
+				ctx.fill();
+				swatches.appendChild(canvas);
+			});
+
+			card.appendChild(header);
 			card.appendChild(swatches);
-			card.appendChild(label);
 
 			card.addEventListener('click', () => this._selectTheme(key));
 			container.appendChild(card);

@@ -106,7 +106,7 @@ export const THEMES = {
 		animation: { pulseSpeed: 1.1, shakePower: 0.9, glowIntensity: 0.9 }
 	},
 	zen: {
-		name: 'Zen Garden 🪷',
+		name: 'Zen Garden 🌿',
 		board: { cellBg: 'rgba(245, 235, 220, 0.3)', gridLine: 'rgba(180, 160, 130, 0.35)' },
 		balls: [
 			{ main: '#C0392B', light: '#E67A6E', dark: '#8E2B1E', glow: 'rgba(192, 57, 43, 0.4)' },
