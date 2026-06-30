@@ -60,6 +60,7 @@ export const spriteCache = {
 
   createBallSprite(c, scaleFactor) {
     const size = Math.round(this.ballSize * scaleFactor);
+    const dpr = this.dpr;
     const canvas = document.createElement('canvas');
     canvas.width = size;
     canvas.height = size;
@@ -156,8 +157,8 @@ export const spriteCache = {
       0.4, 0, Math.PI * 2
     );
     const env = ctx.createLinearGradient(
-      r * 1.05 - radius * 0.5, 0,
-      r * 1.05 + radius * 0.5, 0
+      r * 1.05 - radius * 0.5, r * 0.75,
+      r * 1.05 + radius * 0.5, r * 0.75
     );
     env.addColorStop(0, 'rgba(255, 255, 255, 0)');
     env.addColorStop(0.3, 'rgba(255, 255, 255, 0.08)');
