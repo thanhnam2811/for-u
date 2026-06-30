@@ -308,6 +308,13 @@ function finalizeMove() {
   // Check lines formed at destination
   const clearedList = checkLines(end.row, end.col);
 
+  // Analyze move quality for player feedback
+  const moveQuality = analyzeMove(start.row, start.col, end.row, end.col, clearedList.length);
+  if (!state.gameOver && clearedList.length < 5) {
+    const qualityEmoji = moveQuality === 'Excellent' ? '✨' : moveQuality === 'Risky' ? '⚠️' : '👍';
+    hud.spawnFloatingText(`${qualityEmoji} ${moveQuality}`, end.row, end.col, moveQuality === 'Excellent');
+  }
+
   if (clearedList.length >= 5) {
     // 1. Cleared Lines!
     Sound.clear(clearedList.length);

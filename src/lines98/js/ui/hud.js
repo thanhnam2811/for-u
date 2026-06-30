@@ -1,4 +1,5 @@
 import { state } from '../core/state.js';
+import { Sound } from '../audio/sound.js';
 
 export const hud = {
   scoreEl: null,
@@ -9,6 +10,7 @@ export const hud = {
   undoBtn: null,
   boardContainer: null,
   pressureOverlay: null,
+  heartbeatTimer: 0,
 
   initialize() {
     this.scoreEl = document.getElementById('score');
@@ -28,6 +30,8 @@ export const hud = {
     } else {
       this.pressureOverlay = document.getElementById('pressure-overlay');
     }
+
+    this.heartbeatTimer = 0;
   },
 
   update() {
@@ -67,6 +71,12 @@ export const hud = {
       
       // Heartbeat rumble on board container
       this.boardContainer.style.animation = 'heartbeat-rumble 1s infinite';
+
+      // Heartbeat audio — once per second using elapsedTime guard
+      if (state.elapsedTime - this.heartbeatTimer >= 1) {
+        Sound.heartbeat();
+        this.heartbeatTimer = state.elapsedTime;
+      }
     } else if (occupancy >= 0.70) {
       // Warning Vignette (soft red glow, no pulse, no shake)
       this.pressureOverlay.style.opacity = '0.6';

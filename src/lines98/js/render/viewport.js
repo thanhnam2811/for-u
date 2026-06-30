@@ -3,7 +3,6 @@ import { state } from '../core/state.js';
 import { spriteCache } from './spritecache.js';
 import { screenTransform } from '../fx/camera.js';
 import { particleSystem } from '../fx/particles.js';
-import { checkLines } from '../core/logic.js';
 
 export const viewport = {
   canvas: null,
@@ -202,33 +201,115 @@ export const viewport = {
     }
   },
 
-  drawGlows() {
-    // Scan entire board for potential line setups (4-in-a-row)
-    const size = this.cellSize;
+  /**
+   * Find all unique near-complete lines (4-in-a-row) on the board.
+   * Returns deduplicated array of { cells: [{row,col},...], color }.
+   */
+  _findNearCompleteLines() {
+    const found = [];
+    const seen = new Set();
+    const dirs = [[0, 1], [1, 0], [1, 1], [1, -1]];
 
     for (let r = 0; r < SIZE; r++) {
       for (let c = 0; c < SIZE; c++) {
         const color = state.board[r][c];
         if (color === 0) continue;
 
-        // Check if this cell is part of a 4-in-a-row
-        const line = checkLines(r, c, 4);
-        if (line.length >= 4) {
-          const glowSprite = spriteCache.glows[color];
-          if (!glowSprite) continue;
+        for (const [dr, dc] of dirs) {
+          const cells = [{ row: r, col: c }];
 
-          const { x, y } = this.getCellCoords(r, c);
-          
-          // Draw glow behind ball centered
-          const glowSize = size * 1.5;
-          const offset = (size - glowSize) / 2;
+          // Scan forward
+          let rr = r + dr, cc = c + dc;
+          while (rr >= 0 && rr < SIZE && cc >= 0 && cc < SIZE && state.board[rr][cc] === color) {
+            cells.push({ row: rr, col: cc });
+            rr += dr;
+            cc += dc;
+          }
+          // Scan backward
+          rr = r - dr; cc = c - dc;
+          while (rr >= 0 && rr < SIZE && cc >= 0 && cc < SIZE && state.board[rr][cc] === color) {
+            cells.unshift({ row: rr, col: cc });
+            rr -= dr;
+            cc -= dc;
+          }
 
-          this.ctx.save();
-          // Add soft breathing glow pulsing
-          this.ctx.globalAlpha = 0.5 + Math.sin(this.pathPulseTime * 1.5) * 0.15;
-          this.ctx.drawImage(glowSprite, x + offset, y + offset, glowSize, glowSize);
-          this.ctx.restore();
+          if (cells.length >= 4) {
+            // Create a deterministic key for deduplication
+            const sorted = [...cells].sort((a, b) => a.row - b.row || a.col - b.col);
+            const key = sorted.map(p => `${p.row},${p.col}`).join('|');
+            if (!seen.has(key)) {
+              seen.add(key);
+              // Order cells from one end to the other for streak animation
+              const isHorizontal = cells.every(p => p.row === cells[0].row);
+              if (isHorizontal) cells.sort((a, b) => a.col - b.col);
+              else cells.sort((a, b) => a.row - b.row);
+              found.push({ cells, color });
+            }
+          }
         }
+      }
+    }
+    return found;
+  },
+
+  drawGlows() {
+    const uniqueLines = this._findNearCompleteLines();
+    if (uniqueLines.length === 0) return;
+
+    const size = this.cellSize;
+    const pulseTime = this.pathPulseTime;
+
+    for (const line of uniqueLines) {
+      const glowSprite = spriteCache.glows[line.color];
+      if (!glowSprite) continue;
+
+      // 1. Static pulsing glow on every cell of the line
+      for (const { row, col } of line.cells) {
+        const { x, y } = this.getCellCoords(row, col);
+        const glowSize = size * 1.5;
+        const offset = (size - glowSize) / 2;
+
+        this.ctx.save();
+        this.ctx.globalAlpha = 0.5 + Math.sin(pulseTime * 1.5) * 0.15;
+        this.ctx.drawImage(glowSprite, x + offset, y + offset, glowSize, glowSize);
+        this.ctx.restore();
+      }
+
+      // 2. Chasing light streak along the line (ping-pong)
+      const steps = line.cells.length;
+      // Ping-pong: φ ∈ [0, π] → t ∈ [0, 1 → 0]
+      const t = Math.sin(pulseTime * 2) * 0.5 + 0.5;
+      // Clamp to avoid overshoot at endpoints
+      const maxIdx = steps - 1;
+      const pos = t * maxIdx;
+      const idx = Math.min(Math.floor(pos), maxIdx - 1);
+      const frac = pos - idx;
+
+      if (idx >= 0 && idx <= maxIdx - 1) {
+        const from = this.getCellCoords(line.cells[idx].row, line.cells[idx].col);
+        const to = this.getCellCoords(line.cells[idx + 1].row, line.cells[idx + 1].col);
+        const cx = from.x + size / 2 + (to.x - from.x) * frac;
+        const cy = from.y + size / 2 + (to.y - from.y) * frac;
+
+        // Resolve theme color
+        const theme = THEMES[state.theme] || THEMES.classic;
+        const ballColor = theme.balls[line.color - 1]?.main || '#FF2D6A';
+
+        // Draw a bright glowing spot
+        this.ctx.save();
+        const radius = size * 0.55;
+        const gradient = this.ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+        gradient.addColorStop(0, 'rgba(255,255,255,1)');
+        gradient.addColorStop(0.2, ballColor);
+        gradient.addColorStop(0.6, ballColor + '88');
+        gradient.addColorStop(1, 'transparent');
+
+        this.ctx.globalAlpha = 0.6 + Math.sin(pulseTime * 4) * 0.25;
+        this.ctx.fillStyle = gradient;
+        this.ctx.beginPath();
+        this.ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+        this.ctx.fill();
+        this.ctx.restore();
       }
     }
   },
