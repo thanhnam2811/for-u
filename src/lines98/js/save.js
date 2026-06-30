@@ -126,6 +126,30 @@ export function deleteCheckpoint(slot) {
   }
 }
 
+// Robustly retrieve display name and photo URL from user profile and providerData
+export function getUserProfile(user) {
+  let displayName = user.displayName;
+  let photoURL = user.photoURL;
+
+  if (user.providerData && user.providerData.length > 0) {
+    const googleProfile = user.providerData.find(p => p.providerId === 'google.com');
+    if (googleProfile) {
+      if (googleProfile.displayName) displayName = googleProfile.displayName;
+      if (googleProfile.photoURL) photoURL = googleProfile.photoURL;
+    } else {
+      for (const profile of user.providerData) {
+        if (!displayName && profile.displayName) displayName = profile.displayName;
+        if (!photoURL && profile.photoURL) photoURL = profile.photoURL;
+      }
+    }
+  }
+
+  return {
+    displayName: displayName || (user.isAnonymous ? "Người chơi ẩn danh" : "Google Player"),
+    photoURL: photoURL || ""
+  };
+}
+
 // ── Leaderboard ──
 export function saveToLeaderboard() {
   if (state.score <= 0) return;
@@ -140,12 +164,13 @@ export function saveToLeaderboard() {
   if (user) {
     if (state.score >= state.highScore) {
       const userDocRef = doc(db, 'players', user.uid);
+      const profile = getUserProfile(user);
       setDoc(userDocRef, {
         highScore98: state.highScore,
         highScoreMoves98: state.moves,
         updatedAt: Date.now(),
-        displayName: user.displayName || (user.isAnonymous ? "Người chơi ẩn danh" : "Google Player"),
-        photoURL: user.photoURL || ""
+        displayName: profile.displayName,
+        photoURL: profile.photoURL
       }, { merge: true }).catch(err => console.error("Firestore saveToLeaderboard98 error:", err));
     }
   }
@@ -285,10 +310,11 @@ export async function syncUserProgress(user) {
       return autoMergeUserProgress(userDocRef, cloudData, localHighScore, localSaveRaw, localCheckpoints, user);
     } else {
       // Create new document for user from local data
+      const profile = getUserProfile(user);
       const initialData = {
         highScore98: localHighScore,
-        displayName: user.displayName || (user.isAnonymous ? "Người chơi ẩn danh" : "Google Player"),
-        photoURL: user.photoURL || "",
+        displayName: profile.displayName,
+        photoURL: profile.photoURL,
         updatedAt: Date.now(),
         checkpoints98: localCheckpoints
       };
@@ -306,10 +332,11 @@ export async function syncUserProgress(user) {
 
 // Overwrite cloud document with local device progress
 async function uploadLocalData(userDocRef, localHighScore, localSaveRaw, localCheckpoints, user) {
+  const profile = getUserProfile(user);
   const uploadData = {
     updatedAt: Date.now(),
-    displayName: user.displayName || "Google Player",
-    photoURL: user.photoURL || "",
+    displayName: profile.displayName,
+    photoURL: profile.photoURL,
     checkpoints98: localCheckpoints,
     highScore98: localHighScore,
     saveGame98: localSaveRaw || null
@@ -411,9 +438,10 @@ async function autoMergeUserProgress(userDocRef, cloudData, localHighScore, loca
     }
   }
 
+  const profile = getUserProfile(user);
   if (
-    cloudData.displayName !== user.displayName ||
-    cloudData.photoURL !== user.photoURL
+    cloudData.displayName !== profile.displayName ||
+    cloudData.photoURL !== profile.photoURL
   ) {
     needsUpload = true;
   }
@@ -421,8 +449,8 @@ async function autoMergeUserProgress(userDocRef, cloudData, localHighScore, loca
   if (needsUpload) {
     const uploadData = {
       updatedAt: Date.now(),
-      displayName: user.displayName || (user.isAnonymous ? "Người chơi ẩn danh" : "Google Player"),
-      photoURL: user.photoURL || "",
+      displayName: profile.displayName,
+      photoURL: profile.photoURL,
       checkpoints98: mergedCheckpoints
     };
     if (localHighScore > cloudHighScore) {

@@ -21,6 +21,30 @@ export async function syncPhuocToCloud() {
 	}
 }
 
+// Robustly retrieve display name and photo URL from user profile and providerData
+export function getUserProfile(user) {
+	let displayName = user.displayName;
+	let photoURL = user.photoURL;
+
+	if (user.providerData && user.providerData.length > 0) {
+		const googleProfile = user.providerData.find(p => p.providerId === 'google.com');
+		if (googleProfile) {
+			if (googleProfile.displayName) displayName = googleProfile.displayName;
+			if (googleProfile.photoURL) photoURL = googleProfile.photoURL;
+		} else {
+			for (const profile of user.providerData) {
+				if (!displayName && profile.displayName) displayName = profile.displayName;
+				if (!photoURL && profile.photoURL) photoURL = profile.photoURL;
+			}
+		}
+	}
+
+	return {
+		displayName: displayName || (user.isAnonymous ? "Người chơi ẩn danh" : "Google Player"),
+		photoURL: photoURL || ""
+	};
+}
+
 // Đồng bộ/Tải dữ liệu điểm phước từ Firestore khi đăng nhập
 export async function syncUserAuraProgress(user) {
 	if (!user) return;
@@ -28,10 +52,13 @@ export async function syncUserAuraProgress(user) {
 	try {
 		const docSnap = await getDoc(userDocRef);
 		const localPhuoc = parseInt(localStorage.getItem('phuoc_count') || '0', 10);
+		const profile = getUserProfile(user);
+
 		if (docSnap.exists()) {
 			const cloudData = docSnap.data();
 			const cloudAura = cloudData.auraData || {};
 			const cloudPhuoc = cloudAura.phuocCount || 0;
+			const needsProfileUpdate = (cloudData.displayName !== profile.displayName || cloudData.photoURL !== profile.photoURL);
 
 			if (cloudPhuoc > localPhuoc) {
 				// Cloud lớn hơn, cập nhật local
@@ -39,14 +66,28 @@ export async function syncUserAuraProgress(user) {
 				localStorage.setItem('phuoc_count', cloudPhuoc);
 				const phuocDisplay = document.getElementById('phuoc-count-display');
 				if (phuocDisplay) phuocDisplay.innerText = cloudPhuoc;
-			} else if (localPhuoc > cloudPhuoc) {
-				// Local lớn hơn, cập nhật cloud
-				await setDoc(userDocRef, {
-					auraData: {
+
+				if (needsProfileUpdate) {
+					await setDoc(userDocRef, {
+						displayName: profile.displayName,
+						photoURL: profile.photoURL,
+						updatedAt: Date.now()
+					}, { merge: true });
+				}
+			} else if (localPhuoc > cloudPhuoc || needsProfileUpdate) {
+				// Local lớn hơn hoặc thông tin cá nhân thay đổi, cập nhật cloud
+				const updatePayload = {
+					displayName: profile.displayName,
+					photoURL: profile.photoURL,
+					updatedAt: Date.now()
+				};
+				if (localPhuoc > cloudPhuoc) {
+					updatePayload.auraData = {
 						phuocCount: localPhuoc,
 						updatedAt: Date.now()
-					}
-				}, { merge: true });
+					};
+				}
+				await setDoc(userDocRef, updatePayload, { merge: true });
 			}
 		} else {
 			// Tài liệu chưa tồn tại, tạo mới bằng dữ liệu local
@@ -55,8 +96,8 @@ export async function syncUserAuraProgress(user) {
 					phuocCount: localPhuoc,
 					updatedAt: Date.now()
 				},
-				displayName: user.displayName || (user.isAnonymous ? "Người chơi ẩn danh" : "Google Player"),
-				photoURL: user.photoURL || "",
+				displayName: profile.displayName,
+				photoURL: profile.photoURL,
 				updatedAt: Date.now()
 			}, { merge: true });
 		}
