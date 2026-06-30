@@ -556,11 +556,11 @@ function showGameOverModal() {
 		overlay.querySelector('.game-over-overlay > div')?.classList.remove('scale-95');
 	}
 
-	// Auto-submit score to leaderboard if authenticated (non-anonymous)
-	if (currentUser && !currentUser.isAnonymous) {
+	// Auto-submit score to leaderboard if authenticated
+	if (currentUser) {
 		submitScore({
 			uid: currentUser.uid,
-			displayName: currentUser.displayName || 'Người chơi',
+			displayName: currentUser.displayName || 'Anonymous',
 			photoURL: currentUser.photoURL || '',
 			score: state.score,
 			turns: state.turn,
@@ -658,7 +658,7 @@ async function _openLeaderboard() {
 				.join('');
 		}
 
-		if (currentUser && !currentUser.isAnonymous && state.score > 0) {
+		if (currentUser && state.score > 0) {
 			const rank = await fetchMyRank(state.score);
 			if (rank) {
 				const rankEl = document.createElement('div');
