@@ -223,12 +223,15 @@
                     <div class="flex items-center gap-3 mb-3 w-full">
                         <span class="text-3xl">😢</span>
                         <div class="flex-1">
-                            <h2 class="font-display font-bold text-lg sm:text-xl text-slate-800 dark:text-slate-100 select-none">
+                            <h2
+                                class="font-display font-bold text-lg sm:text-xl text-slate-800 dark:text-slate-100 select-none"
+                            >
                                 Hết chỗ rồi!
                             </h2>
                             <p class="font-sans text-xs text-slate-400 dark:text-slate-500">
-                                Điểm: <span id="final-score" class="font-bold text-slate-600 dark:text-slate-300">0</span>
-                                · Kỷ lục: <span id="final-high" class="font-bold">0</span>
+                                Điểm:
+                                <span id="final-score" class="font-bold text-slate-600 dark:text-slate-300">0</span> ·
+                                Kỷ lục: <span id="final-high" class="font-bold">0</span>
                             </p>
                         </div>
                     </div>
@@ -236,38 +239,94 @@
                     <!-- Session Stats Grid -->
                     <div class="grid grid-cols-3 gap-2 w-full mb-3" id="analytics-stats">
                         <div class="bg-white/30 dark:bg-slate-900/20 rounded-xl py-2 px-1.5 text-center">
-                            <span class="block text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Lượt</span>
-                            <span class="block font-display font-bold text-sm text-slate-700 dark:text-slate-200" id="stat-turns">0</span>
+                            <span
+                                class="block text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider"
+                                >Lượt</span
+                            >
+                            <span
+                                class="block font-display font-bold text-sm text-slate-700 dark:text-slate-200"
+                                id="stat-turns"
+                                >0</span
+                            >
                         </div>
                         <div class="bg-white/30 dark:bg-slate-900/20 rounded-xl py-2 px-1.5 text-center">
-                            <span class="block text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Xoá</span>
-                            <span class="block font-display font-bold text-sm text-slate-700 dark:text-slate-200" id="stat-cleared-final">0</span>
+                            <span
+                                class="block text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider"
+                                >Xoá</span
+                            >
+                            <span
+                                class="block font-display font-bold text-sm text-slate-700 dark:text-slate-200"
+                                id="stat-cleared-final"
+                                >0</span
+                            >
                         </div>
                         <div class="bg-white/30 dark:bg-slate-900/20 rounded-xl py-2 px-1.5 text-center">
-                            <span class="block text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Max</span>
-                            <span class="block font-display font-bold text-sm text-slate-700 dark:text-slate-200" id="stat-longest">0</span>
+                            <span
+                                class="block text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider"
+                                >Max</span
+                            >
+                            <span
+                                class="block font-display font-bold text-sm text-slate-700 dark:text-slate-200"
+                                id="stat-longest"
+                                >0</span
+                            >
                         </div>
                         <div class="bg-white/30 dark:bg-slate-900/20 rounded-xl py-2 px-1.5 text-center">
-                            <span class="block text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Hiệu suất</span>
-                            <span class="block font-display font-bold text-sm text-slate-700 dark:text-slate-200" id="stat-efficiency">—</span>
+                            <span
+                                class="block text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider"
+                                >Hiệu suất</span
+                            >
+                            <span
+                                class="block font-display font-bold text-sm text-slate-700 dark:text-slate-200"
+                                id="stat-efficiency"
+                                >—</span
+                            >
                         </div>
                         <div class="bg-white/30 dark:bg-slate-900/20 rounded-xl py-2 px-1.5 text-center">
-                            <span class="block text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">TB hàng</span>
-                            <span class="block font-display font-bold text-sm text-slate-700 dark:text-slate-200" id="stat-avgline">—</span>
+                            <span
+                                class="block text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider"
+                                >TB hàng</span
+                            >
+                            <span
+                                class="block font-display font-bold text-sm text-slate-700 dark:text-slate-200"
+                                id="stat-avgline"
+                                >—</span
+                            >
                         </div>
                         <div class="bg-white/30 dark:bg-slate-900/20 rounded-xl py-2 px-1.5 text-center">
-                            <span class="block text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Thời gian</span>
-                            <span class="block font-display font-bold text-sm text-slate-700 dark:text-slate-200" id="stat-time-final">00:00</span>
+                            <span
+                                class="block text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider"
+                                >Thời gian</span
+                            >
+                            <span
+                                class="block font-display font-bold text-sm text-slate-700 dark:text-slate-200"
+                                id="stat-time-final"
+                                >00:00</span
+                            >
                         </div>
                     </div>
 
                     <!-- Heatmap -->
                     <div class="w-full mb-3 bg-white/20 dark:bg-slate-900/10 rounded-xl p-2 flex flex-col items-center">
-                        <span class="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1.5">🔥 Bản đồ nhiệt</span>
-                        <canvas id="heatmap-canvas" width="162" height="162" class="rounded-lg w-[162px] h-[162px]"></canvas>
+                        <span
+                            class="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1.5"
+                            >🔥 Bản đồ nhiệt</span
+                        >
+                        <canvas
+                            id="heatmap-canvas"
+                            width="162"
+                            height="162"
+                            class="rounded-lg w-[162px] h-[162px]"
+                        ></canvas>
                     </div>
 
                     <div class="flex flex-col gap-2.5 w-full">
+                        <button
+                            class="w-full font-sans font-bold text-sm sm:text-base text-slate-700 dark:text-slate-200 bg-white/30 dark:bg-slate-800/30 border border-white/40 dark:border-slate-700/40 rounded-2xl py-2 hover:bg-white/50 dark:hover:bg-slate-800/50 transition-all cursor-pointer"
+                            id="share-replay-btn"
+                        >
+                            <span class="material-icons-round align-middle text-lg mr-1">share</span> Chia sẻ replay
+                        </button>
                         <button
                             class="w-full font-display font-bold text-sm sm:text-base text-white bg-gradient-to-r from-brand-pink to-brand-purple rounded-2xl py-2.5 shadow-brand hover:shadow-brand-hover hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 cursor-pointer"
                             id="restart-btn"

@@ -1,7 +1,7 @@
 import { state, resetState, cloneSnapshot, restoreSnapshot } from './core/state.js';
 import { generateNextBalls, spawnBalls, checkLines, checkAllNewBalls, calculateScore, analyzeMove } from './core/logic.js';
 import { findPath } from './core/pathfinding.js';
-import { clearHistory, logEvent } from './core/replay.js';
+import { clearHistory, logEvent, exportReplay, getHistory } from './core/replay.js';
 import { viewport } from './render/viewport.js';
 import { screenTransform } from './fx/camera.js';
 import { particleSystem } from './fx/particles.js';
@@ -14,6 +14,13 @@ import { analytics } from './ui/analytics.js';
 import { profiler } from './ui/profiler.js';
 import { Sound } from './audio/sound.js';
 
+// ── Firebase / Online ──
+import { auth } from '../../shared/firebase.js';
+import { initSharedAuth, showAuthModal, showToast } from '../../shared/auth.js';
+import { submitScore, fetchLeaderboard, fetchMyRank } from './storage/leaderboard.js';
+import { cloudSave, cloudLoad, cloudDelete, detectConflict } from './storage/save.js';
+import { shareReplay, verifyReplay } from './storage/replay-share.js';
+
 // Global variables for movement animation
 let isMoving = false;
 let movePath = [];
@@ -22,6 +29,9 @@ let animatedBall = null; // Temporary ball used for rendering during movement pa
 
 // Global variable for path tracking
 window.currentPath = null;
+
+// Firebase user reference
+let currentUser = null;
 
 function startTimer() {
 	if (state.timerInterval) return;
@@ -105,7 +115,38 @@ function init() {
 		hud.update();
 	}
 
-	// 6. Start Loop
+	// 7. Initialize Firebase Auth + Online features
+	initSharedAuth({
+		onUserChanged: (user) => {
+			currentUser = user;
+			_updateUserAvatar(user);
+			if (!user.isAnonymous) {
+				_autoCloudSync(user);
+			}
+		},
+		syncProgress: (user) => {
+			if (!user.isAnonymous && !state.gameOver) {
+				_autoCloudSync(user);
+			}
+		},
+	});
+
+	// 8. Wire leaderboard button
+	const leaderboardBtn = document.getElementById('leaderboard-btn');
+	if (leaderboardBtn) {
+		leaderboardBtn.addEventListener('click', () => {
+			_openLeaderboard();
+		});
+	}
+
+	// 9. Wire share replay button (delegation for dynamic buttons)
+	document.addEventListener('click', (e) => {
+		if (e.target.closest('#share-replay-btn')) {
+			_handleShareReplay();
+		}
+	});
+
+	// 10. Start Loop
 	lastTime = performance.now();
 	requestAnimationFrame(gameLoop);
 }
@@ -510,11 +551,130 @@ function showGameOverModal() {
 		overlay.classList.add('visible');
 		overlay.querySelector('.game-over-overlay > div')?.classList.remove('scale-95');
 	}
+
+	// Auto-submit score to leaderboard if authenticated (non-anonymous)
+	if (currentUser && !currentUser.isAnonymous) {
+		submitScore({
+			uid: currentUser.uid,
+			displayName: currentUser.displayName || 'Người chơi',
+			photoURL: currentUser.photoURL || '',
+			score: state.score,
+			turns: state.turn,
+			ballsCleared: state.ballsCleared,
+			longestLine: state.longestLine,
+			replaySeed: state.seed,
+			replayCode: exportReplay(),
+		}).catch((err) => console.error('Score submit error:', err));
+	}
 }
 
 function hideGameOverModal() {
 	const overlay = document.getElementById('game-over-overlay');
 	if (overlay) {
 		overlay.classList.remove('visible');
+	}
+}
+
+// ── Online Feature Helpers ──
+
+function _updateUserAvatar(user) {
+	const icon = document.getElementById('user-avatar-icon');
+	const img = document.getElementById('user-avatar-img');
+	if (!icon || !img) return;
+
+	if (user.isAnonymous) {
+		icon.style.display = 'inline';
+		img.style.display = 'none';
+		img.src = '';
+	} else {
+		icon.style.display = 'none';
+		img.style.display = 'block';
+		img.src = user.photoURL || '';
+	}
+}
+
+async function _autoCloudSync(user) {
+	try {
+		const cloudData = await cloudLoad(user.uid);
+		if (cloudData && cloudData.exists()) {
+			const remote = cloudData.data();
+			const local = cloneSnapshot();
+			const conflict = detectConflict(local, remote);
+			if (conflict) {
+				// Keep whichever has higher score
+				if (remote.score > state.score) {
+					restoreSnapshot(remote);
+					hud.update();
+					challenge.update();
+					console.log('Synced from cloud (higher score)');
+				}
+			}
+		}
+		// Save current progress to cloud
+		await cloudSave(cloneSnapshot());
+	} catch (err) {
+		console.error('Cloud sync error:', err);
+	}
+}
+
+async function _openLeaderboard() {
+	const overlay = document.getElementById('leaderboard-overlay');
+	const list = document.getElementById('leaderboard-list');
+	if (!overlay || !list) return;
+
+	overlay.classList.add('visible');
+	list.innerHTML = '<div class="text-center text-sm text-slate-400 py-4">⏳ Đang tải...</div>';
+
+	try {
+		const entries = await fetchLeaderboard(10);
+		if (entries.length === 0) {
+			list.innerHTML =
+				'<div class="text-center text-sm text-slate-400 py-4">🏆 Chưa có điểm nào. Hãy là người đầu tiên!</div>';
+		} else {
+			list.innerHTML = entries
+				.map(
+					(entry, i) => `
+					<div class="flex items-center gap-2.5 bg-white/40 dark:bg-slate-800/30 rounded-xl px-3.5 py-2.5 border border-white/30 dark:border-slate-700/30 transition-all hover:bg-white/60 dark:hover:bg-slate-800/40">
+						<span class="font-display font-bold text-sm w-6 text-center ${i === 0
+							? 'text-yellow-500'
+							: i === 1
+								? 'text-slate-400'
+								: i === 2
+									? 'text-amber-600'
+									: 'text-slate-500'
+						}">${i + 1}</span>
+						<img class="w-7 h-7 rounded-full bg-slate-300 dark:bg-slate-700 object-cover" src="${entry.photoURL || ''
+						}" alt="" onerror="this.style.display='none'" />
+						<span class="flex-1 font-semibold text-sm text-slate-700 dark:text-slate-200 truncate">${entry.displayName || 'Ẩn danh'
+						}</span>
+						<span class="font-display font-bold text-sm text-brand-pink dark:text-brand-purple">${entry.score}</span>
+					</div>
+				`
+				)
+				.join('');
+		}
+
+		if (currentUser && !currentUser.isAnonymous && state.score > 0) {
+			const rank = await fetchMyRank(state.score);
+			if (rank) {
+				const rankEl = document.createElement('div');
+				rankEl.className =
+					'text-center text-xs text-slate-500 dark:text-slate-400 pt-2 border-t border-white/30 dark:border-slate-700/30 mt-2';
+				rankEl.textContent = `📍 Bạn đang đứng hạng #${rank}`;
+				list.appendChild(rankEl);
+			}
+		}
+	} catch (err) {
+		console.error('Leaderboard fetch error:', err);
+		list.innerHTML = '<div class="text-center text-sm text-red-400 py-4">❌ Không thể tải bảng xếp hạng</div>';
+	}
+}
+
+function _handleShareReplay() {
+	const code = shareReplay();
+	if (code) {
+		showToast('📋 Đã sao chép mã replay!');
+	} else {
+		showToast('❌ Không có replay để chia sẻ');
 	}
 }
