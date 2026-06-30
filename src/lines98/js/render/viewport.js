@@ -4,6 +4,16 @@ import { spriteCache } from './spritecache.js';
 import { screenTransform } from '../fx/camera.js';
 import { particleSystem } from '../fx/particles.js';
 
+/**
+ * Convert hex color (#RRGGBB) to rgba string with given alpha.
+ */
+function hexToRgba(hex, alpha) {
+	const r = parseInt(hex.slice(1, 3), 16);
+	const g = parseInt(hex.slice(3, 5), 16);
+	const b = parseInt(hex.slice(5, 7), 16);
+	return `rgba(${r},${g},${b},${alpha})`;
+}
+
 export const viewport = {
 	canvas: null,
 	ctx: null,
@@ -139,36 +149,67 @@ export const viewport = {
 
 				// Draw hover cell highlight
 				if (this.hoveredCell && this.hoveredCell.row === r && this.hoveredCell.col === c) {
+					const theme = THEMES[state.theme] || THEMES.classic;
+					const cellBallColor = state.board[r][c] > 0
+						? (theme.balls[state.board[r][c] - 1]?.main || '#FF7597')
+						: '#FF7597';
+
 					this.ctx.save();
-					// Glow fill
+
+					// Stronger glow fill
 					this.ctx.beginPath();
 					this.ctx.roundRect(x, y, size, size, 8);
 					const grad = this.ctx.createRadialGradient(
 						x + size / 2, y + size / 2, 2,
-						x + size / 2, y + size / 2, size * 0.7
+						x + size / 2, y + size / 2, size * 0.9
 					);
-					grad.addColorStop(0, 'rgba(255, 117, 151, 0.25)');
-					grad.addColorStop(1, 'rgba(255, 117, 151, 0.05)');
+					grad.addColorStop(0, hexToRgba(cellBallColor, 0.35));
+					grad.addColorStop(0.5, hexToRgba(cellBallColor, 0.12));
+					grad.addColorStop(1, hexToRgba(cellBallColor, 0.03));
 					this.ctx.fillStyle = grad;
 					this.ctx.fill();
 
-					// Glow border
-					const pulse = 0.5 + Math.sin(this.pathPulseTime * 3) * 0.3;
+					// Thick pulsing border
+					const pulse = 0.6 + Math.sin(this.pathPulseTime * 3) * 0.4;
 					this.ctx.beginPath();
 					this.ctx.roundRect(x, y, size, size, 8);
-					this.ctx.strokeStyle = `rgba(255, 117, 151, ${0.25 * pulse})`;
-					this.ctx.lineWidth = 2;
+					this.ctx.strokeStyle = hexToRgba(cellBallColor, 0.5 * pulse);
+					this.ctx.lineWidth = 2.5;
+					this.ctx.shadowColor = hexToRgba(cellBallColor, 0.8);
+					this.ctx.shadowBlur = 16;
 					this.ctx.stroke();
 
-					// Extra outer glow
-					this.ctx.shadowColor = 'rgba(255, 117, 151, 0.5)';
-					this.ctx.shadowBlur = 12;
+					// Outer aura ring
+					this.ctx.shadowColor = hexToRgba(cellBallColor, 0.6);
+					this.ctx.shadowBlur = 24;
+					this.ctx.globalAlpha = 0.2 + Math.sin(this.pathPulseTime * 3) * 0.1;
 					this.ctx.beginPath();
 					this.ctx.roundRect(x, y, size, size, 8);
-					this.ctx.strokeStyle = 'rgba(255, 117, 151, 0.15)';
+					this.ctx.strokeStyle = hexToRgba(cellBallColor, 0.35);
 					this.ctx.lineWidth = 1;
 					this.ctx.stroke();
 					this.ctx.restore();
+
+					// Corner sparkles
+					const sparkle = Math.sin(this.pathPulseTime * 4) * 0.5 + 0.5;
+					if (sparkle > 0.6) {
+						this.ctx.save();
+						this.ctx.globalAlpha = (sparkle - 0.6) * 2;
+						const cs = size * 0.14;
+						const corners = [
+							[x, y], [x + size - cs, y],
+							[x, y + size - cs], [x + size - cs, y + size - cs]
+						];
+						for (const [cx, cy] of corners) {
+							this.ctx.beginPath();
+							this.ctx.roundRect(cx, cy, cs, cs, 3);
+							this.ctx.fillStyle = cellBallColor;
+							this.ctx.shadowColor = cellBallColor;
+							this.ctx.shadowBlur = 10;
+							this.ctx.fill();
+						}
+						this.ctx.restore();
+					}
 				}
 			}
 		}
@@ -196,8 +237,8 @@ export const viewport = {
 				// Hover lift effect
 				const isHovered = this.hoveredCell && this.hoveredCell.row === r && this.hoveredCell.col === c;
 				if (isHovered) {
-					scale *= 1.12;
-					offsetY = -3;
+					scale *= 1.18;
+					offsetY = -6;
 				}
 
 				// Danger Alert: shake + desaturate if next spawn blocks crucial path
@@ -214,11 +255,44 @@ export const viewport = {
 				const ballSprite = spriteCache.balls[color]?.[stateIndex];
 				if (!ballSprite) continue;
 
-				// Hover glow
+				// Hover glow — use ball's own theme color
 				if (isHovered) {
+					const theme = THEMES[state.theme] || THEMES.classic;
+					const ballColor = theme.balls[color - 1];
+					const glowColor = ballColor?.glow || 'rgba(255, 117, 151, 0.6)';
+					const hoverColor = ballColor?.main || '#FF7597';
+
 					this.ctx.save();
-					this.ctx.shadowColor = 'rgba(255, 117, 151, 0.6)';
-					this.ctx.shadowBlur = 20;
+
+					// Outer glow
+					this.ctx.shadowColor = glowColor;
+					this.ctx.shadowBlur = 28;
+
+					this.ctx.drawImage(
+						ballSprite,
+						x + offset + offsetX,
+						y + offset + offsetY,
+						ballWidth,
+						ballWidth
+					);
+					this.drawCallCount++;
+
+					// Animated ring highlight
+					this.ctx.restore();
+					this.ctx.save();
+					const ringRadius = ballWidth * (0.65 + Math.sin(this.pathPulseTime * 3) * 0.08);
+					const cx = x + offset + offsetX + ballWidth / 2;
+					const cy = y + offset + offsetY + ballWidth / 2;
+					this.ctx.beginPath();
+					this.ctx.arc(cx, cy, ringRadius, 0, Math.PI * 2);
+					this.ctx.strokeStyle = hoverColor;
+					this.ctx.globalAlpha = 0.35 + Math.sin(this.pathPulseTime * 3) * 0.15;
+					this.ctx.lineWidth = 2.5;
+					this.ctx.shadowColor = hoverColor;
+					this.ctx.shadowBlur = 12;
+					this.ctx.stroke();
+					this.ctx.restore();
+					continue; // Skip the normal draw below
 				}
 
 				this.ctx.drawImage(
@@ -230,11 +304,6 @@ export const viewport = {
 				);
 				this.drawCallCount++;
 
-				if (isHovered) {
-					this.ctx.restore();
-				}
-
-				// Desaturate overlay for danger alert balls
 				if (isNextSpawnCrucial) {
 					this.ctx.save();
 					this.ctx.globalAlpha = 0.35;

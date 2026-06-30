@@ -5,15 +5,15 @@
  * @param {{ board, balls, particles, audio, ambient, hud, animation }} config
  */
 export class Theme {
-  constructor(config) {
-    this.board = config.board;
-    this.balls = config.balls;
-    this.particles = config.particles;
-    this.audio = config.audio;
-    this.ambient = config.ambient;
-    this.hud = config.hud;
-    this.animation = config.animation;
-  }
+	constructor(config) {
+		this.board = config.board;
+		this.balls = config.balls;
+		this.particles = config.particles;
+		this.audio = config.audio;
+		this.ambient = config.ambient;
+		this.hud = config.hud;
+		this.animation = config.animation;
+	}
 }
 
 export const SIZE = 9;
@@ -31,7 +31,7 @@ export const LS_SAVE = 'lines98_save';
 export const LS_CHECKPOINT = 'lines98_checkpoint_';
 
 function _theme(config) {
-  return new Theme(config);
+	return new Theme(config);
 }
 
 export const THEMES = {
