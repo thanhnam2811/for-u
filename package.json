@@ -1,12 +1,14 @@
 {
   "name": "for-u",
   "version": "1.0.0",
+  "type": "module",
   "description": "Góc Nhỏ Phép Thuật - Magic Playground",
   "main": "index.html",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "node tests/golden-test.mjs"
   },
   "keywords": [],
   "author": "",

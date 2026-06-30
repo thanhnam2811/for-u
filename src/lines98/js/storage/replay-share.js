@@ -3,6 +3,7 @@
  * Wraps exportReplay/importReplay with clipboard and formatting helpers.
  */
 import { exportReplay, importReplay } from '../core/replay.js';
+import { simulateGame } from '../core/simulator.js';
 import { state } from '../core/state.js';
 
 /**
@@ -38,38 +39,37 @@ export async function shareReplay() {
 }
 
 /**
- * Verify a replay by simulating it.
- * Runs through the event history and checks that the final score matches.
+ * Verify a replay by running it through the headless simulator.
  *
  * @param {Array} events - Event history array
+ * @param {number} initialSeed - The game's initial seed
  * @param {number} claimedScore - The score to verify against
- * @returns {{ valid: boolean, computedScore: number, reason?: string }}
+ * @returns {{ valid: boolean, computedScore: number, boardHash: string, errors: string[], reason?: string }}
  */
-export function verifyReplay(events, claimedScore) {
-	// We do basic structure + score consistency checks
-	// Full headless simulation can be added later
+export function verifyReplay(events, initialSeed, claimedScore) {
 	if (!Array.isArray(events) || events.length === 0) {
-		return { valid: false, computedScore: 0, reason: 'Empty replay' };
+		return { valid: false, computedScore: 0, boardHash: '', errors: ['Empty replay'], reason: 'Empty replay' };
 	}
 
-	// Check that there's a START event
 	const hasStart = events.some(e => e.type === 'START');
 	if (!hasStart) {
-		return { valid: false, computedScore: 0, reason: 'Missing START event' };
+		return { valid: false, computedScore: 0, boardHash: '', errors: ['Missing START event'], reason: 'Missing START event' };
 	}
 
-	// Crude score approximation from CLEAR events
-	let computedScore = 0;
-	for (const e of events) {
-		if (e.type === 'CLEAR' && e.scoreDelta) {
-			computedScore += e.scoreDelta;
-		}
-	}
+	const result = simulateGame(initialSeed || 0, events);
 
-	const valid = Math.abs(computedScore - claimedScore) <= 5; // Allow small rounding
+	const scoreMatch = Math.abs(result.score - (claimedScore || 0)) <= 1;
+	const reason = !scoreMatch
+		? `Score mismatch: simulated ${result.score} vs claimed ${claimedScore}`
+		: result.errors.length > 0
+			? `Simulation errors: ${result.errors.join('; ')}`
+			: undefined;
+
 	return {
-		valid,
-		computedScore,
-		reason: valid ? undefined : `Score mismatch: computed ${computedScore}, claimed ${claimedScore}`,
+		valid: result.valid && scoreMatch,
+		computedScore: result.score,
+		boardHash: result.boardHash,
+		errors: result.errors,
+		reason,
 	};
 }
