@@ -81,16 +81,21 @@ export const modal = {
 				'w-full flex items-center gap-3 p-3 rounded-2xl border border-slate-200/40 dark:border-slate-800/40 bg-white/30 dark:bg-slate-900/20 hover:bg-white/60 dark:hover:bg-slate-900/40 hover:border-brand-pink dark:hover:border-brand-purple transition-all cursor-pointer text-left';
 			card.dataset.theme = key;
 
-			// Color swatches row
+			// Color swatches row (actual ball sprites)
 			const swatches = document.createElement('div');
 			swatches.className = 'flex gap-1 flex-shrink-0';
-			for (const ball of theme.balls) {
-				const dot = document.createElement('span');
-				dot.className = 'w-4 h-4 rounded-full border border-white/30 dark:border-slate-700/30';
-				dot.style.background =
-					`radial-gradient(circle at 35% 30%, ${ball.light}, ${ball.main} 60%, ${ball.dark})`;
-				swatches.appendChild(dot);
-			}
+			theme.balls.forEach((_, i) => {
+				const sprite = spriteCache.balls[i + 1]?.[2];
+				if (!sprite) return;
+
+				const canvas = document.createElement('canvas');
+				canvas.className = 'rounded-full border border-white/20 dark:border-slate-700/20';
+				canvas.width = 18;
+				canvas.height = 18;
+				const ctx = canvas.getContext('2d');
+				ctx.drawImage(sprite, 0, 0, 18, 18);
+				swatches.appendChild(canvas);
+			});
 
 			// Label + checkmark
 			const label = document.createElement('div');

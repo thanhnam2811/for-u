@@ -1,5 +1,6 @@
 import { state } from '../core/state.js';
 import { THEMES } from '../core/constants.js';
+import { spriteCache } from '../render/spritecache.js';
 import { Sound } from '../audio/sound.js';
 
 export const hud = {
@@ -134,17 +135,18 @@ export const hud = {
 		if (!container) return;
 
 		container.innerHTML = '';
-		const theme = THEMES[state.theme] || THEMES.classic;
 
 		state.nextBalls.forEach(ball => {
-			const c = theme.balls[ball.color - 1];
-			const main = c?.main || '#888';
-			const light = c?.light || '#aaa';
+			const sprite = spriteCache.balls[ball.color]?.[2];
+			if (!sprite) return;
 
-			const dot = document.createElement('div');
-			dot.className = 'w-5 h-5 rounded-full shadow-sm transition-all duration-300';
-			dot.style.background = `radial-gradient(circle at 35% 35%, ${light}, ${main})`;
-			container.appendChild(dot);
+			const canvas = document.createElement('canvas');
+			canvas.className = 'drop-shadow-sm';
+			canvas.width = 22;
+			canvas.height = 22;
+			const ctx = canvas.getContext('2d');
+			ctx.drawImage(sprite, 0, 0, 22, 22);
+			container.appendChild(canvas);
 		});
 	}
 };
