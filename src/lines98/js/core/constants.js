@@ -56,5 +56,33 @@ export const THEMES = {
       { main: '#F0F0F0', light: '#FFFFFF', dark: '#C0C0C0', glow: 'rgba(240, 240, 240, 0.6)' },
     ],
     animation: { pulseSpeed: 1.4, shakePower: 1.2, glowIntensity: 1.0 }
+  },
+  galaxy: {
+    name: 'Galaxy Space 🌌',
+    board: { cellBg: 'rgba(10, 6, 30, 0.45)', gridLine: 'rgba(90, 60, 180, 0.35)' },
+    balls: [
+      { main: '#FF6B9D', light: '#FFB3CC', dark: '#C44070', glow: 'rgba(255, 107, 157, 0.5)' },
+      { main: '#7B68EE', light: '#B0A5F5', dark: '#4E3DC7', glow: 'rgba(123, 104, 238, 0.5)' },
+      { main: '#00FA9A', light: '#66FFC0', dark: '#00B86B', glow: 'rgba(0, 250, 154, 0.5)' },
+      { main: '#FFD700', light: '#FFE866', dark: '#C8A800', glow: 'rgba(255, 215, 0, 0.5)' },
+      { main: '#DA70D6', light: '#EBA8E9', dark: '#B04DAC', glow: 'rgba(218, 112, 214, 0.5)' },
+      { main: '#48D1CC', light: '#8CE8E4', dark: '#2EAAA5', glow: 'rgba(72, 209, 204, 0.5)' },
+      { main: '#F0E6FF', light: '#FFFFFF', dark: '#C4B3E6', glow: 'rgba(240, 230, 255, 0.5)' },
+    ],
+    animation: { pulseSpeed: 1.1, shakePower: 0.9, glowIntensity: 0.9 }
+  },
+  zen: {
+    name: 'Zen Garden 🪷',
+    board: { cellBg: 'rgba(245, 235, 220, 0.3)', gridLine: 'rgba(180, 160, 130, 0.35)' },
+    balls: [
+      { main: '#C0392B', light: '#E67A6E', dark: '#8E2B1E', glow: 'rgba(192, 57, 43, 0.4)' },
+      { main: '#2E86C1', light: '#7FB3E0', dark: '#1B5C8A', glow: 'rgba(46, 134, 193, 0.4)' },
+      { main: '#27AE60', light: '#72D092', dark: '#1A7A42', glow: 'rgba(39, 174, 96, 0.4)' },
+      { main: '#D4AC0D', light: '#E6CE6E', dark: '#9F7E0A', glow: 'rgba(212, 172, 13, 0.4)' },
+      { main: '#8E44AD', light: '#BC83D1', dark: '#642E7D', glow: 'rgba(142, 68, 173, 0.4)' },
+      { main: '#D35400', light: '#E8944D', dark: '#9F3E00', glow: 'rgba(211, 84, 0, 0.4)' },
+      { main: '#7F8C8D', light: '#B0BABC', dark: '#566264', glow: 'rgba(127, 140, 141, 0.4)' },
+    ],
+    animation: { pulseSpeed: 0.8, shakePower: 0.7, glowIntensity: 0.5 }
   }
 };

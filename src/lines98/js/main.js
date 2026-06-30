@@ -8,6 +8,10 @@ import { particleSystem } from './fx/particles.js';
 import { tweenManager } from './fx/tween.js';
 import { scheduler } from './core/scheduler.js';
 import { hud } from './ui/hud.js';
+import { modal } from './ui/modal.js';
+import { challenge } from './ui/challenge.js';
+import { analytics } from './ui/analytics.js';
+import { profiler } from './ui/profiler.js';
 import { Sound } from './audio/sound.js';
 
 // Global variables for movement animation
@@ -20,450 +24,497 @@ let animatedBall = null; // Temporary ball used for rendering during movement pa
 window.currentPath = null;
 
 function startTimer() {
-  if (state.timerInterval) return;
-  state.timerInterval = setInterval(() => {
-    if (!state.gameOver && !state.animating && !isMoving) {
-      state.elapsedTime++;
-      hud.update();
-    }
-  }, 1000);
+	if (state.timerInterval) return;
+	state.timerInterval = setInterval(() => {
+		if (!state.gameOver && !state.animating && !isMoving) {
+			state.elapsedTime++;
+			hud.update();
+		}
+	}, 1000);
 }
 
 function stopTimer() {
-  if (state.timerInterval) {
-    clearInterval(state.timerInterval);
-    state.timerInterval = null;
-  }
+	if (state.timerInterval) {
+		clearInterval(state.timerInterval);
+		state.timerInterval = null;
+	}
 }
 
 function loadSavedGame() {
-  const raw = localStorage.getItem('lines98_save');
-  if (!raw) return false;
-  try {
-    const data = JSON.parse(raw);
-    if (!data.board || data.board.length === 0) return false;
-    restoreSnapshot(data);
-    if (data.undoStack) {
-      state.undoStack = data.undoStack.map(snap => ({ ...snap }));
-    }
-    return true;
-  } catch (err) {
-    console.error("Error loading saved game:", err);
-    return false;
-  }
+	const raw = localStorage.getItem('lines98_save');
+	if (!raw) return false;
+	try {
+		const data = JSON.parse(raw);
+		if (!data.board || data.board.length === 0) return false;
+		restoreSnapshot(data);
+		if (data.undoStack) {
+			state.undoStack = data.undoStack.map(snap => ({ ...snap }));
+		}
+		return true;
+	} catch (err) {
+		console.error("Error loading saved game:", err);
+		return false;
+	}
 }
 
 function init() {
-  console.log("Lines 98 Remastered starting up...");
+	console.log("Lines 98 Remastered starting up...");
 
-  // 1. Initialize Viewport (Canvas) & HUD
-  const canvas = document.createElement('canvas');
-  canvas.id = 'game-canvas';
-  canvas.className = 'w-full h-full block cursor-pointer select-none';
-  
-  const board = document.getElementById('game-board');
-  if (board) {
-    board.innerHTML = '';
-    board.appendChild(canvas);
-  }
+	// 1. Initialize Viewport (Canvas) & HUD
+	const canvas = document.createElement('canvas');
+	canvas.id = 'game-canvas';
+	canvas.className = 'w-full h-full block cursor-pointer select-none';
 
-  viewport.initialize(canvas);
-  hud.initialize();
+	const board = document.getElementById('game-board');
+	if (board) {
+		board.innerHTML = '';
+		board.appendChild(canvas);
+	}
 
-  // 2. Setup Responsive Resize
-  window.addEventListener('resize', () => {
-    viewport.resize();
-    hud.update();
-  });
+	viewport.initialize(canvas);
+	hud.initialize();
+	modal.initialize();
+	challenge.initialize();
+	profiler.initialize();
 
-  // 3. Setup Input Event Listeners
-  setupInputListeners(canvas);
+	// 2. Setup Responsive Resize
+	window.addEventListener('resize', () => {
+		viewport.resize();
+		hud.update();
+	});
 
-  // 4. Setup Controls
-  setupControlListeners();
+	// 3. Setup Input Event Listeners
+	setupInputListeners(canvas);
 
-  // 5. Initialize Audio
-  Sound.init();
+	// 4. Setup Controls
+	setupControlListeners();
 
-  // 6. Load or Start New Game
-  const savedHigh = localStorage.getItem('lines98_highScore');
-  if (savedHigh) {
-    state.highScore = parseInt(savedHigh, 10) || 0;
-  }
-  
-  if (!loadSavedGame()) {
-    startNewGame();
-  } else {
-    startTimer();
-    hud.update();
-  }
+	// 5. Initialize Audio
+	Sound.init();
 
-  // 6. Start Loop
-  lastTime = performance.now();
-  requestAnimationFrame(gameLoop);
+	// 6. Load or Start New Game
+	const savedHigh = localStorage.getItem('lines98_highScore');
+	if (savedHigh) {
+		state.highScore = parseInt(savedHigh, 10) || 0;
+	}
+
+	if (!loadSavedGame()) {
+		startNewGame();
+	} else {
+		startTimer();
+		hud.update();
+	}
+
+	// 6. Start Loop
+	lastTime = performance.now();
+	requestAnimationFrame(gameLoop);
 }
 
 let lastTime = 0;
 function gameLoop(now) {
-  let dt = now - lastTime;
-  if (dt > 100) dt = 16.67; // Cap spikes (e.g. background tab)
-  lastTime = now;
+	let dt = now - lastTime;
+	if (dt > 100) dt = 16.67; // Cap spikes (e.g. background tab)
+	lastTime = now;
 
-  // Update game loop schedulers
-  scheduler.update(dt);
-  tweenManager.update(dt);
-  particleSystem.update(dt);
-  screenTransform.update(dt);
+	// Update game loop schedulers
+	scheduler.update(dt);
+	tweenManager.update(dt);
+	particleSystem.update(dt);
+	screenTransform.update(dt);
 
-  // Draw viewport frame
-  viewport.draw(dt);
+	// Draw viewport frame
+	viewport.draw(dt);
 
-  requestAnimationFrame(gameLoop);
+	// Update profiler (after draw to capture full frame time)
+	profiler.update(dt, now);
+
+	requestAnimationFrame(gameLoop);
 }
 
 function startNewGame() {
-  const seed = Math.floor(Math.random() * 2147483647);
-  resetState(seed);
-  clearHistory();
-  particleSystem.clear();
-  tweenManager.clear();
-  screenTransform.reset();
+	const seed = Math.floor(Math.random() * 2147483647);
+	resetState(seed);
+	clearHistory();
+	particleSystem.clear();
+	tweenManager.clear();
+	screenTransform.reset();
 
-  // Log start
-  logEvent({ type: 'START', seed });
+	// Activate daily challenge
+	_activateChallenge();
 
-  // Initial spawn
-  const spawned = spawnBalls(5);
-  logEvent({ type: 'SPAWN', balls: spawned });
+	// Log start
+	logEvent({ type: 'START', seed });
 
-  // Pre-generate next balls
-  generateNextBalls();
+	// Initial spawn
+	const spawned = spawnBalls(5);
+	logEvent({ type: 'SPAWN', balls: spawned });
 
-  // Update UI HUD
-  hud.update();
-  isMoving = false;
-  window.currentPath = null;
-  startTimer();
+	// Pre-generate next balls
+	generateNextBalls();
+
+	// Update UI HUD
+	hud.update();
+	isMoving = false;
+	window.currentPath = null;
+	startTimer();
+}
+
+function _activateChallenge() {
+	const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+
+	// Reset goals if it's a new day or challenge not yet active
+	if (state.challenge.dateStr !== today) {
+		state.challenge.dateStr = today;
+		state.challenge.goals.forEach(g => { g.progress = 0; g.done = false; });
+		state.challenge.completed = false;
+	}
+	state.challenge.active = true;
+
+	challenge.initialize();
+	challenge.update();
 }
 
 function setupInputListeners(canvas) {
-  // Translate mouse/touch to grid index
-  const getCellFromEvent = (e) => {
-    const rect = canvas.getBoundingClientRect();
-    let clientX, clientY;
+	// Translate mouse/touch to grid index
+	const getCellFromEvent = (e) => {
+		const rect = canvas.getBoundingClientRect();
+		let clientX, clientY;
 
-    if (e.touches && e.touches.length > 0) {
-      clientX = e.touches[0].clientX;
-      clientY = e.touches[0].clientY;
-    } else {
-      clientX = e.clientX;
-      clientY = e.clientY;
-    }
+		if (e.touches && e.touches.length > 0) {
+			clientX = e.touches[0].clientX;
+			clientY = e.touches[0].clientY;
+		} else {
+			clientX = e.clientX;
+			clientY = e.clientY;
+		}
 
-    const x = clientX - rect.left;
-    const y = clientY - rect.top;
-    return viewport.getCellFromPixels(x, y);
-  };
+		const x = clientX - rect.left;
+		const y = clientY - rect.top;
+		return viewport.getCellFromPixels(x, y);
+	};
 
-  const handlePointerMove = (e) => {
-    if (state.gameOver || state.animating || isMoving) return;
-    const cell = getCellFromEvent(e);
-    
-    if (cell) {
-      viewport.hoveredCell = cell;
+	const handlePointerMove = (e) => {
+		if (state.gameOver || state.animating || isMoving) return;
+		const cell = getCellFromEvent(e);
 
-      // Dynamic path preview (P0)
-      if (state.selected) {
-        if (state.selected.row === cell.row && state.selected.col === cell.col) {
-          window.currentPath = null;
-        } else {
-          window.currentPath = findPath(state.selected.row, state.selected.col, cell.row, cell.col);
-        }
-      }
-    } else {
-      viewport.hoveredCell = null;
-      window.currentPath = null;
-    }
-  };
+		if (cell) {
+			viewport.hoveredCell = cell;
 
-  const handlePointerDown = (e) => {
-    e.preventDefault();
-    if (state.gameOver || state.animating || isMoving) return;
+			// Dynamic path preview (P0)
+			if (state.selected) {
+				if (state.selected.row === cell.row && state.selected.col === cell.col) {
+					window.currentPath = null;
+				} else {
+					window.currentPath = findPath(state.selected.row, state.selected.col, cell.row, cell.col);
+				}
+			}
+		} else {
+			viewport.hoveredCell = null;
+			window.currentPath = null;
+		}
+	};
 
-    const cell = getCellFromEvent(e);
-    if (!cell) return;
+	const handlePointerDown = (e) => {
+		e.preventDefault();
+		if (state.gameOver || state.animating || isMoving) return;
 
-    const color = state.board[cell.row][cell.col];
+		const cell = getCellFromEvent(e);
+		if (!cell) return;
 
-    if (color > 0) {
-      // 1. Select Ball
-      if (state.selected && state.selected.row === cell.row && state.selected.col === cell.col) {
-        // Click same ball → deselect
-        state.selected = null;
-        window.currentPath = null;
-        Sound.deselect();
-        return;
-      }
-      state.selected = { row: cell.row, col: cell.col };
-      window.currentPath = null;
-      Sound.select();
-      // Add a small scale bounce tween on selection
-      tweenManager.killTweensOf(state.selected);
-      // Selected pulse is handled continuously inside viewport
-    } else if (state.selected) {
-      // 2. Move Ball (if path exists)
-      const path = findPath(state.selected.row, state.selected.col, cell.row, cell.col);
-      if (path) {
-        executeMovement(path);
-      } else {
-        Sound.noPath();
-        // Shake the cell to show blocked path
-        state.selected = null;
-        window.currentPath = null;
-      }
-    }
-  };
+		const color = state.board[cell.row][cell.col];
 
-  canvas.addEventListener('mousemove', handlePointerMove);
-  canvas.addEventListener('mousedown', handlePointerDown);
+		if (color > 0) {
+			// 1. Select Ball
+			if (state.selected && state.selected.row === cell.row && state.selected.col === cell.col) {
+				// Click same ball → deselect
+				state.selected = null;
+				window.currentPath = null;
+				Sound.deselect();
+				return;
+			}
+			state.selected = { row: cell.row, col: cell.col };
+			window.currentPath = null;
+			Sound.select();
+			// Add a small scale bounce tween on selection
+			tweenManager.killTweensOf(state.selected);
+			// Selected pulse is handled continuously inside viewport
+		} else if (state.selected) {
+			// 2. Move Ball (if path exists)
+			const path = findPath(state.selected.row, state.selected.col, cell.row, cell.col);
+			if (path) {
+				executeMovement(path);
+			} else {
+				Sound.noPath();
+				// Shake the cell to show blocked path
+				state.selected = null;
+				window.currentPath = null;
+			}
+		}
+	};
 
-  canvas.addEventListener('touchmove', handlePointerMove);
-  canvas.addEventListener('touchstart', handlePointerDown);
+	canvas.addEventListener('mousemove', handlePointerMove);
+	canvas.addEventListener('mousedown', handlePointerDown);
+
+	canvas.addEventListener('touchmove', handlePointerMove);
+	canvas.addEventListener('touchstart', handlePointerDown);
 }
 
 function executeMovement(path) {
-  isMoving = true;
-  state.animating = true;
-  window.currentPath = null;
+	isMoving = true;
+	state.animating = true;
+	window.currentPath = null;
 
-  // Preserve state for undo
-  state.undoStack = [cloneSnapshot()];
+	// Preserve state for undo
+	state.undoStack = [cloneSnapshot()];
 
-  const startCell = path[0];
-  const endCell = path[path.length - 1];
-  const color = state.board[startCell.row][startCell.col];
+	const startCell = path[0];
+	const endCell = path[path.length - 1];
+	const color = state.board[startCell.row][startCell.col];
 
-  // Temporarily clear ball from starting board position
-  state.board[startCell.row][startCell.col] = 0;
+	// Temporarily clear ball from starting board position
+	state.board[startCell.row][startCell.col] = 0;
 
-  // Zoom camera coordinate transform during movement
-  screenTransform.setZoom(1.04);
+	// Zoom camera coordinate transform during movement
+	screenTransform.setZoom(1.04);
 
-  // Setup animated ball container for path drawing interpolation
-  animatedBall = {
-    row: startCell.row,
-    col: startCell.col,
-    color: color
-  };
+	// Setup animated ball container for path drawing interpolation
+	animatedBall = {
+		row: startCell.row,
+		col: startCell.col,
+		color: color
+	};
 
-  movePath = path;
-  movePathIndex = 0;
-  
-  animateStep();
+	movePath = path;
+	movePathIndex = 0;
+
+	animateStep();
 }
 
 function animateStep() {
-  if (movePathIndex >= movePath.length - 1) {
-    // Movement completed!
-    finalizeMove();
-    return;
-  }
+	if (movePathIndex >= movePath.length - 1) {
+		// Movement completed!
+		finalizeMove();
+		return;
+	}
 
-  const current = movePath[movePathIndex];
-  const next = movePath[movePathIndex + 1];
+	const current = movePath[movePathIndex];
+	const next = movePath[movePathIndex + 1];
 
-  // We tween the animatedBall indices directly (rendered as offsets in main viewport)
-  // To keep it simple, we replace the board position of the animated ball dynamically
-  state.board[current.row][current.col] = 0;
-  state.board[next.row][next.col] = animatedBall.color; // Shift color to next cell
+	// We tween the animatedBall indices directly (rendered as offsets in main viewport)
+	// To keep it simple, we replace the board position of the animated ball dynamically
+	state.board[current.row][current.col] = 0;
+	state.board[next.row][next.col] = animatedBall.color; // Shift color to next cell
 
-  movePathIndex++;
-  
-  // Delay next step using our deterministic scheduler
-  scheduler.after(MOVE_STEP_MS, animateStep);
+	movePathIndex++;
+
+	// Delay next step using our deterministic scheduler
+	scheduler.after(MOVE_STEP_MS, animateStep);
 }
 
 function finalizeMove() {
-  const start = movePath[0];
-  const end = movePath[movePath.length - 1];
-  const color = animatedBall.color;
+	const start = movePath[0];
+	const end = movePath[movePath.length - 1];
+	const color = animatedBall.color;
 
-  isMoving = false;
-  state.animating = false;
-  state.selected = null;
-  animatedBall = null;
+	isMoving = false;
+	state.animating = false;
+	state.selected = null;
+	animatedBall = null;
 
-  // Restore camera zoom
-  screenTransform.setZoom(1.0);
+	// Restore camera zoom
+	screenTransform.setZoom(1.0);
 
-  // Play landing sound effect
-  Sound.land();
+	// Play landing sound effect
+	Sound.land();
 
-  // Log move event
-  logEvent({ type: 'MOVE', from: [start.row, start.col], to: [end.row, end.col] });
+	// Log move event
+	logEvent({ type: 'MOVE', from: [start.row, start.col], to: [end.row, end.col] });
 
-  // Increment moves turn
-  state.turn++;
+	// Increment moves turn
+	state.turn++;
 
-  // Check lines formed at destination
-  const clearedList = checkLines(end.row, end.col);
+	// Check lines formed at destination
+	const clearedList = checkLines(end.row, end.col);
 
-  // Analyze move quality for player feedback
-  const moveQuality = analyzeMove(start.row, start.col, end.row, end.col, clearedList.length);
-  if (!state.gameOver && clearedList.length < 5) {
-    const qualityEmoji = moveQuality === 'Excellent' ? '✨' : moveQuality === 'Risky' ? '⚠️' : '👍';
-    hud.spawnFloatingText(`${qualityEmoji} ${moveQuality}`, end.row, end.col, moveQuality === 'Excellent');
-  }
+	// Analyze move quality for player feedback
+	const moveQuality = analyzeMove(start.row, start.col, end.row, end.col, clearedList.length);
+	if (!state.gameOver && clearedList.length < 5) {
+		const qualityEmoji = moveQuality === 'Excellent' ? '✨' : moveQuality === 'Risky' ? '⚠️' : '👍';
+		hud.spawnFloatingText(`${qualityEmoji} ${moveQuality}`, end.row, end.col, moveQuality === 'Excellent');
+	}
 
-  if (clearedList.length >= 5) {
-    // 1. Cleared Lines!
-    Sound.clear(clearedList.length);
-    handleLineClears(clearedList);
-  } else {
-    // 2. Spawn 3 new balls
-    const spawned = spawnBalls(3);
-    Sound.spawn();
-    logEvent({ type: 'SPAWN', balls: spawned });
+	if (clearedList.length >= 5) {
+		// 1. Cleared Lines!
+		Sound.clear(clearedList.length);
+		handleLineClears(clearedList);
+	} else {
+		// 2. Spawn 3 new balls
+		const spawned = spawnBalls(3);
+		Sound.spawn();
+		logEvent({ type: 'SPAWN', balls: spawned });
 
-    const spawnedClears = checkAllNewBalls(spawned.map(b => ({ row: b[0], col: b[1] })));
-    if (spawnedClears.length >= 5) {
-      Sound.clear(spawnedClears.length);
-      handleLineClears(spawnedClears);
-    }
+		const spawnedClears = checkAllNewBalls(spawned.map(b => ({ row: b[0], col: b[1] })));
+		if (spawnedClears.length >= 5) {
+			Sound.clear(spawnedClears.length);
+			handleLineClears(spawnedClears);
+		}
 
-    // Pre-generate next preview balls
-    generateNextBalls();
-  }
+		// Pre-generate next preview balls
+		generateNextBalls();
+	}
 
-  // Check game over
-  const empties = state.board.flat().filter(cell => cell === 0);
-  if (empties.length === 0) {
-    state.gameOver = true;
-    stopTimer();
-    Sound.gameOver();
-    showGameOverModal();
-    saveGameProgress();
-    return;
-  }
+	// Check game over
+	const empties = state.board.flat().filter(cell => cell === 0);
+	if (empties.length === 0) {
+		state.gameOver = true;
+		stopTimer();
+		Sound.gameOver();
+		showGameOverModal();
+		saveGameProgress();
+		return;
+	}
 
-  // Sync highscore
-  if (state.score > state.highScore) {
-    state.highScore = state.score;
-    localStorage.setItem('lines98_highScore', state.highScore);
-  }
+	// Sync highscore
+	if (state.score > state.highScore) {
+		state.highScore = state.score;
+		localStorage.setItem('lines98_highScore', state.highScore);
+	}
 
-  // Update HUD
-  hud.update();
-  saveGameProgress();
+	// Update challenge progress
+	challenge.update();
+
+	// Update HUD
+	hud.update();
+	saveGameProgress();
 }
 
 function handleLineClears(cells) {
-  const scoreDelta = calculateScore(cells.length);
-  state.score += scoreDelta;
-  state.ballsCleared += cells.length;
+	const scoreDelta = calculateScore(cells.length);
+	state.score += scoreDelta;
+	state.ballsCleared += cells.length;
+	state.totalLinesCleared++;
 
-  logEvent({ type: 'CLEAR', cells: cells.map(c => [c.row, c.col]), scoreDelta });
+	logEvent({ type: 'CLEAR', cells: cells.map(c => [c.row, c.col]), scoreDelta });
 
-  // Camera Shake on eating balls
-  screenTransform.shake(8, 400);
+	// Camera Shake on eating balls
+	screenTransform.shake(8, 400);
 
-  // Spawn crystal shards explosion particles
-  cells.forEach(cell => {
-    const coords = viewport.getCellCoords(cell.row, cell.col);
-    const pixelX = coords.x + viewport.cellSize / 2;
-    const pixelY = coords.y + viewport.cellSize / 2;
-    const color = state.board[cell.row][cell.col];
-    
-    particleSystem.spawnExplosion(pixelX, pixelY, color);
+	// Spawn crystal shards explosion particles
+	cells.forEach(cell => {
+		const coords = viewport.getCellCoords(cell.row, cell.col);
+		const pixelX = coords.x + viewport.cellSize / 2;
+		const pixelY = coords.y + viewport.cellSize / 2;
+		const color = state.board[cell.row][cell.col];
 
-    // Clear board cells
-    state.board[cell.row][cell.col] = 0;
-  });
+		particleSystem.spawnExplosion(pixelX, pixelY, color);
 
-  // Spawn combo celebrate notification floating text
-  const centerCell = cells[Math.floor(cells.length / 2)];
-  let txt = `+${scoreDelta}`;
-  if (cells.length > 5) txt += " COMBO! 🔥";
-  hud.spawnFloatingText(txt, centerCell.row, centerCell.col, cells.length > 5);
+		// Clear board cells
+		state.board[cell.row][cell.col] = 0;
+	});
+
+	// Spawn combo celebrate notification floating text
+	const centerCell = cells[Math.floor(cells.length / 2)];
+	let txt = `+${scoreDelta}`;
+	if (cells.length > 5) txt += " COMBO! 🔥";
+	hud.spawnFloatingText(txt, centerCell.row, centerCell.col, cells.length > 5);
 }
 
 function undo() {
-  if (state.undoStack.length === 0 || state.animating || state.gameOver) return;
-  
-  Sound.undo();
-  const snap = state.undoStack.pop();
-  restoreSnapshot(snap);
-  particleSystem.clear();
-  window.currentPath = null;
-  
-  hud.update();
-  saveGameProgress();
+	if (state.undoStack.length === 0 || state.animating || state.gameOver) return;
+
+	Sound.undo();
+	const snap = state.undoStack.pop();
+	restoreSnapshot(snap);
+	particleSystem.clear();
+	window.currentPath = null;
+
+	challenge.update();
+	hud.update();
+	saveGameProgress();
 }
 
 function setupControlListeners() {
-  const newGameBtn = document.getElementById('new-game-btn');
-  if (newGameBtn) {
-    newGameBtn.addEventListener('click', startNewGame);
-  }
+	const newGameBtn = document.getElementById('new-game-btn');
+	if (newGameBtn) {
+		newGameBtn.addEventListener('click', startNewGame);
+	}
 
-  const undoBtn = document.getElementById('undo-btn');
-  if (undoBtn) {
-    undoBtn.addEventListener('click', undo);
-  }
+	const undoBtn = document.getElementById('undo-btn');
+	if (undoBtn) {
+		undoBtn.addEventListener('click', undo);
+	}
 
-  const soundBtn = document.getElementById('sound-toggle');
-  if (soundBtn) {
-    soundBtn.addEventListener('click', () => {
-      state.soundEnabled = !state.soundEnabled;
-      const icon = document.getElementById('sound-icon');
-      if (icon) {
-        icon.textContent = state.soundEnabled ? 'volume_up' : 'volume_off';
-      }
-    });
-  }
+	const soundBtn = document.getElementById('sound-toggle');
+	if (soundBtn) {
+		soundBtn.addEventListener('click', () => {
+			state.soundEnabled = !state.soundEnabled;
+			const icon = document.getElementById('sound-icon');
+			if (icon) {
+				icon.textContent = state.soundEnabled ? 'volume_up' : 'volume_off';
+			}
+		});
+	}
 
-  const restartBtn = document.getElementById('restart-btn');
-  if (restartBtn) {
-    restartBtn.addEventListener('click', () => {
-      hideGameOverModal();
-      startNewGame();
-    });
-  }
+	const restartBtn = document.getElementById('restart-btn');
+	if (restartBtn) {
+		restartBtn.addEventListener('click', () => {
+			hideGameOverModal();
+			startNewGame();
+		});
+	}
 
-  const closeLeaderboardBtn = document.getElementById('close-leaderboard-btn');
-  if (closeLeaderboardBtn) {
-    closeLeaderboardBtn.addEventListener('click', () => {
-      document.getElementById('leaderboard-overlay')?.classList.remove('visible');
-    });
-  }
+	const closeLeaderboardBtn = document.getElementById('close-leaderboard-btn');
+	if (closeLeaderboardBtn) {
+		closeLeaderboardBtn.addEventListener('click', () => {
+			document.getElementById('leaderboard-overlay')?.classList.remove('visible');
+		});
+	}
 }
 
 function saveGameProgress() {
-  const raw = {
-    ...cloneSnapshot(),
-    undoStack: state.undoStack.map(snap => ({ ...snap }))
-  };
-  localStorage.setItem('lines98_save', JSON.stringify(raw));
+	const raw = {
+		...cloneSnapshot(),
+		undoStack: state.undoStack.map(snap => ({ ...snap }))
+	};
+	localStorage.setItem('lines98_save', JSON.stringify(raw));
 }
 
 // Kick off initialization
 window.addEventListener('DOMContentLoaded', init);
 
 function showGameOverModal() {
-  const overlay = document.getElementById('game-over-overlay');
-  const finalScore = document.getElementById('final-score');
-  const finalHigh = document.getElementById('final-high');
-  if (finalScore) finalScore.textContent = state.score;
-  if (finalHigh) finalHigh.textContent = state.highScore;
-  if (overlay) {
-    overlay.classList.add('visible');
-    overlay.querySelector('.game-over-overlay > div')?.classList.remove('scale-95');
-  }
+	const overlay = document.getElementById('game-over-overlay');
+	const finalScore = document.getElementById('final-score');
+	const finalHigh = document.getElementById('final-high');
+	if (finalScore) finalScore.textContent = state.score;
+	if (finalHigh) finalHigh.textContent = state.highScore;
+
+	// Populate analytics stats
+	const stats = analytics.computeStats();
+	const setText = (id, val) => {
+		const el = document.getElementById(id);
+		if (el) el.textContent = val;
+	};
+	setText('stat-turns', stats.turns);
+	setText('stat-cleared-final', stats.ballsCleared);
+	setText('stat-longest', stats.longestLine);
+	setText('stat-efficiency', stats.efficiency);
+	setText('stat-avgline', stats.avgLine);
+	setText('stat-time-final', stats.time);
+
+	// Render heatmap
+	const heatCanvas = document.getElementById('heatmap-canvas');
+	if (heatCanvas) analytics.renderHeatmap(heatCanvas);
+
+	if (overlay) {
+		overlay.classList.add('visible');
+		overlay.querySelector('.game-over-overlay > div')?.classList.remove('scale-95');
+	}
 }
 
 function hideGameOverModal() {
-  const overlay = document.getElementById('game-over-overlay');
-  if (overlay) {
-    overlay.classList.remove('visible');
-  }
+	const overlay = document.getElementById('game-over-overlay');
+	if (overlay) {
+		overlay.classList.remove('visible');
+	}
 }
