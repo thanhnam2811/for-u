@@ -30,6 +30,7 @@ window.currentPath = null;
 
 // Firebase user reference
 let currentUser = null;
+let bestSubmittedScore = 0;
 
 function startTimer() {
 	if (state.timerInterval) return;
@@ -201,6 +202,7 @@ function gameLoop(now) {
 }
 
 function startNewGame() {
+	bestSubmittedScore = 0;
 	const seed = state.challenge.active
 		? challenge.getDailySeed()
 		: Math.floor(Math.random() * 2147483647);
@@ -437,6 +439,7 @@ function handleLineClears(cells) {
 	const scoreDelta = calculateScore(cells.length);
 	state.score += scoreDelta;
 	state.ballsCleared += cells.length;
+	_submitHighScoreIfNeeded();
 	state.totalLinesCleared++;
 
 	logEvent({ type: 'CLEAR', cells: cells.map(c => [c.row, c.col]), scoreDelta });
@@ -527,7 +530,7 @@ function saveGameProgress() {
 // Kick off initialization
 window.addEventListener('DOMContentLoaded', init);
 
-async function showGameOverModal() {
+function showGameOverModal() {
 	const overlay = document.getElementById('game-over-overlay');
 	const finalScore = document.getElementById('final-score');
 	const finalHigh = document.getElementById('final-high');
@@ -557,9 +560,9 @@ async function showGameOverModal() {
 	}
 
 	// Auto-submit score to leaderboard if authenticated
-	console.log('Game over — currentUser:', !!currentUser, 'score:', state.score);
+	// Auto-submit score to leaderboard if authenticated
 	if (currentUser) {
-		const result = await submitScore({
+		submitScore({
 			uid: currentUser.uid,
 			displayName: currentUser.displayName || 'Anonymous',
 			photoURL: currentUser.photoURL || '',
@@ -569,8 +572,7 @@ async function showGameOverModal() {
 			longestLine: state.longestLine,
 			replaySeed: state.seed,
 			replayCode: exportReplay(),
-		});
-		console.log('Submit score result:', result);
+		}).catch((err) => console.error('Score submit error:', err));
 	}
 }
 
@@ -579,6 +581,22 @@ function hideGameOverModal() {
 	if (overlay) {
 		overlay.classList.remove('visible');
 	}
+}
+
+function _submitHighScoreIfNeeded() {
+	if (!currentUser || state.score <= bestSubmittedScore || state.gameOver) return;
+	bestSubmittedScore = state.score;
+	submitScore({
+		uid: currentUser.uid,
+		displayName: currentUser.displayName || 'Anonymous',
+		photoURL: currentUser.photoURL || '',
+		score: state.score,
+		turns: state.turn,
+		ballsCleared: state.ballsCleared,
+		longestLine: state.longestLine,
+		replaySeed: state.seed,
+		replayCode: exportReplay(),
+	}).catch((err) => console.error('Auto submit error:', err));
 }
 
 // ── Online Feature Helpers ──
