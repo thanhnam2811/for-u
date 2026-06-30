@@ -18,39 +18,38 @@ export function getDailySeed() {
 /**
  * Daily Challenge system.
  *
- * Generates a deterministic seed from today's date,
- * tracks 3 daily goals, and updates progress automatically.
+ * Renders goals inside a popup modal.
+ * Toggle with challenge-btn in the controls bar.
  */
 export const challenge = {
-	barEl: null,
 	goalEls: [],
+	progressBar: null,
+	badgeEl: null,
 
 	initialize() {
-		this.barEl = document.getElementById('challenge-bar');
-		if (!this.barEl) return;
-
-		// Build goal rows
-		const listEl = this.barEl.querySelector('.challenge-goals');
+		const listEl = document.querySelector('.challenge-goals');
 		if (!listEl) return;
+
+		this.progressBar = document.querySelector('.challenge-progress-bar');
 
 		listEl.innerHTML = '';
 		this.goalEls = [];
 
 		state.challenge.goals.forEach((goal, i) => {
 			const row = document.createElement('div');
-			row.className = 'flex items-center gap-2 text-xs';
+			row.className = 'flex items-center gap-2 text-sm';
 
 			const icon = document.createElement('span');
-			icon.className = 'material-icons-round text-sm flex-shrink-0';
+			icon.className = 'material-icons-round text-base flex-shrink-0';
 			icon.textContent = goal.done ? 'check_circle' : 'radio_button_unchecked';
 			icon.style.color = goal.done ? '#22C55E' : '#94A3B8';
 
 			const label = document.createElement('span');
-			label.className = 'flex-1 text-slate-600 dark:text-slate-400 font-medium truncate';
+			label.className = 'flex-1 text-slate-700 dark:text-slate-300 font-medium';
 			label.textContent = goal.label;
 
 			const prog = document.createElement('span');
-			prog.className = 'font-bold text-slate-700 dark:text-slate-300 flex-shrink-0';
+			prog.className = 'font-bold text-slate-800 dark:text-slate-200 flex-shrink-0';
 			prog.textContent = `${Math.min(goal.progress, goal.target)}/${goal.target}`;
 
 			row.appendChild(icon);
@@ -60,7 +59,8 @@ export const challenge = {
 			this.goalEls.push({ icon, label, prog, row });
 		});
 
-		this._updateVisibility();
+		this._updateBadge();
+		this._updateProgressBar();
 	},
 
 	/**
@@ -69,13 +69,8 @@ export const challenge = {
 	update() {
 		const goals = state.challenge.goals;
 
-		// Goal 0: moves
 		goals[0].progress = state.turn;
-
-		// Goal 1: score
 		goals[1].progress = state.score;
-
-		// Goal 2: balls cleared
 		goals[2].progress = state.ballsCleared;
 
 		let allDone = true;
@@ -89,7 +84,6 @@ export const challenge = {
 				allDone = false;
 			}
 
-			// Update display
 			if (this.goalEls[i]) {
 				this.goalEls[i].icon.textContent = goal.done ? 'check_circle' : 'radio_button_unchecked';
 				this.goalEls[i].icon.style.color = goal.done ? '#22C55E' : '#94A3B8';
@@ -98,23 +92,35 @@ export const challenge = {
 		});
 
 		state.challenge.completed = allDone;
-
-		this._updateVisibility();
+		this._updateBadge();
+		this._updateProgressBar();
 	},
 
 	_animateGoalComplete(index) {
 		const el = this.goalEls[index]?.row;
 		if (!el) return;
-
-		// Flash animation
 		el.classList.add('animate-pulse', 'text-green-500');
 		setTimeout(() => el.classList.remove('animate-pulse'), 1000);
 	},
 
-	_updateVisibility() {
-		if (!this.barEl) return;
-		// Only show if challenge is active or goals have progress
-		const hasProgress = state.challenge.goals.some(g => g.progress > 0);
-		this.barEl.classList.toggle('hidden', !hasProgress);
+	_updateBadge() {
+		if (!this.badgeEl) {
+			this.badgeEl = document.createElement('span');
+			this.badgeEl.className =
+				'absolute -top-1.5 -right-1.5 bg-gradient-to-br from-amber-400 to-rose-500 text-white text-[9px] font-semibold min-w-[18px] h-[18px] flex items-center justify-center rounded-full shadow-[0_2px_6px_rgba(245,158,11,0.4)]';
+			const btn = document.getElementById('challenge-btn');
+			if (btn) {
+				btn.style.position = 'relative';
+				btn.appendChild(this.badgeEl);
+			}
+		}
+		const done = state.challenge.goals.filter(g => g.done).length;
+		this.badgeEl.textContent = `${done}/3`;
 	},
+
+	_updateProgressBar() {
+		if (!this.progressBar) return;
+		const done = state.challenge.goals.filter(g => g.done).length;
+		this.progressBar.style.width = `${(done / 3) * 100}%`;
+	}
 };

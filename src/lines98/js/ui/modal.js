@@ -14,6 +14,8 @@ export const modal = {
 		this._wirePaletteClose();
 		this._wireCheckpointToggle();
 		this._wireCheckpointClose();
+		this._wireChallengeToggle();
+		this._wireChallengeClose();
 		this._populatePaletteOptions();
 		this._applySavedTheme();
 	},
@@ -49,6 +51,20 @@ export const modal = {
 
 	_wireCheckpointClose() {
 		const closeBtn = document.getElementById('close-checkpoint-btn');
+		if (!closeBtn) return;
+		closeBtn.addEventListener('click', () => this._closeModal());
+	},
+
+	// ── Challenge Modal ──
+
+	_wireChallengeToggle() {
+		const btn = document.getElementById('challenge-btn');
+		if (!btn) return;
+		btn.addEventListener('click', () => this._openModal('challenge-modal'));
+	},
+
+	_wireChallengeClose() {
+		const closeBtn = document.getElementById('close-challenge-btn');
 		if (!closeBtn) return;
 		closeBtn.addEventListener('click', () => this._closeModal());
 	},

@@ -134,20 +134,6 @@
                 <span id="stat-cleared">💥 0</span>
             </div>
 
-            <!-- Daily Challenge Bar -->
-            <div
-                class="challenge-bar w-full hidden mb-1 bg-gradient-to-r from-amber-50/70 to-rose-50/70 dark:from-amber-900/15 dark:to-rose-900/15 border border-amber-200/40 dark:border-amber-700/30 rounded-xl py-1.5 px-2.5 max-h-[72px] overflow-y-auto transition-all duration-300"
-                id="challenge-bar"
-            >
-                <div class="flex items-center gap-1.5 mb-1.5">
-                    <span class="material-icons-round text-sm text-amber-500">emoji_events</span>
-                    <span class="font-display font-bold text-xs text-amber-700 dark:text-amber-400"
-                        >Thử thách hôm nay</span
-                    >
-                </div>
-                <div class="challenge-goals space-y-1"></div>
-            </div>
-
             <!-- Game Board (Canvas 2D Render Target) -->
             <div
                 class="game-board-container relative w-full aspect-square max-w-[460px] bg-white/45 dark:bg-slate-950/40 backdrop-blur-glass border border-white/60 dark:border-slate-800/60 shadow-glass-light dark:shadow-glass-dark rounded-[24px] sm:rounded-[32px] p-2 sm:p-3 mb-4 transition-all duration-300"
@@ -195,6 +181,13 @@
                 >
                     <span class="material-icons-round text-lg sm:text-xl mb-1" id="sound-icon">volume_up</span>
                     <span class="font-display font-bold text-[10px] sm:text-xs tracking-wide" id="sound-label">Âm</span>
+                </button>
+                <button
+                    class="col-span-3 sm:col-span-1 flex flex-col items-center justify-center py-2.5 px-1 rounded-2xl bg-white/45 dark:bg-slate-900/40 border border-white/60 dark:border-slate-800/60 shadow-glass-light dark:shadow-glass-dark backdrop-blur-glass text-slate-600 dark:text-slate-300 hover:text-amber-500 dark:hover:text-amber-400 hover:scale-105 active:scale-95 transition-all select-none relative cursor-pointer"
+                    id="challenge-btn"
+                >
+                    <span class="material-icons-round text-lg sm:text-xl mb-1">calendar_month</span>
+                    <span class="font-display font-bold text-[10px] sm:text-xs tracking-wide">Thử thách</span>
                 </button>
                 <button
                     class="col-span-3 sm:col-span-1 flex flex-col items-center justify-center py-2.5 px-1 rounded-2xl bg-white/45 dark:bg-slate-900/40 border border-white/60 dark:border-slate-800/60 shadow-glass-light dark:shadow-glass-dark backdrop-blur-glass text-slate-600 dark:text-slate-300 hover:text-brand-pink dark:hover:text-brand-purple hover:scale-105 active:scale-95 transition-all select-none relative cursor-pointer"
@@ -504,6 +497,43 @@
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- Challenge Modal -->
+            <div
+                class="game-over-overlay fixed inset-0 bg-slate-900/45 dark:bg-slate-950/60 backdrop-blur-sm z-[99] flex items-center justify-center pointer-events-none opacity-0 invisible transition-all duration-300"
+                id="challenge-modal"
+            >
+                <div
+                    class="w-[90%] max-w-[400px] bg-white/75 dark:bg-slate-900/50 backdrop-blur-md border border-white/60 dark:border-slate-800/60 shadow-glass-light dark:shadow-glass-dark rounded-[28px] sm:rounded-[36px] p-6 sm:p-8 flex flex-col transform scale-95 transition-all duration-300 relative pointer-events-auto"
+                >
+                    <div
+                        class="w-full flex items-center justify-between border-b border-amber-200/50 dark:border-amber-800/50 pb-3 mb-5 select-none"
+                    >
+                        <h2 class="font-display font-bold text-lg sm:text-xl text-amber-700 dark:text-amber-400">
+                            🏆 Thử thách hôm nay
+                        </h2>
+                        <button
+                            class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer"
+                            id="close-challenge-btn"
+                            aria-label="Đóng"
+                        >
+                            <span class="material-icons-round">close</span>
+                        </button>
+                    </div>
+                    <div class="challenge-goals space-y-3 mb-4"></div>
+                    <div
+                        class="challenge-progress w-full bg-white/30 dark:bg-slate-800/30 rounded-full h-2 overflow-hidden border border-slate-200/30 dark:border-slate-700/30"
+                    >
+                        <div
+                            class="challenge-progress-bar h-full bg-gradient-to-r from-amber-400 to-rose-500 rounded-full transition-all duration-500"
+                            style="width: 0%"
+                        ></div>
+                    </div>
+                    <p class="text-[11px] text-slate-400 dark:text-slate-500 font-semibold text-center mt-2">
+                        Hoàn thành đủ 3 thử thách để nhận huy hiệu!
+                    </p>
                 </div>
             </div>
 
