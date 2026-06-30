@@ -173,6 +173,7 @@ export const viewport = {
 				}
 
 				const ballWidth = size * scale;
+				const offset = (size - ballWidth) / 2;
 				const stateIndex = spriteCache.scaleToState(scale);
 				const ballSprite = spriteCache.balls[color]?.[stateIndex];
 				if (!ballSprite) continue;
