@@ -108,6 +108,27 @@ function injectDOM() {
           </div>
         </div>
 
+        <!-- View 3b: Sync Confirmation (shown when anonymous user has local data) -->
+        <div id="shared-auth-sync-view" style="display: none;" class="text-center">
+          <div class="w-14 h-14 bg-blue-100 dark:bg-blue-950/30 rounded-full flex justify-center items-center mx-auto mb-3 text-blue-500">
+            <span class="material-icons-round text-3xl">cloud_upload</span>
+          </div>
+          <h4 class="font-display font-bold text-lg text-slate-800 dark:text-slate-100 mb-1">Đồng bộ tiến trình?</h4>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mb-5 px-2 leading-relaxed font-sans">Phát hiện tiến trình chơi trên máy này. Bạn muốn đồng bộ dữ liệu lên tài khoản Google không?</p>
+          <div class="bg-sky-50 dark:bg-sky-950/20 border border-sky-200/40 dark:border-sky-800/30 rounded-2xl p-3 mb-5 text-xs text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
+            <strong class="text-blue-600 dark:text-blue-400">Đồng bộ:</strong> ghi đè dữ liệu Google bằng dữ liệu máy này<br>
+            <strong class="text-slate-500">Không đồng bộ:</strong> dùng dữ liệu Google, giữ local để sau này
+          </div>
+          <div class="space-y-2.5">
+            <button id="shared-auth-sync-btn" class="w-full font-sans font-bold text-sm text-white bg-gradient-to-r from-blue-500 to-cyan-500 rounded-2xl py-3 shadow-md hover:shadow-lg transition-all cursor-pointer">
+              🔄 Đồng Bộ & Liên Kết
+            </button>
+            <button id="shared-auth-nosync-btn" class="w-full font-sans font-bold text-sm text-slate-600 dark:text-slate-300 bg-white/50 dark:bg-slate-800/50 border border-slate-200/50 dark:border-slate-700/50 rounded-2xl py-3 hover:bg-white/80 dark:hover:bg-slate-800/80 transition-all cursor-pointer">
+              ➡️ Chỉ Liên Kết, Giữ Local
+            </button>
+          </div>
+        </div>
+
         <!-- View 3: Sync/Switch Account Conflict (shown when Google is already linked) -->
         <div id="shared-auth-conflict-view" style="display: none;" class="text-center">
           <div class="w-14 h-14 bg-amber-100 dark:bg-amber-950/30 rounded-full flex justify-center items-center mx-auto mb-3 text-amber-500">
@@ -203,8 +224,8 @@ function getFriendlyAuthErrorMessage(errorCode) {
 
 // Generate random fantasy nicknames for anonymous players
 function generateRandomNickname() {
-  const adjs = ["Thần Bí", "Lấp Lánh", "Kỳ Diệu", "Huyền Thoại", "Ma Thuật", "Siêu Cấp", "Vô Địch", "Thần Tốc", "Nhiệm Màu", "Vui Vẻ"];
-  const nouns = ["Phù Thủy", "Chiến Binh", "Tinh Linh", "Hiệp Sĩ", "Thần Thú", "Ninja", "Ảo Thuật Gia", "Nhà Thám Hiểm", "Phi Hành Gia", "Học Giả"];
+  const adjs = ["Thần Bí", "Lấp Lánh", "Kỳ Diệu", "Huyền Thoại", "Ma Thuật", "Siêu Cấp", "Vô Địch", "Thần Tốc", "Nhiệm Màu", "Vui Vẻ", "Dũng Mãnh", "Bí Ẩn", "Cao Quý", "Tinh Tế", "Huyền Ảo", "Phi Thường", "Rực Rỡ", "Oai Hùng"];
+  const nouns = ["Phù Thủy", "Chiến Binh", "Tinh Linh", "Hiệp Sĩ", "Thần Thú", "Ninja", "Ảo Thuật Gia", "Nhà Thám Hiểm", "Phi Hành Gia", "Học Giả", "Nhà Mạo Hiểm", "Cao Bồi", "Hoàng Tử", "Công Chúa", "Kỵ Sĩ", "Đạo Sĩ", "Thợ Săn", "Thần Sấm"];
   const adj = adjs[Math.floor(Math.random() * adjs.length)];
   const noun = nouns[Math.floor(Math.random() * nouns.length)];
   const num = Math.floor(1000 + Math.random() * 9000);
@@ -215,9 +236,11 @@ function generateRandomNickname() {
 function showView(viewId) {
   const loginView = $('#shared-auth-login-view');
   const profileView = $('#shared-auth-profile-view');
+  const syncView = $('#shared-auth-sync-view');
   const conflictView = $('#shared-auth-conflict-view');
   if (loginView) loginView.style.display = viewId === 'login' ? 'block' : 'none';
   if (profileView) profileView.style.display = viewId === 'profile' ? 'block' : 'none';
+  if (syncView) syncView.style.display = viewId === 'sync' ? 'block' : 'none';
   if (conflictView) conflictView.style.display = viewId === 'conflict' ? 'block' : 'none';
 }
 
@@ -287,10 +310,61 @@ export function initSharedAuth({ onUserChanged, syncProgress, profileBtnSelector
   $('#shared-auth-google-btn').addEventListener('click', async () => {
     const user = auth.currentUser;
     if (!user) return;
+
+    // Check if anonymous user has local game data
+    const localSave = localStorage.getItem('lines98_save');
+    if (localSave && user.isAnonymous) {
+      // Store local data for sync decision
+      sessionStorage.setItem('pre_sync_local', localSave);
+      showView('sync');
+      return;
+    }
+
     showToast("🔑 Đang mở đăng nhập Google...");
     const provider = new GoogleAuthProvider();
     try {
       await linkWithPopup(user, provider);
+      sessionStorage.setItem('just_logged_in', 'true');
+      showToast("🎉 Liên kết tài khoản Google thành công!");
+      hideAuthModal();
+    } catch (error) {
+      if (error.code === 'auth/credential-already-in-use') {
+        showView('conflict');
+      } else {
+        console.error("Google linking error:", error);
+        showToast(getFriendlyAuthErrorMessage(error.code));
+      }
+    }
+  });
+
+  // Sync button: upload local data to cloud
+  $('#shared-auth-sync-btn').addEventListener('click', async () => {
+    sessionStorage.setItem('sync_pending', 'true');
+    showToast("🔑 Đang mở đăng nhập Google...");
+    const provider = new GoogleAuthProvider();
+    try {
+      await linkWithPopup(auth.currentUser, provider);
+      sessionStorage.setItem('just_logged_in', 'true');
+      showToast("🎉 Đã đồng bộ và liên kết!");
+      hideAuthModal();
+    } catch (error) {
+      if (error.code === 'auth/credential-already-in-use') {
+        showView('conflict');
+      } else {
+        console.error("Google linking error:", error);
+        showToast(getFriendlyAuthErrorMessage(error.code));
+        sessionStorage.removeItem('sync_pending');
+      }
+    }
+  });
+
+  // No-sync button: just link, keep local
+  $('#shared-auth-nosync-btn').addEventListener('click', async () => {
+    sessionStorage.removeItem('pre_sync_local');
+    showToast("🔑 Đang mở đăng nhập Google...");
+    const provider = new GoogleAuthProvider();
+    try {
+      await linkWithPopup(auth.currentUser, provider);
       sessionStorage.setItem('just_logged_in', 'true');
       showToast("🎉 Liên kết tài khoản Google thành công!");
       hideAuthModal();
@@ -405,11 +479,12 @@ export function initSharedAuth({ onUserChanged, syncProgress, profileBtnSelector
     if (user) {
       console.log("Shared Auth State: Logged in as", user.uid, user.isAnonymous ? "Anonymous" : user.displayName);
       
-      // If it's an anonymous user without a nickname, set a random one
+      // If it's an anonymous user without a nickname, set a random one + avatar
       if (user.isAnonymous && !user.displayName) {
         const nickname = generateRandomNickname();
+        const avatarURL = `https://api.dicebear.com/7.x/thumbs/svg?seed=${encodeURIComponent(nickname)}`;
         try {
-          await updateProfile(user, { displayName: nickname });
+          await updateProfile(user, { displayName: nickname, photoURL: avatarURL });
           console.log("Profile updated with nickname:", nickname);
         } catch (err) {
           console.error("Profile update error:", err);

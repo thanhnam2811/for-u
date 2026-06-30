@@ -586,19 +586,51 @@ function _updateUserAvatar(user) {
 	const img = document.getElementById('user-avatar-img');
 	if (!icon || !img) return;
 
-	if (user.isAnonymous) {
+	if (user.photoURL) {
+		icon.style.display = 'none';
+		img.style.display = 'block';
+		img.src = user.photoURL;
+	} else {
 		icon.style.display = 'inline';
 		img.style.display = 'none';
 		img.src = '';
-	} else {
-		icon.style.display = 'none';
-		img.style.display = 'block';
-		img.src = user.photoURL || '';
 	}
 }
 
 async function _autoCloudSync(user) {
 	try {
+		// Check if we need to sync local data to cloud first
+		const syncPending = sessionStorage.getItem('sync_pending');
+		if (syncPending) {
+			sessionStorage.removeItem('sync_pending');
+			const localRaw = sessionStorage.getItem('pre_sync_local');
+			sessionStorage.removeItem('pre_sync_local');
+			if (localRaw) {
+				try {
+					const localData = JSON.parse(localRaw);
+					const syncPayload = {
+						...localData,
+						uid: user.uid,
+						_syncedAt: Date.now(),
+					};
+					await cloudSave(syncPayload);
+					// Restore local state
+					restoreSnapshot(localData);
+					if (localData.undoStack) {
+						state.undoStack = localData.undoStack.map(snap => ({ ...snap }));
+					}
+					hud.update();
+					challenge.update();
+					// Clear local save since it's now in cloud
+					localStorage.removeItem('lines98_save');
+					console.log('Synced local data to cloud');
+					return;
+				} catch (err) {
+					console.error('Sync upload error:', err);
+				}
+			}
+		}
+
 		const cloudData = await cloudLoad(user.uid);
 		if (cloudData && cloudData.exists()) {
 			const remote = cloudData.data();
