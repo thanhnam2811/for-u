@@ -54,7 +54,8 @@ function init() {
         
         let refreshing = false;
         navigator.serviceWorker.addEventListener('controllerchange', () => {
-          if (!refreshing) {
+          if (refreshing) return;
+          if (navigator.serviceWorker.controller) {
             refreshing = true;
             window.location.reload();
           }
