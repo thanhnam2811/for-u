@@ -281,54 +281,48 @@ export const viewport = {
 		const pulseTime = this.pathPulseTime;
 
 		for (const line of uniqueLines) {
-			// Select glow intensity based on line length
-			const intensity = line.cells.length >= 6 ? 2 : line.cells.length >= 5 ? 1 : 0;
+			const intensity = line.cells.length >= 6 ? 2 : 1;
 			const glowSprite = spriteCache.glows[line.color]?.[intensity];
 			if (!glowSprite) continue;
 
-			// 1. Static pulsing glow on every cell of the line
+			// Subtle pulsing glow under each cell in the line
 			for (const { row, col } of line.cells) {
 				const { x, y } = this.getCellCoords(row, col);
-				const glowSize = size * 1.5;
-				const offset = (size - glowSize) / 2;
+				const gSize = size * 1.1;
+				const off = (size - gSize) / 2;
 
 				this.ctx.save();
-				this.ctx.globalAlpha = 0.5 + Math.sin(pulseTime * 1.5) * 0.15;
-				this.ctx.drawImage(glowSprite, x + offset, y + offset, glowSize, glowSize);
+				this.ctx.globalAlpha = 0.35 + Math.sin(pulseTime * 2) * 0.12;
+				this.ctx.drawImage(glowSprite, x + off, y + off, gSize, gSize);
 				this.drawCallCount++;
 				this.ctx.restore();
 			}
 
-			// 2. Chasing light streak along the line (ping-pong)
+			// Gentle traveling shimmer along the line
 			const steps = line.cells.length;
-			// Ping-pong: φ ∈ [0, π] → t ∈ [0, 1 → 0]
-			const t = Math.sin(pulseTime * 2) * 0.5 + 0.5;
-			// Clamp to avoid overshoot at endpoints
+			const t = Math.sin(pulseTime * 1.8) * 0.5 + 0.5;
 			const maxIdx = steps - 1;
 			const pos = t * maxIdx;
 			const idx = Math.min(Math.floor(pos), maxIdx - 1);
 			const frac = pos - idx;
 
-			if (idx >= 0 && idx <= maxIdx - 1) {
+			if (idx >= 0 && idx <= maxIdx - 1 && idx + 1 < steps) {
 				const from = this.getCellCoords(line.cells[idx].row, line.cells[idx].col);
 				const to = this.getCellCoords(line.cells[idx + 1].row, line.cells[idx + 1].col);
 				const cx = from.x + size / 2 + (to.x - from.x) * frac;
 				const cy = from.y + size / 2 + (to.y - from.y) * frac;
 
-				// Resolve theme color
 				const theme = THEMES[state.theme] || THEMES.classic;
 				const ballColor = theme.balls[line.color - 1]?.main || '#FF2D6A';
 
-				// Draw a bright glowing spot
 				this.ctx.save();
-				const radius = size * 0.55;
+				const radius = size * 0.35;
 				const gradient = this.ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
-				gradient.addColorStop(0, 'rgba(255,255,255,1)');
-				gradient.addColorStop(0.2, ballColor);
-				gradient.addColorStop(0.6, ballColor + '88');
+				gradient.addColorStop(0, 'rgba(255,255,255,0.9)');
+				gradient.addColorStop(0.3, ballColor + '88');
 				gradient.addColorStop(1, 'transparent');
 
-				this.ctx.globalAlpha = 0.6 + Math.sin(pulseTime * 4) * 0.25;
+				this.ctx.globalAlpha = 0.5 + Math.sin(pulseTime * 3) * 0.2;
 				this.ctx.fillStyle = gradient;
 				this.ctx.beginPath();
 				this.ctx.arc(cx, cy, radius, 0, Math.PI * 2);

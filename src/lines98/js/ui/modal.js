@@ -12,6 +12,8 @@ export const modal = {
 	initialize() {
 		this._wirePaletteToggle();
 		this._wirePaletteClose();
+		this._wireCheckpointToggle();
+		this._wireCheckpointClose();
 		this._populatePaletteOptions();
 		this._applySavedTheme();
 	},
@@ -33,6 +35,20 @@ export const modal = {
 
 	_wirePaletteClose() {
 		const closeBtn = document.getElementById('close-palette-btn');
+		if (!closeBtn) return;
+		closeBtn.addEventListener('click', () => this._closeModal());
+	},
+
+	// ── Checkpoint Modal ──
+
+	_wireCheckpointToggle() {
+		const btn = document.getElementById('checkpoint-toggle');
+		if (!btn) return;
+		btn.addEventListener('click', () => this._openModal('checkpoint-modal'));
+	},
+
+	_wireCheckpointClose() {
+		const closeBtn = document.getElementById('close-checkpoint-btn');
 		if (!closeBtn) return;
 		closeBtn.addEventListener('click', () => this._closeModal());
 	},

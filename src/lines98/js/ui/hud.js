@@ -106,7 +106,7 @@ export const hud = {
 		const y = row * cellWidth + cellWidth / 2;
 
 		// Premium styling
-		floatingText.className = `absolute pointer-events-none z-30 font-display font-bold text-xs sm:text-sm text-center -translate-x-1/2 -translate-y-1/2 transition-all duration-1000 ${isCombo
+		floatingText.className = `absolute pointer-events-none z-30 font-display font-bold text-sm sm:text-base text-center -translate-x-1/2 -translate-y-1/2 transition-all duration-1200 ease-out ${isCombo
 				? 'text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-rose-500 drop-shadow-[0_2px_8px_rgba(245,158,11,0.5)] scale-110'
 				: 'text-brand-pink dark:text-brand-purple drop-shadow-[0_2px_4px_rgba(255,127,142,0.4)]'
 			}`;
@@ -116,14 +116,14 @@ export const hud = {
 
 		this.boardContainer.appendChild(floatingText);
 
-		// GSAP/CSS animate up and fade out
+		// Pause briefly, then float up + fade out slowly
 		setTimeout(() => {
-			floatingText.style.transform = 'translate(-50%, -150%) scale(1.1)';
+			floatingText.style.transform = 'translate(-50%, -220%) scale(1.15)';
 			floatingText.style.opacity = '0';
-		}, 20);
+		}, 350);
 
 		setTimeout(() => {
 			floatingText.remove();
-		}, 1000);
+		}, 1800);
 	}
 };

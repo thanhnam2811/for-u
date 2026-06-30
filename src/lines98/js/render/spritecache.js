@@ -66,39 +66,78 @@ export const spriteCache = {
     const ctx = canvas.getContext('2d');
     const r = size / 2;
     const pad = Math.round(4 * this.dpr * scaleFactor);
+    const radius = r - pad;
 
     ctx.clearRect(0, 0, size, size);
 
-    // Drop shadow
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.25)';
-    ctx.shadowBlur = Math.round(4 * this.dpr * scaleFactor);
-    ctx.shadowOffsetY = Math.round(2 * this.dpr * scaleFactor);
-
-    // 3D sphere with radial gradient
+    // ── 1. Soft drop shadow ──
+    ctx.save();
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+    ctx.shadowBlur = Math.round(6 * this.dpr * scaleFactor);
+    ctx.shadowOffsetY = Math.round(3 * this.dpr * scaleFactor);
     ctx.beginPath();
-    ctx.arc(r, r, r - pad, 0, Math.PI * 2);
+    ctx.arc(r, r, radius, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(0,0,0,0.01)';
+    ctx.fill();
+    ctx.restore();
+
+    // ── 2. Main sphere body (multi-stop radial gradient) ──
+    ctx.beginPath();
+    ctx.arc(r, r, radius, 0, Math.PI * 2);
 
     const gradient = ctx.createRadialGradient(
-      r * 0.7, r * 0.6, Math.max(1, r * 0.1),
-      r, r, r - pad
+      r * 0.65, r * 0.55, Math.max(1, r * 0.05),
+      r, r, radius
     );
-    gradient.addColorStop(0, c.light);
-    gradient.addColorStop(0.55, c.main);
+    gradient.addColorStop(0, '#FFFFFF');
+    gradient.addColorStop(0.15, c.light);
+    gradient.addColorStop(0.5, c.main);
+    gradient.addColorStop(0.85, c.dark);
     gradient.addColorStop(1, c.dark);
 
     ctx.fillStyle = gradient;
     ctx.fill();
 
-    // Reset shadow
-    ctx.shadowColor = 'transparent';
-    ctx.shadowBlur = 0;
-    ctx.shadowOffsetY = 0;
-
-    // Glass highlight
+    // ── 3. Primary specular highlight (big, soft) ──
     ctx.beginPath();
-    ctx.arc(r * 0.68, r * 0.58, Math.max(1, r * 0.12), 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.38)';
+    ctx.arc(r * 0.7, r * 0.52, Math.max(1, radius * 0.22), 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
     ctx.fill();
+
+    // ── 4. Secondary specular (small, sharp) ──
+    ctx.beginPath();
+    ctx.arc(r * 0.6, r * 0.42, Math.max(1, radius * 0.08), 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+    ctx.fill();
+
+    // ── 5. Rim light (bottom edge reflection) ──
+    ctx.beginPath();
+    ctx.arc(r * 1.25, r * 1.15, radius * 0.95, 0, Math.PI * 2);
+    const rimGrad = ctx.createRadialGradient(
+      r * 1.15, r * 1.1, 0,
+      r * 1.15, r * 1.1, radius * 0.9
+    );
+    rimGrad.addColorStop(0, 'rgba(255, 255, 255, 0.18)');
+    rimGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    ctx.fillStyle = rimGrad;
+    ctx.fill();
+
+    // ── 6. Subtle inner shadow on top edge ──
+    ctx.beginPath();
+    ctx.arc(r * 0.5, r * 0.5, radius, 0, Math.PI * 2);
+    ctx.save();
+    ctx.clip();
+    const innerShadow = ctx.createRadialGradient(
+      r * 0.45, r * 0.4, radius * 0.3,
+      r * 0.45, r * 0.4, radius * 1.2
+    );
+    innerShadow.addColorStop(0, 'rgba(0, 0, 0, 0)');
+    innerShadow.addColorStop(1, 'rgba(0, 0, 0, 0.15)');
+    ctx.fillStyle = innerShadow;
+    ctx.beginPath();
+    ctx.arc(r * 0.45, r * 0.4, radius * 1.2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
 
     return canvas;
   },
