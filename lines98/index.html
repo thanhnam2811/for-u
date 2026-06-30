@@ -147,54 +147,42 @@
             </div>
 
             <!-- Controls -->
-            <div class="game-controls-container grid grid-cols-6 sm:grid-cols-6 gap-2 w-full mb-4">
+            <div class="game-controls-container flex flex-wrap items-center justify-center gap-2 w-full mb-4">
                 <button
-                    class="col-span-2 sm:col-span-1 flex flex-col items-center justify-center py-2.5 px-1 rounded-2xl bg-white/45 dark:bg-slate-900/40 border border-white/60 dark:border-slate-800/60 shadow-glass-light dark:shadow-glass-dark backdrop-blur-glass text-slate-600 dark:text-slate-300 hover:text-brand-pink dark:hover:text-brand-purple hover:scale-105 active:scale-95 transition-all select-none relative cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
+                    class="flex items-center justify-center w-10 h-10 rounded-xl bg-white/45 dark:bg-slate-900/40 border border-white/60 dark:border-slate-800/60 shadow-glass-light dark:shadow-glass-dark text-slate-550 dark:text-slate-400 hover:text-brand-pink dark:hover:text-brand-purple hover:scale-105 active:scale-95 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
                     id="undo-btn"
                     disabled
+                    aria-label="Hoàn tác"
                 >
-                    <span class="material-icons-round text-lg sm:text-xl mb-1">undo</span>
-                    <span class="font-display font-bold text-[10px] sm:text-xs tracking-wide hidden sm:block">Hoàn tác</span>
+                    <span class="material-icons-round text-lg">undo</span>
                 </button>
                 <button
-                    class="col-span-2 sm:col-span-1 flex flex-col items-center justify-center py-2.5 px-1 rounded-2xl bg-white/45 dark:bg-slate-900/40 border border-white/60 dark:border-slate-800/60 shadow-glass-light dark:shadow-glass-dark backdrop-blur-glass text-slate-600 dark:text-slate-300 hover:text-brand-pink dark:hover:text-brand-purple hover:scale-105 active:scale-95 transition-all select-none relative cursor-pointer"
-                    id="hint-btn"
-                >
-                    <span class="material-icons-round text-lg sm:text-xl mb-1">lightbulb</span>
-                    <span class="font-display font-bold text-[10px] sm:text-xs tracking-wide hidden sm:block">Gợi ý</span>
-                    <span
-                        class="absolute -top-1.5 -right-1.5 bg-gradient-to-br from-brand-pink to-pink-600 text-white text-[9px] font-semibold px-2 py-0.5 rounded-full shadow-[0_2px_6px_rgba(255,117,151,0.4)]"
-                        id="hint-count"
-                        >3</span
-                    >
-                </button>
-                <button
-                    class="col-span-2 sm:col-span-1 flex flex-col items-center justify-center py-2.5 px-1 rounded-2xl bg-white/45 dark:bg-slate-900/40 border border-white/60 dark:border-slate-800/60 shadow-glass-light dark:shadow-glass-dark backdrop-blur-glass text-slate-600 dark:text-slate-300 hover:text-brand-pink dark:hover:text-brand-purple hover:scale-105 active:scale-95 transition-all select-none relative cursor-pointer"
+                    class="flex items-center justify-center w-10 h-10 rounded-xl bg-white/45 dark:bg-slate-900/40 border border-white/60 dark:border-slate-800/60 shadow-glass-light dark:shadow-glass-dark text-slate-550 dark:text-slate-400 hover:text-brand-pink dark:hover:text-brand-purple hover:scale-105 active:scale-95 transition-all cursor-pointer"
                     id="new-game-btn"
+                    aria-label="Trận mới"
                 >
-                    <span class="material-icons-round text-lg sm:text-xl mb-1">refresh</span>
-                    <span class="font-display font-bold text-[10px] sm:text-xs tracking-wide hidden sm:block">Mới</span>
+                    <span class="material-icons-round text-lg">refresh</span>
                 </button>
                 <button
-                    class="col-span-2 sm:col-span-1 flex flex-col items-center justify-center py-2.5 px-1 rounded-2xl bg-white/45 dark:bg-slate-900/40 border border-white/60 dark:border-slate-800/60 shadow-glass-light dark:shadow-glass-dark backdrop-blur-glass text-slate-600 dark:text-slate-300 hover:text-brand-pink dark:hover:text-brand-purple hover:scale-105 active:scale-95 transition-all select-none relative cursor-pointer"
+                    class="flex items-center justify-center w-10 h-10 rounded-xl bg-white/45 dark:bg-slate-900/40 border border-white/60 dark:border-slate-800/60 shadow-glass-light dark:shadow-glass-dark text-slate-550 dark:text-slate-400 hover:text-brand-pink dark:hover:text-brand-purple hover:scale-105 active:scale-95 transition-all cursor-pointer"
                     id="sound-toggle"
+                    aria-label="Âm thanh"
                 >
-                    <span class="material-icons-round text-lg sm:text-xl mb-1" id="sound-icon">volume_up</span>
-                    <span class="font-display font-bold text-[10px] sm:text-xs tracking-wide hidden sm:block" id="sound-label">Âm</span>
+                    <span class="material-icons-round text-lg" id="sound-icon">volume_up</span>
                 </button>
                 <button
-                    class="col-span-2 sm:col-span-1 flex flex-col items-center justify-center py-2.5 px-1 rounded-2xl bg-white/45 dark:bg-slate-900/40 border border-white/60 dark:border-slate-800/60 shadow-glass-light dark:shadow-glass-dark backdrop-blur-glass text-slate-600 dark:text-slate-300 hover:text-amber-500 dark:hover:text-amber-400 hover:scale-105 active:scale-95 transition-all select-none relative cursor-pointer"
+                    class="flex items-center justify-center w-10 h-10 rounded-xl bg-white/45 dark:bg-slate-900/40 border border-white/60 dark:border-slate-800/60 shadow-glass-light dark:shadow-glass-dark text-slate-550 dark:text-slate-400 hover:text-amber-500 dark:hover:text-amber-400 hover:scale-105 active:scale-95 transition-all cursor-pointer"
                     id="challenge-btn"
+                    aria-label="Thử thách"
                 >
-                    <span class="material-icons-round text-lg sm:text-xl mb-1">calendar_month</span>
-                    <span class="font-display font-bold text-[10px] sm:text-xs tracking-wide hidden sm:block">Thử thách</span>
+                    <span class="material-icons-round text-lg">calendar_month</span>
                 </button>
                 <button
-                    class="col-span-2 sm:col-span-1 flex flex-col items-center justify-center py-2.5 px-1 rounded-2xl bg-white/45 dark:bg-slate-900/40 border border-white/60 dark:border-slate-800/60 shadow-glass-light dark:shadow-glass-dark backdrop-blur-glass text-slate-600 dark:text-slate-300 hover:text-brand-pink dark:hover:text-brand-purple hover:scale-105 active:scale-95 transition-all select-none relative cursor-pointer"
+                    class="flex items-center justify-center w-10 h-10 rounded-xl bg-white/45 dark:bg-slate-900/40 border border-white/60 dark:border-slate-800/60 shadow-glass-light dark:shadow-glass-dark text-slate-550 dark:text-slate-400 hover:text-brand-pink dark:hover:text-brand-purple hover:scale-105 active:scale-95 transition-all cursor-pointer"
                     id="leaderboard-btn"
+                    aria-label="Bảng xếp hạng"
                 >
-                    <span class="material-icons-round text-lg sm:text-xl mb-1">emoji_events</span>
-                    <span class="font-display font-bold text-[10px] sm:text-xs tracking-wide hidden sm:block">Top</span>
+                    <span class="material-icons-round text-lg">emoji_events</span>
                 </button>
             </div>
 
