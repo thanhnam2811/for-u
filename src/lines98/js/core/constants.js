@@ -27,7 +27,29 @@ export const THEMES = {
 			{ main: '#06B6D4', light: '#67E8F9', dark: '#0E7490', glow: 'rgba(6, 182, 212, 0.45)' },
 			{ main: '#A3715B', light: '#D4A68E', dark: '#78503F', glow: 'rgba(163, 113, 91, 0.45)' },
 		],
+		particles: { shardCount: [15, 20], gravity: 0.28, speed: [4, 6] },
+		audio: { selectPitch: 880, clearChord: 'major', heartbeatFreq: 65, volume: 1.0 },
+		ambient: { style: 'retro', color: '#FFEBF0' },
+		hud: { pressureColor: 'rgba(239,68,68,0.65)', textColor: '#EF4444', accentColor: '#3B82F6' },
 		animation: { pulseSpeed: 1.0, shakePower: 1.0, glowIntensity: 0.6 }
+	},
+	win98: {
+		name: 'Windows 98 🖥️',
+		board: { cellBg: 'rgba(192, 192, 192, 0.35)', gridLine: 'rgba(128, 128, 128, 0.5)' },
+		balls: [
+			{ main: '#FF0000', light: '#FF6666', dark: '#CC0000', glow: 'rgba(255, 0, 0, 0.4)' },
+			{ main: '#0000FF', light: '#6666FF', dark: '#0000CC', glow: 'rgba(0, 0, 255, 0.4)' },
+			{ main: '#008000', light: '#00CC00', dark: '#006600', glow: 'rgba(0, 128, 0, 0.4)' },
+			{ main: '#FFFF00', light: '#FFFF66', dark: '#CCCC00', glow: 'rgba(255, 255, 0, 0.4)' },
+			{ main: '#FF00FF', light: '#FF66FF', dark: '#CC00CC', glow: 'rgba(255, 0, 255, 0.4)' },
+			{ main: '#00FFFF', light: '#66FFFF', dark: '#00CCCC', glow: 'rgba(0, 255, 255, 0.4)' },
+			{ main: '#808080', light: '#C0C0C0', dark: '#606060', glow: 'rgba(128, 128, 128, 0.4)' },
+		],
+		particles: { shardCount: [8, 12], gravity: 0.35, speed: [3, 5] },
+		audio: { selectPitch: 660, clearChord: 'pentatonic', heartbeatFreq: 55, volume: 0.8 },
+		ambient: { style: 'chiptune', color: '#C0C0C0' },
+		hud: { pressureColor: 'rgba(255,0,0,0.5)', textColor: '#0000FF', accentColor: '#008000' },
+		animation: { pulseSpeed: 0.7, shakePower: 0.6, glowIntensity: 0.4 }
 	},
 	crystal: {
 		name: 'Crystal ✨',
@@ -41,6 +63,10 @@ export const THEMES = {
 			{ main: '#FFB07C', light: '#FFD0AE', dark: '#CC8A5E', glow: 'rgba(255, 176, 124, 0.45)' },
 			{ main: '#E0D4F0', light: '#F0EAF8', dark: '#B0A0C8', glow: 'rgba(224, 212, 240, 0.45)' },
 		],
+		particles: { shardCount: [20, 28], gravity: 0.22, speed: [5, 8] },
+		audio: { selectPitch: 1100, clearChord: 'major', heartbeatFreq: 72, volume: 1.1 },
+		ambient: { style: 'ethereal', color: '#E8F0FE' },
+		hud: { pressureColor: 'rgba(255,127,142,0.6)', textColor: '#FF7F8E', accentColor: '#7EC8E3' },
 		animation: { pulseSpeed: 1.2, shakePower: 0.8, glowIntensity: 0.8 }
 	},
 	neon: {
@@ -55,6 +81,10 @@ export const THEMES = {
 			{ main: '#FF8C00', light: '#FFB366', dark: '#BF6900', glow: 'rgba(255, 140, 0, 0.6)' },
 			{ main: '#F0F0F0', light: '#FFFFFF', dark: '#C0C0C0', glow: 'rgba(240, 240, 240, 0.6)' },
 		],
+		particles: { shardCount: [18, 25], gravity: 0.30, speed: [6, 9] },
+		audio: { selectPitch: 1000, clearChord: 'synth', heartbeatFreq: 70, volume: 1.2 },
+		ambient: { style: 'synthwave', color: '#0F0C1B' },
+		hud: { pressureColor: 'rgba(255,45,106,0.7)', textColor: '#00D4FF', accentColor: '#FF2D6A' },
 		animation: { pulseSpeed: 1.4, shakePower: 1.2, glowIntensity: 1.0 }
 	},
 	galaxy: {
@@ -69,6 +99,10 @@ export const THEMES = {
 			{ main: '#48D1CC', light: '#8CE8E4', dark: '#2EAAA5', glow: 'rgba(72, 209, 204, 0.5)' },
 			{ main: '#F0E6FF', light: '#FFFFFF', dark: '#C4B3E6', glow: 'rgba(240, 230, 255, 0.5)' },
 		],
+		particles: { shardCount: [16, 22], gravity: 0.25, speed: [4, 7] },
+		audio: { selectPitch: 940, clearChord: 'major', heartbeatFreq: 60, volume: 1.0 },
+		ambient: { style: 'cosmic', color: '#0A061E' },
+		hud: { pressureColor: 'rgba(123,104,238,0.65)', textColor: '#FF6B9D', accentColor: '#7B68EE' },
 		animation: { pulseSpeed: 1.1, shakePower: 0.9, glowIntensity: 0.9 }
 	},
 	zen: {
@@ -83,6 +117,10 @@ export const THEMES = {
 			{ main: '#D35400', light: '#E8944D', dark: '#9F3E00', glow: 'rgba(211, 84, 0, 0.4)' },
 			{ main: '#7F8C8D', light: '#B0BABC', dark: '#566264', glow: 'rgba(127, 140, 141, 0.4)' },
 		],
+		particles: { shardCount: [12, 16], gravity: 0.20, speed: [3, 5] },
+		audio: { selectPitch: 780, clearChord: 'pentatonic', heartbeatFreq: 50, volume: 0.7 },
+		ambient: { style: 'nature', color: '#F5EBDC' },
+		hud: { pressureColor: 'rgba(192,57,43,0.5)', textColor: '#2E86C1', accentColor: '#27AE60' },
 		animation: { pulseSpeed: 0.8, shakePower: 0.7, glowIntensity: 0.5 }
 	}
 };

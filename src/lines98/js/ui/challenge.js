@@ -1,4 +1,19 @@
 import { state } from '../core/state.js';
+import { SeededRNG } from '../core/rng.js';
+
+/**
+ * Deterministic seed from today's date string (YYYY-MM-DD).
+ * Ensures all players get the same board on the same day.
+ */
+export function getDailySeed() {
+	const dateStr = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+	let hash = 0;
+	for (let i = 0; i < dateStr.length; i++) {
+		hash = ((hash << 5) - hash) + dateStr.charCodeAt(i);
+		hash |= 0; // Convert to 32bit int
+	}
+	return Math.abs(hash);
+}
 
 /**
  * Daily Challenge system.

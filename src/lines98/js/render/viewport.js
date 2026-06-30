@@ -23,6 +23,9 @@ export const viewport = {
 	// Path preview line animation pulsing
 	pathPulseTime: 0,
 
+	// Draw call counter for profiler
+	drawCallCount: 0,
+
 	initialize(canvasElement) {
 		this.canvas = canvasElement;
 		this.ctx = canvasElement.getContext('2d');
@@ -80,6 +83,7 @@ export const viewport = {
 	draw(dt) {
 		if (!this.ctx) return;
 		this.ctx.clearRect(0, 0, this.width, this.height);
+		this.drawCallCount = 0;
 
 		// 1. Update fx/timing variables
 		this.pathPulseTime += 0.05 * (dt / 16.67);
@@ -180,6 +184,7 @@ export const viewport = {
 					ballWidth,
 					ballWidth
 				);
+				this.drawCallCount++;
 
 				// Desaturate overlay for danger alert balls
 				if (isNextSpawnCrucial) {
@@ -212,6 +217,7 @@ export const viewport = {
 			const offset = (size - ballWidth) / 2;
 
 			this.ctx.drawImage(ghostSprite, x + offset, y + offset, ballWidth, ballWidth);
+		this.drawCallCount++;
 		}
 	},
 
@@ -288,6 +294,7 @@ export const viewport = {
 				this.ctx.save();
 				this.ctx.globalAlpha = 0.5 + Math.sin(pulseTime * 1.5) * 0.15;
 				this.ctx.drawImage(glowSprite, x + offset, y + offset, glowSize, glowSize);
+				this.drawCallCount++;
 				this.ctx.restore();
 			}
 

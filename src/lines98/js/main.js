@@ -158,14 +158,33 @@ function gameLoop(now) {
 	if (dt > 100) dt = 16.67; // Cap spikes (e.g. background tab)
 	lastTime = now;
 
-	// Update game loop schedulers
+	profiler.resetFrame();
+
+	// Logic timing
+	const t1 = performance.now();
 	scheduler.update(dt);
 	tweenManager.update(dt);
-	particleSystem.update(dt);
-	screenTransform.update(dt);
+	const t2 = performance.now();
+	profiler.logicTime = t2 - t1;
 
-	// Draw viewport frame
+	// Particle timing
+	const t3 = performance.now();
+	particleSystem.update(dt);
+	const t4 = performance.now();
+	profiler.particleTime = t4 - t3;
+
+	// FX timing
+	const t5 = performance.now();
+	screenTransform.update(dt);
+	const t6 = performance.now();
+	profiler.fxTime = t6 - t5;
+
+	// Render timing
+	const t7 = performance.now();
 	viewport.draw(dt);
+	const t8 = performance.now();
+	profiler.renderTime = t8 - t7;
+	profiler.drawCalls = viewport.drawCallCount || 0;
 
 	// Update profiler (after draw to capture full frame time)
 	profiler.update(dt, now);
@@ -174,7 +193,9 @@ function gameLoop(now) {
 }
 
 function startNewGame() {
-	const seed = Math.floor(Math.random() * 2147483647);
+	const seed = state.challenge.active
+		? challenge.getDailySeed()
+		: Math.floor(Math.random() * 2147483647);
 	resetState(seed);
 	clearHistory();
 	particleSystem.clear();
