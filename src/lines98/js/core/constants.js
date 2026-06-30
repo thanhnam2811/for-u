@@ -6,6 +6,7 @@
  */
 export class Theme {
 	constructor(config) {
+		this.name = config.name;
 		this.board = config.board;
 		this.balls = config.balls;
 		this.particles = config.particles;

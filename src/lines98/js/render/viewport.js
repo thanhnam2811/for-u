@@ -196,10 +196,10 @@ export const viewport = {
 				let offsetX = 0;
 				let offsetY = 0;
 
-				// Selected Pulse — big breathing + glow + ring
+				// Selected — subtle lift like hover
 				const isSelected = state.selected && state.selected.row === r && state.selected.col === c;
 				if (isSelected) {
-					scale = 0.85 + Math.sin(this.pathPulseTime * 2.5) * 0.15;
+					offsetY = -2;
 				}
 
 				// Hover — subtle lift + glow
@@ -223,8 +223,8 @@ export const viewport = {
 				const ballSprite = spriteCache.balls[color]?.[stateIndex];
 				if (!ballSprite) continue;
 
-				// Hover — subtle shadow glow
-				if (isHovered && !isSelected) {
+				// Hover or Selected — same subtle lift + glow
+				if (isHovered || isSelected) {
 					const theme = THEMES[state.theme] || THEMES.classic;
 					const ballColor = theme.balls[color - 1];
 					const glowColor = ballColor?.glow || 'rgba(255, 117, 151, 0.6)';
@@ -242,47 +242,6 @@ export const viewport = {
 						this.ctx.fillStyle = '#A0A0A0';
 						this.ctx.beginPath();
 						this.ctx.arc(x + offset + offsetX + ballWidth / 2, y + offset + offsetY + ballWidth / 2, ballWidth / 2, 0, Math.PI * 2);
-						this.ctx.fill();
-						this.ctx.restore();
-					}
-					continue;
-				}
-
-				// Selected — big glow + animated ring
-				if (isSelected) {
-					const theme = THEMES[state.theme] || THEMES.classic;
-					const ballColor = theme.balls[color - 1];
-					const selColor = ballColor?.main || '#FF7597';
-					const selGlow = ballColor?.glow || 'rgba(255, 117, 151, 0.6)';
-
-					this.ctx.save();
-					this.ctx.shadowColor = selGlow;
-					this.ctx.shadowBlur = 30;
-					this.ctx.drawImage(ballSprite, x + offset + offsetX, y + offset + offsetY, ballWidth, ballWidth);
-					this.drawCallCount++;
-					this.ctx.restore();
-
-					// Pulsing ring
-					this.ctx.save();
-					const ringR = ballWidth * (0.72 + Math.sin(this.pathPulseTime * 3) * 0.12);
-					const cx = x + offset + offsetX + ballWidth / 2;
-					const cy = y + offset + offsetY + ballWidth / 2;
-					this.ctx.beginPath();
-					this.ctx.arc(cx, cy, ringR, 0, Math.PI * 2);
-					this.ctx.strokeStyle = selColor;
-					this.ctx.globalAlpha = 0.5 + Math.sin(this.pathPulseTime * 3) * 0.25;
-					this.ctx.lineWidth = 3;
-					this.ctx.shadowColor = selColor;
-					this.ctx.shadowBlur = 18;
-					this.ctx.stroke();
-					this.ctx.restore();
-
-					if (isNextSpawnCrucial) {
-						this.ctx.save();
-						this.ctx.globalAlpha = 0.35;
-						this.ctx.fillStyle = '#A0A0A0';
-						this.ctx.beginPath();
-						this.ctx.arc(cx, cy, ballWidth / 2, 0, Math.PI * 2);
 						this.ctx.fill();
 						this.ctx.restore();
 					}
