@@ -317,8 +317,12 @@ html, body {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-/* === MOBILE GAME OVERLAY ADJUSTMENTS === */
+/* === SMALL SCREEN (≤ 480px) === */
 @media (max-width: 480px) {
+  .game-score-container { gap: 0.3rem; }
+  .game-score-container > div { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+  .game-stats-bar { padding: 0.4rem 0.5rem; font-size: 0.65rem; }
+  .game-board-container { padding: 0.3rem; }
   .preview-ball {
     width: 18px;
     height: 18px;
@@ -384,6 +388,37 @@ html, body {
   .game-header h1 { font-size: 1.1rem; }
   .game-header button { width: 2rem; height: 2rem; border-radius: 0.5rem; }
   .game-header button span { font-size: 1rem; }
+}
+
+/* === VERY SMALL SCREEN (≤ 359px) === */
+@media (max-width: 359px) {
+  .game-score-container { gap: 0.2rem; }
+  .game-score-container > div { padding: 0.3rem 0.2rem; border-radius: 0.75rem; }
+  .game-score-container span { font-size: 0.5rem; }
+  #score, #high-score { font-size: 0.875rem; }
+  .game-stats-bar { font-size: 0.55rem; padding: 0.25rem 0.3rem; }
+  .game-controls-container button { width: 2rem; height: 2rem; }
+  .game-controls-container button span { font-size: 0.875rem; }
+  .game-header h1 { font-size: 0.95rem; }
+  .game-header button { width: 1.75rem; height: 1.75rem; }
+  .game-header button span { font-size: 0.875rem; }
+}
+
+/* === LANDSCAPE TINY HEIGHT (≤ 450px) === */
+@media (max-height: 450px) {
+  .game-header { margin-bottom: 0.15rem; }
+  .game-header h1 { font-size: 0.9rem; }
+  .game-header button { width: 1.75rem; height: 1.75rem; }
+  .game-header button span { font-size: 0.875rem; }
+  .game-score-container { margin-bottom: 0.15rem; gap: 0.2rem; }
+  .game-score-container > div { padding: 0.25rem 0.15rem; border-radius: 0.625rem; }
+  .game-score-container span { font-size: 0.5rem; }
+  #score, #high-score { font-size: 0.875rem; }
+  .game-stats-bar { display: none; }
+  .game-board-container { margin-bottom: 0.15rem; max-width: 280px; }
+  .game-controls-container { margin-bottom: 0.15rem; gap: 0.25rem; }
+  .game-controls-container button { width: 1.75rem; height: 1.75rem; }
+  .game-controls-container button span { font-size: 0.875rem; }
 }
 
 @keyframes heartbeat-rumble {
