@@ -12,6 +12,7 @@ import { modal } from './ui/modal.js';
 import { challenge } from './ui/challenge.js';
 import { analytics } from './ui/analytics.js';
 import { profiler } from './ui/profiler.js';
+import { MOVE_STEP_MS } from './core/constants.js';
 import { Sound } from './audio/sound.js';
 
 // ── Firebase / Online ──

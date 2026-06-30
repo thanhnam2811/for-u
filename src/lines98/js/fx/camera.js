@@ -16,6 +16,12 @@ export class ScreenTransform {
     this.zoomTarget = 1.0;
     this.zoomSpeed = 0.05;
 
+    // 2.5D perspective tilt
+    this.skewX = 0;
+    this.skewY = 0;
+    this.skewTargetX = 0;
+    this.skewTargetY = 0;
+
     // Floating idle oscillation
     this.time = 0;
   }
@@ -30,6 +36,16 @@ export class ScreenTransform {
     this.zoomTarget = target;
   }
 
+  /**
+   * Set a 2.5D perspective skew target (subtle tilt).
+   * @param {number} sx - Horizontal skew factor (-0.05 to 0.05)
+   * @param {number} sy - Vertical skew factor (-0.05 to 0.05)
+   */
+  setSkewTarget(sx, sy) {
+    this.skewTargetX = sx;
+    this.skewTargetY = sy;
+  }
+
   update(dt) {
     const step = dt / 16.67;
     this.time += 0.015 * step;
@@ -37,16 +53,19 @@ export class ScreenTransform {
     // 1. Idle rotation/tilt oscillation (slow wave between -0.3 and 0.3 degrees)
     this.angle = Math.sin(this.time) * 0.005;
 
-    // 2. Zoom interpolation (towards 1.0 or 1.05)
+    // 2. 2.5D perspective skew — subtle idle oscillation
+    this.skewX += (this.skewTargetX + Math.sin(this.time * 0.7) * 0.008 - this.skewX) * 0.03 * step;
+    this.skewY += (this.skewTargetY + Math.cos(this.time * 0.5) * 0.005 - this.skewY) * 0.03 * step;
+
+    // 3. Zoom interpolation (towards 1.0 or 1.05)
     this.scale += (this.zoomTarget - this.scale) * this.zoomSpeed * step;
 
-    // 3. Screen shake calculation
+    // 4. Screen shake calculation
     if (this.shakeElapsed < this.shakeDuration) {
       this.shakeElapsed += dt;
       const progress = this.shakeElapsed / this.shakeDuration;
-      // Fade out shake intensity near end
       const currentIntensity = this.shakeIntensity * (1 - progress);
-      
+
       this.offsetX = (Math.random() * 2 - 1) * currentIntensity;
       this.offsetY = (Math.random() * 2 - 1) * currentIntensity;
     } else {
@@ -57,6 +76,7 @@ export class ScreenTransform {
 
   /**
    * Applies the transformation matrix to the canvas.
+   * Includes 2.5D perspective tilt via skew transform.
    */
   apply(ctx, width, height) {
     ctx.save();
@@ -71,6 +91,12 @@ export class ScreenTransform {
     ctx.translate(centerX, centerY);
     ctx.rotate(this.angle);
     ctx.scale(this.scale, this.scale);
+
+    // 3. 2.5D perspective tilt via skew
+    const skewX = this.skewX * 0.05;
+    const skewY = this.skewY * 0.03;
+    ctx.transform(1, skewY, skewX, 1, 0, 0);
+
     ctx.translate(-centerX, -centerY);
   }
 
@@ -92,6 +118,10 @@ export class ScreenTransform {
     this.shakeDuration = 0;
     this.shakeElapsed = 0;
     this.zoomTarget = 1.0;
+    this.skewX = 0;
+    this.skewY = 0;
+    this.skewTargetX = 0;
+    this.skewTargetY = 0;
   }
 }
 

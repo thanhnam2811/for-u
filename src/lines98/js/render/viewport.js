@@ -150,8 +150,6 @@ export const viewport = {
 				if (color === 0) continue;
 
 				const { x, y } = this.getCellCoords(r, c);
-				const ballSprite = spriteCache.balls[color];
-				if (!ballSprite) continue;
 
 				let scale = 0.85;
 				let offsetX = 0;
@@ -162,17 +160,18 @@ export const viewport = {
 					scale = 0.85 + Math.sin(this.pathPulseTime * 2.5) * 0.08;
 				}
 
-				// Danger Alert Ball shake (if next spawn breaks setup)
+				// Danger Alert: shake + desaturate if next spawn blocks crucial path
 				const isNextSpawnCrucial = state.nextBalls.some(nb => nb.row === r && nb.col === c);
 				if (isNextSpawnCrucial) {
-					// Desaturate slightly (via globalAlpha or overlay, here we shake)
 					const angle = this.pathPulseTime * 5;
 					offsetX = Math.sin(angle) * 1.5;
 					offsetY = Math.cos(angle) * 1.5;
 				}
 
 				const ballWidth = size * scale;
-				const offset = (size - ballWidth) / 2;
+				const stateIndex = spriteCache.scaleToState(scale);
+				const ballSprite = spriteCache.balls[color]?.[stateIndex];
+				if (!ballSprite) continue;
 
 				this.ctx.drawImage(
 					ballSprite,
@@ -181,6 +180,21 @@ export const viewport = {
 					ballWidth,
 					ballWidth
 				);
+
+				// Desaturate overlay for danger alert balls
+				if (isNextSpawnCrucial) {
+					this.ctx.save();
+					this.ctx.globalAlpha = 0.35;
+					this.ctx.fillStyle = '#A0A0A0';
+					this.ctx.beginPath();
+					this.ctx.arc(
+						x + offset + offsetX + ballWidth / 2,
+						y + offset + offsetY + ballWidth / 2,
+						ballWidth / 2, 0, Math.PI * 2
+					);
+					this.ctx.fill();
+					this.ctx.restore();
+				}
 			}
 		}
 	},
@@ -260,7 +274,9 @@ export const viewport = {
 		const pulseTime = this.pathPulseTime;
 
 		for (const line of uniqueLines) {
-			const glowSprite = spriteCache.glows[line.color];
+			// Select glow intensity based on line length
+			const intensity = line.cells.length >= 6 ? 2 : line.cells.length >= 5 ? 1 : 0;
+			const glowSprite = spriteCache.glows[line.color]?.[intensity];
 			if (!glowSprite) continue;
 
 			// 1. Static pulsing glow on every cell of the line

@@ -1,16 +1,21 @@
 import { THEMES } from '../core/constants.js';
 
+// 5 ball scale states for pulse animation (pre-rendered at DPR)
+export const BALL_STATE_SCALES = [0.70, 0.82, 0.94, 1.06, 1.18];
+
+// 3 glow intensity levels
+export const GLOW_INTENSITIES = [0.3, 0.65, 1.0];
+
 export const spriteCache = {
-  balls: [],      // Array of Canvas elements for each color
-  ghosts: [],     // 30% opacity preview ghost balls
-  glows: [],      // Glowing backdrop halo for potential setups
-  particles: [],  // Colored crystal shards
+  balls: [],      // balls[color][state] -> Canvas
+  ghosts: [],     // ghosts[color] -> Canvas
+  glows: [],      // glows[color][intensity] -> Canvas
+  particles: [],  // particles[color] -> [Canvas x4]
   dpr: 1,
-  ballSize: 64,   // Base resolution for high-DPI caching
+  ballSize: 64,
 
   initialize(themeName) {
     this.dpr = window.devicePixelRatio || 1;
-    // Base texture size (e.g. 64px scaled by DPR, so 128px on 2x Retina screen)
     this.ballSize = Math.round(64 * this.dpr);
 
     const theme = THEMES[themeName] || THEMES.classic;
@@ -21,40 +26,61 @@ export const spriteCache = {
     this.glows = [];
     this.particles = [];
 
-    // Cache each color
     for (let i = 0; i < colors.length; i++) {
       const c = colors[i];
-      const colorIndex = i + 1; // 1-indexed ball colors
+      const colorIndex = i + 1;
 
-      this.balls[colorIndex] = this.createBallSprite(c);
+      // 5 ball states at different scales for pulse animation
+      const stateSprites = [];
+      for (let s = 0; s < BALL_STATE_SCALES.length; s++) {
+        stateSprites.push(this.createBallSprite(c, BALL_STATE_SCALES[s]));
+      }
+      this.balls[colorIndex] = stateSprites;
+
       this.ghosts[colorIndex] = this.createGhostSprite(c);
-      this.glows[colorIndex] = this.createGlowSprite(c);
+
+      // 3 glow intensities
+      const glowSprites = [];
+      for (let g = 0; g < GLOW_INTENSITIES.length; g++) {
+        glowSprites.push(this.createGlowSprite(c, GLOW_INTENSITIES[g]));
+      }
+      this.glows[colorIndex] = glowSprites;
+
       this.particles[colorIndex] = this.createParticleSprites(c);
     }
   },
 
-  createBallSprite(c) {
+  /**
+   * Map a desired scale factor to nearest pre-rendered state index (0-4).
+   */
+  scaleToState(scale) {
+    const t = (scale - BALL_STATE_SCALES[0]) / (BALL_STATE_SCALES[4] - BALL_STATE_SCALES[0]);
+    return Math.max(0, Math.min(4, Math.round(t * 4)));
+  },
+
+  createBallSprite(c, scaleFactor) {
+    const size = Math.round(this.ballSize * scaleFactor);
     const canvas = document.createElement('canvas');
-    canvas.width = this.ballSize;
-    canvas.height = this.ballSize;
+    canvas.width = size;
+    canvas.height = size;
     const ctx = canvas.getContext('2d');
-    const r = this.ballSize / 2;
+    const r = size / 2;
+    const pad = Math.round(4 * this.dpr * scaleFactor);
 
-    ctx.clearRect(0, 0, this.ballSize, this.ballSize);
+    ctx.clearRect(0, 0, size, size);
 
-    // 1. Shadow glow (slight blurred dark bottom shadow)
+    // Drop shadow
     ctx.shadowColor = 'rgba(0, 0, 0, 0.25)';
-    ctx.shadowBlur = 4 * this.dpr;
-    ctx.shadowOffsetY = 2 * this.dpr;
+    ctx.shadowBlur = Math.round(4 * this.dpr * scaleFactor);
+    ctx.shadowOffsetY = Math.round(2 * this.dpr * scaleFactor);
 
-    // 2. Base Sphere (radial gradient for 3D sphere look)
+    // 3D sphere with radial gradient
     ctx.beginPath();
-    ctx.arc(r, r, r - 4 * this.dpr, 0, Math.PI * 2);
-    
-    // Light source from top-left (35% x, 30% y)
+    ctx.arc(r, r, r - pad, 0, Math.PI * 2);
+
     const gradient = ctx.createRadialGradient(
-      r * 0.7, r * 0.6, r * 0.1,
-      r, r, r - 4 * this.dpr
+      r * 0.7, r * 0.6, Math.max(1, r * 0.1),
+      r, r, r - pad
     );
     gradient.addColorStop(0, c.light);
     gradient.addColorStop(0.55, c.main);
@@ -68,9 +94,9 @@ export const spriteCache = {
     ctx.shadowBlur = 0;
     ctx.shadowOffsetY = 0;
 
-    // 3. Realistic Glass Highlight (white glossy dot on top-left)
+    // Glass highlight
     ctx.beginPath();
-    ctx.arc(r * 0.68, r * 0.58, r * 0.12, 0, Math.PI * 2);
+    ctx.arc(r * 0.68, r * 0.58, Math.max(1, r * 0.12), 0, Math.PI * 2);
     ctx.fillStyle = 'rgba(255, 255, 255, 0.38)';
     ctx.fill();
 
@@ -83,17 +109,16 @@ export const spriteCache = {
     canvas.height = this.ballSize;
     const ctx = canvas.getContext('2d');
     const r = this.ballSize / 2;
+    const pad = Math.round(5 * this.dpr);
 
     ctx.clearRect(0, 0, this.ballSize, this.ballSize);
-
-    // Draw sphere at 30% opacity
     ctx.globalAlpha = 0.3;
 
     ctx.beginPath();
-    ctx.arc(r, r, r - 5 * this.dpr, 0, Math.PI * 2);
+    ctx.arc(r, r, r - pad, 0, Math.PI * 2);
     const gradient = ctx.createRadialGradient(
       r * 0.7, r * 0.6, r * 0.1,
-      r, r, r - 5 * this.dpr
+      r, r, r - pad
     );
     gradient.addColorStop(0, c.light);
     gradient.addColorStop(0.6, c.main);
@@ -106,26 +131,26 @@ export const spriteCache = {
     ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
     ctx.fill();
 
-    ctx.globalAlpha = 1.0; // Reset
+    ctx.globalAlpha = 1.0;
     return canvas;
   },
 
-  createGlowSprite(c) {
+  createGlowSprite(c, alpha) {
     const canvas = document.createElement('canvas');
-    canvas.width = this.ballSize * 1.5;
-    canvas.height = this.ballSize * 1.5;
+    const totalSize = Math.round(this.ballSize * 1.5);
+    canvas.width = totalSize;
+    canvas.height = totalSize;
     const ctx = canvas.getContext('2d');
-    const center = (this.ballSize * 1.5) / 2;
+    const center = totalSize / 2;
     const r = this.ballSize / 2;
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, totalSize, totalSize);
 
-    // Dynamic glow radial aura
     const gradient = ctx.createRadialGradient(
       center, center, r * 0.3,
       center, center, r * 1.4
     );
-    gradient.addColorStop(0, c.glow);
+    gradient.addColorStop(0, c.glow.replace('0.45', String(alpha * 0.45)));
     gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
 
     ctx.fillStyle = gradient;
@@ -138,7 +163,7 @@ export const spriteCache = {
 
   createParticleSprites(c) {
     const shardCanvases = [];
-    const shardCount = 4; // Generate a few random shard shapes
+    const shardCount = 4;
     const shardSize = Math.round(16 * this.dpr);
 
     for (let s = 0; s < shardCount; s++) {
@@ -150,7 +175,6 @@ export const spriteCache = {
       ctx.clearRect(0, 0, shardSize, shardSize);
 
       ctx.beginPath();
-      // Draw random triangle/polygon shards
       ctx.moveTo(Math.random() * shardSize, Math.random() * shardSize);
       ctx.lineTo(Math.random() * shardSize, Math.random() * shardSize);
       ctx.lineTo(Math.random() * shardSize, Math.random() * shardSize);
@@ -163,7 +187,6 @@ export const spriteCache = {
       ctx.fillStyle = grad;
       ctx.fill();
 
-      // Add a tiny glossy white line
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
       ctx.lineWidth = 1 * this.dpr;
       ctx.stroke();
