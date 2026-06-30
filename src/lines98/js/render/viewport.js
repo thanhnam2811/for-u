@@ -112,6 +112,9 @@ export const viewport = {
 		// 8. Draw Particles
 		particleSystem.render(this.ctx);
 
+		// 9. Draw smoothly moving ball on top of everything
+		this._drawMovingBall();
+
 		// Restore Transform Matrix
 		screenTransform.restore(this.ctx);
 	},
@@ -374,5 +377,49 @@ export const viewport = {
 		this.ctx.fill();
 
 		this.ctx.restore();
+	},
+
+	/**
+	 * Draw the ball at its smoothly interpolated position during movement.
+	 */
+	_drawMovingBall() {
+		const anim = window.moveAnim;
+		if (!anim || !anim.path || anim.path.length < 2) return;
+
+		const totalSteps = anim.path.length - 1;
+		const stepPos = Math.min(anim.progress * totalSteps, totalSteps);
+		const stepIdx = Math.min(Math.floor(stepPos), totalSteps - 1);
+		const frac = this._easeInOutQuad(stepPos - stepIdx);
+
+		const from = anim.path[stepIdx];
+		const to = anim.path[Math.min(stepIdx + 1, totalSteps)];
+		if (!from || !to) return;
+
+		const fromPos = this.getCellCoords(from.row, from.col);
+		const toPos = this.getCellCoords(to.row, to.col);
+
+		const drawX = fromPos.x + (toPos.x - fromPos.x) * frac;
+		const drawY = fromPos.y + (toPos.y - fromPos.y) * frac;
+
+		const size = this.cellSize;
+		const scale = 0.88;
+		const ballWidth = size * scale;
+		const stateIdx = spriteCache.scaleToState(scale);
+		const ballSprite = spriteCache.balls[anim.color]?.[stateIdx];
+		if (!ballSprite) return;
+
+		// Floating shadow beneath ball
+		this.ctx.save();
+		this.ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
+		this.ctx.shadowBlur = 8;
+		this.ctx.shadowOffsetY = 4;
+
+		this.ctx.drawImage(ballSprite, drawX, drawY, ballWidth, ballWidth);
+		this.drawCallCount++;
+		this.ctx.restore();
+	},
+
+	_easeInOutQuad(t) {
+		return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
 	}
 };

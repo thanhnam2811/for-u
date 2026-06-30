@@ -24,9 +24,6 @@ import { shareReplay, verifyReplay } from './storage/replay-share.js';
 
 // Global variables for movement animation
 let isMoving = false;
-let movePath = [];
-let movePathIndex = 0;
-let animatedBall = null; // Temporary ball used for rendering during movement path interpolation
 
 // Global variable for path tracking
 window.currentPath = null;
@@ -178,6 +175,17 @@ function gameLoop(now) {
 	screenTransform.update(dt);
 	const t6 = performance.now();
 	profiler.fxTime = t6 - t5;
+
+	// Update smooth move animation
+	if (window.moveAnim) {
+		const anim = window.moveAnim;
+		anim.progress = Math.min(1, anim.progress + dt / anim.totalDuration);
+		if (anim.progress >= 1) {
+			window.moveAnim = null;
+			state.board[anim.endRow][anim.endCol] = anim.color;
+			finalizeMove(anim.path, anim.color);
+		}
+	}
 
 	// Render timing
 	const t7 = performance.now();
@@ -334,55 +342,29 @@ function executeMovement(path) {
 	const endCell = path[path.length - 1];
 	const color = state.board[startCell.row][startCell.col];
 
-	// Temporarily clear ball from starting board position
+	// Clear ball from board — viewport will render it at interpolated position
 	state.board[startCell.row][startCell.col] = 0;
 
-	// Zoom camera coordinate transform during movement
+	// Zoom camera during movement
 	screenTransform.setZoom(1.04);
 
-	// Setup animated ball container for path drawing interpolation
-	animatedBall = {
-		row: startCell.row,
-		col: startCell.col,
-		color: color
+	window.moveAnim = {
+		path,
+		progress: 0,
+		color,
+		endRow: endCell.row,
+		endCol: endCell.col,
+		totalDuration: (path.length - 1) * MOVE_STEP_MS,
 	};
-
-	movePath = path;
-	movePathIndex = 0;
-
-	animateStep();
 }
 
-function animateStep() {
-	if (movePathIndex >= movePath.length - 1) {
-		// Movement completed!
-		finalizeMove();
-		return;
-	}
-
-	const current = movePath[movePathIndex];
-	const next = movePath[movePathIndex + 1];
-
-	// We tween the animatedBall indices directly (rendered as offsets in main viewport)
-	// To keep it simple, we replace the board position of the animated ball dynamically
-	state.board[current.row][current.col] = 0;
-	state.board[next.row][next.col] = animatedBall.color; // Shift color to next cell
-
-	movePathIndex++;
-
-	// Delay next step using our deterministic scheduler
-	scheduler.after(MOVE_STEP_MS, animateStep);
-}
-
-function finalizeMove() {
-	const start = movePath[0];
-	const end = movePath[movePath.length - 1];
-	const color = animatedBall.color;
+function finalizeMove(path, color) {
+	const start = path[0];
+	const end = path[path.length - 1];
 
 	isMoving = false;
 	state.animating = false;
 	state.selected = null;
-	animatedBall = null;
 
 	// Restore camera zoom
 	screenTransform.setZoom(1.0);
