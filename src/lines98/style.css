@@ -791,6 +791,7 @@ html::-webkit-scrollbar-thumb:hover {
     }
 }
 /* Chặn zoom thao tác cảm ứng trên mobile */
-canvas, .game-container {
-  touch-action: manipulation;
+canvas,
+.game-container {
+    touch-action: manipulation;
 }

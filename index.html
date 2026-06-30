@@ -1,126 +1,231 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="vi">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Góc Nhỏ Phép Thuật ✨ (Magic Playground)</title>
-  
-  <!-- script tối ưu tránh nhấp nháy FOUC khi chọn dark mode và thiết lập theme-color di động -->
-  <script>
-    (function() {
-      const isDark = localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
-      if (isDark) {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
-      const meta = document.createElement('meta');
-      meta.name = 'theme-color';
-      meta.content = isDark ? '#0F0C1B' : '#FFEBF0';
-      document.head.appendChild(meta);
-    })();
-  </script>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
+        <title>Góc Nhỏ Phép Thuật ✨ (Magic Playground)</title>
 
-  <!-- Font chữ cực kỳ tròn trịa, đáng yêu và hỗ trợ tiếng Việt 100% không lỗi ký tự -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@500;700&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
-  
-  <!-- Material Icons cho các biểu tượng xinh xắn -->
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+        <!-- script tối ưu tránh nhấp nháy FOUC khi chọn dark mode và thiết lập theme-color di động -->
+        <script>
+            (function () {
+                const isDark =
+                    localStorage.getItem('theme') === 'dark' ||
+                    (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                if (isDark) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+                const meta = document.createElement('meta');
+                meta.name = 'theme-color';
+                meta.content = isDark ? '#0F0C1B' : '#FFEBF0';
+                document.head.appendChild(meta);
+            })();
+        </script>
 
-  <link rel="icon" type="image/svg+xml" href="favicon.svg">
-  
-  <link rel="stylesheet" href="src/style.css">
-</head>
-<body class="bg-gradient-to-br from-[#FFEBF0] to-[#E8F0FE] dark:from-[#0F0C1B] dark:to-[#1B1437] min-h-screen font-sans text-slate-700 dark:text-slate-100 flex justify-center items-center overflow-x-hidden relative transition-colors duration-500">
-  <!-- Nút Tài khoản / Đăng nhập -->
-  <button id="google-login-btn" class="fixed top-6 right-20 z-50 flex items-center justify-center w-12 h-12 rounded-2xl bg-white/45 dark:bg-slate-900/40 backdrop-blur-glass border border-white/60 dark:border-slate-800/60 shadow-glass-light dark:shadow-glass-dark hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer pointer-events-auto" title="Tài khoản">
-    <span id="user-avatar-icon" class="material-icons-round text-brand-pink dark:text-brand-purple text-2xl">account_circle</span>
-    <img id="user-avatar-img" src="" alt="Avatar" class="w-8 h-8 rounded-full border border-brand-pink/30 dark:border-brand-purple/30 object-cover" style="display: none;">
-  </button>
+        <!-- Font chữ cực kỳ tròn trịa, đáng yêu và hỗ trợ tiếng Việt 100% không lỗi ký tự -->
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@500;700&family=Quicksand:wght@500;600;700&display=swap"
+            rel="stylesheet"
+        />
 
-  <!-- Nút bật tắt chế độ Sáng/Tối -->
-  <button id="theme-toggle" class="fixed top-6 right-6 z-50 flex items-center justify-center w-12 h-12 rounded-2xl bg-white/45 dark:bg-slate-900/40 backdrop-blur-glass border border-white/60 dark:border-slate-800/60 shadow-glass-light dark:shadow-glass-dark hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer pointer-events-auto" aria-label="Toggle dark mode">
-    <span class="material-icons-round text-brand-pink dark:text-brand-purple text-2xl transition-transform duration-500 rotate-0 dark:rotate-180" id="theme-toggle-icon">light_mode</span>
-  </button>
+        <!-- Material Icons cho các biểu tượng xinh xắn -->
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet" />
 
-  <!-- Hiệu ứng bóng bong bóng trái tim bay bay nền -->
-  <div class="floating-hearts-container" id="hearts-container"></div>
+        <link rel="icon" type="image/svg+xml" href="favicon.svg" />
 
-  <div class="w-full max-w-[1100px] px-4 py-8 sm:py-12 md:py-16 z-10 flex flex-col items-center">
-    <header class="text-center mb-12 max-w-[650px] select-none">
-      <div class="w-[70px] h-[70px] bg-white dark:bg-slate-900/60 rounded-full flex justify-center items-center mx-auto mb-5 shadow-[0_10px_30px_rgba(255,117,151,0.25)] border-2 border-brand-pink/30 dark:border-brand-purple/30 transition-colors duration-500">
-        <span class="material-icons-round heart-pulse text-brand-pink dark:text-brand-purple text-3xl">auto_awesome</span>
-      </div>
-      <h1 class="font-display font-bold text-3xl sm:text-4xl lg:text-5xl mb-3 leading-tight tracking-wide bg-gradient-to-r from-brand-pink to-brand-purple bg-clip-text text-transparent drop-shadow-sm">Góc Nhỏ Phép Thuật ✨</h1>
-      <p class="text-brand-muted dark:text-brand-purple/70 font-medium text-sm sm:text-base leading-relaxed transition-colors duration-500">Nơi tổng hợp những trò nghịch ngợm công nghệ vui vẻ được làm riêng cho bạn chơi đùa!</p>
-    </header>
+        <link rel="stylesheet" href="src/style.css" />
+    </head>
+    <body
+        class="bg-gradient-to-br from-[#FFEBF0] to-[#E8F0FE] dark:from-[#0F0C1B] dark:to-[#1B1437] min-h-screen font-sans text-slate-700 dark:text-slate-100 flex justify-center items-center overflow-x-hidden relative transition-colors duration-500"
+    >
+        <!-- Nút Tài khoản / Đăng nhập -->
+        <button
+            id="google-login-btn"
+            class="fixed top-6 right-20 z-50 flex items-center justify-center w-12 h-12 rounded-2xl bg-white/45 dark:bg-slate-900/40 backdrop-blur-glass border border-white/60 dark:border-slate-800/60 shadow-glass-light dark:shadow-glass-dark hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer pointer-events-auto"
+            title="Tài khoản"
+        >
+            <span id="user-avatar-icon" class="material-icons-round text-brand-pink dark:text-brand-purple text-2xl"
+                >account_circle</span
+            >
+            <img
+                id="user-avatar-img"
+                src=""
+                alt="Avatar"
+                class="w-8 h-8 rounded-full border border-brand-pink/30 dark:border-brand-purple/30 object-cover"
+                style="display: none"
+            />
+        </button>
 
-    <!-- Grid chứa các thẻ trò chơi nhỏ -->
-    <main class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 w-full mb-12 sm:mb-16">
-      
-      <!-- CARD 1: Ứng dụng Hào Quang 🙏 -->
-      <a href="aura/index.html" class="group relative bg-white/45 dark:bg-slate-950/40 backdrop-blur-glass border border-white/60 dark:border-slate-800/60 shadow-glass-light dark:shadow-glass-dark rounded-3xl p-6 sm:p-8 flex flex-col transition-all duration-300 hover:-translate-y-2 hover:shadow-xl hover:bg-white/60 dark:hover:bg-slate-900/50 hover:border-brand-pink/30 dark:hover:border-brand-purple/30 overflow-hidden">
-        <!-- Top line gradient indicator on hover -->
-        <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-brand-pink to-brand-purple opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-        <div class="absolute top-5 right-5 bg-gradient-to-br from-brand-pink to-pink-600 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-[0_4px_10px_rgba(255,117,151,0.3)]">Mới Nhất ⚡</div>
-        <div class="w-16 h-16 rounded-2xl flex justify-center items-center mb-6 bg-yellow-500/10 dark:bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 border border-yellow-500/20 dark:border-yellow-500/30 group-hover:scale-110 group-hover:rotate-12 transition-all duration-300">
-          <span class="material-icons-round text-3xl">spa</span>
+        <!-- Nút bật tắt chế độ Sáng/Tối -->
+        <button
+            id="theme-toggle"
+            class="fixed top-6 right-6 z-50 flex items-center justify-center w-12 h-12 rounded-2xl bg-white/45 dark:bg-slate-900/40 backdrop-blur-glass border border-white/60 dark:border-slate-800/60 shadow-glass-light dark:shadow-glass-dark hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer pointer-events-auto"
+            aria-label="Toggle dark mode"
+        >
+            <span
+                class="material-icons-round text-brand-pink dark:text-brand-purple text-2xl transition-transform duration-500 rotate-0 dark:rotate-180"
+                id="theme-toggle-icon"
+                >light_mode</span
+            >
+        </button>
+
+        <!-- Hiệu ứng bóng bong bóng trái tim bay bay nền -->
+        <div class="floating-hearts-container" id="hearts-container"></div>
+
+        <div class="w-full max-w-[1100px] px-4 py-8 sm:py-12 md:py-16 z-10 flex flex-col items-center">
+            <header class="text-center mb-12 max-w-[650px] select-none">
+                <div
+                    class="w-[70px] h-[70px] bg-white dark:bg-slate-900/60 rounded-full flex justify-center items-center mx-auto mb-5 shadow-[0_10px_30px_rgba(255,117,151,0.25)] border-2 border-brand-pink/30 dark:border-brand-purple/30 transition-colors duration-500"
+                >
+                    <span class="material-icons-round heart-pulse text-brand-pink dark:text-brand-purple text-3xl"
+                        >auto_awesome</span
+                    >
+                </div>
+                <h1
+                    class="font-display font-bold text-3xl sm:text-4xl lg:text-5xl mb-3 leading-tight tracking-wide bg-gradient-to-r from-brand-pink to-brand-purple bg-clip-text text-transparent drop-shadow-sm"
+                >
+                    Góc Nhỏ Phép Thuật ✨
+                </h1>
+                <p
+                    class="text-brand-muted dark:text-brand-purple/70 font-medium text-sm sm:text-base leading-relaxed transition-colors duration-500"
+                >
+                    Nơi tổng hợp những trò nghịch ngợm công nghệ vui vẻ được làm riêng cho bạn chơi đùa!
+                </p>
+            </header>
+
+            <!-- Grid chứa các thẻ trò chơi nhỏ -->
+            <main class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 w-full mb-12 sm:mb-16">
+                <!-- CARD 1: Ứng dụng Hào Quang 🙏 -->
+                <a
+                    href="aura/index.html"
+                    class="group relative bg-white/45 dark:bg-slate-950/40 backdrop-blur-glass border border-white/60 dark:border-slate-800/60 shadow-glass-light dark:shadow-glass-dark rounded-3xl p-6 sm:p-8 flex flex-col transition-all duration-300 hover:-translate-y-2 hover:shadow-xl hover:bg-white/60 dark:hover:bg-slate-900/50 hover:border-brand-pink/30 dark:hover:border-brand-purple/30 overflow-hidden"
+                >
+                    <!-- Top line gradient indicator on hover -->
+                    <div
+                        class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-brand-pink to-brand-purple opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                    ></div>
+                    <div
+                        class="absolute top-5 right-5 bg-gradient-to-br from-brand-pink to-pink-600 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-[0_4px_10px_rgba(255,117,151,0.3)]"
+                    >
+                        Mới Nhất ⚡
+                    </div>
+                    <div
+                        class="w-16 h-16 rounded-2xl flex justify-center items-center mb-6 bg-yellow-500/10 dark:bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 border border-yellow-500/20 dark:border-yellow-500/30 group-hover:scale-110 group-hover:rotate-12 transition-all duration-300"
+                    >
+                        <span class="material-icons-round text-3xl">spa</span>
+                    </div>
+                    <div class="flex flex-col flex-grow">
+                        <h2
+                            class="font-display font-bold text-xl sm:text-2xl text-slate-800 dark:text-slate-100 mb-3 transition-colors"
+                        >
+                            Hào Quang Hộ Thể 🙏
+                        </h2>
+                        <p
+                            class="text-slate-500 dark:text-slate-400 font-medium text-sm leading-relaxed mb-6 flex-grow transition-colors"
+                        >
+                            Bật webcam, chắp hai tay trước ngực để tự tỏa ra vòng hào quang lấp lánh cực ảo kèm tiếng
+                            chuông tịnh tâm thư thái.
+                        </p>
+                        <span
+                            class="inline-flex items-center justify-center gap-1.5 self-start font-display font-bold text-sm text-white bg-gradient-to-r from-brand-pink to-brand-purple px-5 py-2.5 rounded-2xl shadow-brand hover:shadow-brand-hover hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300"
+                        >
+                            <span>Vào nghịch thử</span>
+                            <span class="material-icons-round text-base">play_arrow</span>
+                        </span>
+                    </div>
+                </a>
+
+                <!-- CARD 2: Game Lines 97 🎱 -->
+                <a
+                    href="lines97/index.html"
+                    class="group relative bg-white/45 dark:bg-slate-950/40 backdrop-blur-glass border border-white/60 dark:border-slate-800/60 shadow-glass-light dark:shadow-glass-dark rounded-3xl p-6 sm:p-8 flex flex-col transition-all duration-300 hover:-translate-y-2 hover:shadow-xl hover:bg-white/60 dark:hover:bg-slate-900/50 hover:border-brand-pink/30 dark:hover:border-brand-purple/30 overflow-hidden"
+                >
+                    <!-- Top line gradient indicator on hover -->
+                    <div
+                        class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-brand-pink to-brand-purple opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                    ></div>
+                    <div
+                        class="absolute top-5 right-5 bg-gradient-to-br from-brand-pink to-pink-600 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-[0_4px_10px_rgba(255,117,151,0.3)]"
+                    >
+                        Mới ⚡
+                    </div>
+                    <div
+                        class="w-16 h-16 rounded-2xl flex justify-center items-center mb-6 bg-cyan-500/10 dark:bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 dark:border-cyan-500/30 group-hover:scale-110 group-hover:rotate-12 transition-all duration-300"
+                    >
+                        <span class="material-icons-round text-3xl">grid_on</span>
+                    </div>
+                    <div class="flex flex-col flex-grow">
+                        <h2
+                            class="font-display font-bold text-xl sm:text-2xl text-slate-800 dark:text-slate-100 mb-3 transition-colors"
+                        >
+                            Lines 97 🎱
+                        </h2>
+                        <p
+                            class="text-slate-500 dark:text-slate-400 font-medium text-sm leading-relaxed mb-6 flex-grow transition-colors"
+                        >
+                            Game xếp bi kinh điển trên bàn 9×9! Di chuyển bi, xếp 5 viên cùng màu thành hàng để ghi điểm
+                            cao nhất.
+                        </p>
+                        <span
+                            class="inline-flex items-center justify-center gap-1.5 self-start font-display font-bold text-sm text-white bg-gradient-to-r from-brand-pink to-brand-purple px-5 py-2.5 rounded-2xl shadow-brand hover:shadow-brand-hover hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300"
+                        >
+                            <span>Vào chơi thôi</span>
+                            <span class="material-icons-round text-base">play_arrow</span>
+                        </span>
+                    </div>
+                </a>
+
+                <!-- CARD 3: Game Lines 98 🚀 -->
+                <a
+                    href="lines98/index.html"
+                    class="group relative bg-white/45 dark:bg-slate-950/40 backdrop-blur-glass border border-white/60 dark:border-slate-800/60 shadow-glass-light dark:shadow-glass-dark rounded-3xl p-6 sm:p-8 flex flex-col transition-all duration-300 hover:-translate-y-2 hover:shadow-xl hover:bg-white/60 dark:hover:bg-slate-900/50 hover:border-brand-pink/30 dark:hover:border-brand-purple/30 overflow-hidden"
+                >
+                    <!-- Top line gradient indicator on hover -->
+                    <div
+                        class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-brand-pink to-brand-purple opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                    ></div>
+                    <div
+                        class="absolute top-5 right-5 bg-gradient-to-br from-brand-pink to-pink-600 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-[0_4px_10px_rgba(255,117,151,0.3)]"
+                    >
+                        Mới Nhất 🚀
+                    </div>
+                    <div
+                        class="w-16 h-16 rounded-2xl flex justify-center items-center mb-6 bg-purple-500/10 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 border border-purple-500/20 dark:border-purple-500/30 group-hover:scale-110 group-hover:rotate-12 transition-all duration-300"
+                    >
+                        <span class="material-icons-round text-3xl">sports_esports</span>
+                    </div>
+                    <div class="flex flex-col flex-grow">
+                        <h2
+                            class="font-display font-bold text-xl sm:text-2xl text-slate-800 dark:text-slate-100 mb-3 transition-colors"
+                        >
+                            Lines 98 🚀
+                        </h2>
+                        <p
+                            class="text-slate-500 dark:text-slate-400 font-medium text-sm leading-relaxed mb-6 flex-grow transition-colors"
+                        >
+                            Bản nâng cấp đồ họa PixiJS v8 siêu mượt mà! Thỏa sức trải nghiệm hoạt họa lăn bi động, hiệu
+                            ứng nổ bi sinh động và âm thanh retro cực đã.
+                        </p>
+                        <span
+                            class="inline-flex items-center justify-center gap-1.5 self-start font-display font-bold text-sm text-white bg-gradient-to-r from-brand-pink to-brand-purple px-5 py-2.5 rounded-2xl shadow-brand hover:shadow-brand-hover hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300"
+                        >
+                            <span>Chơi ngay</span>
+                            <span class="material-icons-round text-base">play_arrow</span>
+                        </span>
+                    </div>
+                </a>
+            </main>
+
+            <footer
+                class="text-center font-display text-sm text-brand-muted dark:text-brand-purple/50 select-none transition-colors"
+            >
+                <p>Made with 💖 by Me • 2026</p>
+            </footer>
         </div>
-        <div class="flex flex-col flex-grow">
-          <h2 class="font-display font-bold text-xl sm:text-2xl text-slate-800 dark:text-slate-100 mb-3 transition-colors">Hào Quang Hộ Thể 🙏</h2>
-          <p class="text-slate-500 dark:text-slate-400 font-medium text-sm leading-relaxed mb-6 flex-grow transition-colors">Bật webcam, chắp hai tay trước ngực để tự tỏa ra vòng hào quang lấp lánh cực ảo kèm tiếng chuông tịnh tâm thư thái.</p>
-          <span class="inline-flex items-center justify-center gap-1.5 self-start font-display font-bold text-sm text-white bg-gradient-to-r from-brand-pink to-brand-purple px-5 py-2.5 rounded-2xl shadow-brand hover:shadow-brand-hover hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300">
-            <span>Vào nghịch thử</span>
-            <span class="material-icons-round text-base">play_arrow</span>
-          </span>
-        </div>
-      </a>
 
-      <!-- CARD 2: Game Lines 97 🎱 -->
-      <a href="lines97/index.html" class="group relative bg-white/45 dark:bg-slate-950/40 backdrop-blur-glass border border-white/60 dark:border-slate-800/60 shadow-glass-light dark:shadow-glass-dark rounded-3xl p-6 sm:p-8 flex flex-col transition-all duration-300 hover:-translate-y-2 hover:shadow-xl hover:bg-white/60 dark:hover:bg-slate-900/50 hover:border-brand-pink/30 dark:hover:border-brand-purple/30 overflow-hidden">
-        <!-- Top line gradient indicator on hover -->
-        <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-brand-pink to-brand-purple opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-        <div class="absolute top-5 right-5 bg-gradient-to-br from-brand-pink to-pink-600 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-[0_4px_10px_rgba(255,117,151,0.3)]">Mới ⚡</div>
-        <div class="w-16 h-16 rounded-2xl flex justify-center items-center mb-6 bg-cyan-500/10 dark:bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 dark:border-cyan-500/30 group-hover:scale-110 group-hover:rotate-12 transition-all duration-300">
-          <span class="material-icons-round text-3xl">grid_on</span>
-        </div>
-        <div class="flex flex-col flex-grow">
-          <h2 class="font-display font-bold text-xl sm:text-2xl text-slate-800 dark:text-slate-100 mb-3 transition-colors">Lines 97 🎱</h2>
-          <p class="text-slate-500 dark:text-slate-400 font-medium text-sm leading-relaxed mb-6 flex-grow transition-colors">Game xếp bi kinh điển trên bàn 9×9! Di chuyển bi, xếp 5 viên cùng màu thành hàng để ghi điểm cao nhất.</p>
-          <span class="inline-flex items-center justify-center gap-1.5 self-start font-display font-bold text-sm text-white bg-gradient-to-r from-brand-pink to-brand-purple px-5 py-2.5 rounded-2xl shadow-brand hover:shadow-brand-hover hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300">
-            <span>Vào chơi thôi</span>
-            <span class="material-icons-round text-base">play_arrow</span>
-          </span>
-        </div>
-      </a>
-
-      <!-- CARD 3: Game Lines 98 🚀 -->
-      <a href="lines98/index.html" class="group relative bg-white/45 dark:bg-slate-950/40 backdrop-blur-glass border border-white/60 dark:border-slate-800/60 shadow-glass-light dark:shadow-glass-dark rounded-3xl p-6 sm:p-8 flex flex-col transition-all duration-300 hover:-translate-y-2 hover:shadow-xl hover:bg-white/60 dark:hover:bg-slate-900/50 hover:border-brand-pink/30 dark:hover:border-brand-purple/30 overflow-hidden">
-        <!-- Top line gradient indicator on hover -->
-        <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-brand-pink to-brand-purple opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-        <div class="absolute top-5 right-5 bg-gradient-to-br from-brand-pink to-pink-600 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-[0_4px_10px_rgba(255,117,151,0.3)]">Mới Nhất 🚀</div>
-        <div class="w-16 h-16 rounded-2xl flex justify-center items-center mb-6 bg-purple-500/10 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 border border-purple-500/20 dark:border-purple-500/30 group-hover:scale-110 group-hover:rotate-12 transition-all duration-300">
-          <span class="material-icons-round text-3xl">sports_esports</span>
-        </div>
-        <div class="flex flex-col flex-grow">
-          <h2 class="font-display font-bold text-xl sm:text-2xl text-slate-800 dark:text-slate-100 mb-3 transition-colors">Lines 98 🚀</h2>
-          <p class="text-slate-500 dark:text-slate-400 font-medium text-sm leading-relaxed mb-6 flex-grow transition-colors">Bản nâng cấp đồ họa PixiJS v8 siêu mượt mà! Thỏa sức trải nghiệm hoạt họa lăn bi động, hiệu ứng nổ bi sinh động và âm thanh retro cực đã.</p>
-          <span class="inline-flex items-center justify-center gap-1.5 self-start font-display font-bold text-sm text-white bg-gradient-to-r from-brand-pink to-brand-purple px-5 py-2.5 rounded-2xl shadow-brand hover:shadow-brand-hover hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300">
-            <span>Chơi ngay</span>
-            <span class="material-icons-round text-base">play_arrow</span>
-          </span>
-        </div>
-      </a>
-
-    </main>
-
-    <footer class="text-center font-display text-sm text-brand-muted dark:text-brand-purple/50 select-none transition-colors">
-      <p>Made with 💖 by Me • 2026</p>
-    </footer>
-  </div>
-
-  <script type="module" src="src/main.js"></script>
-</body>
+        <script type="module" src="src/main.js"></script>
+    </body>
 </html>
