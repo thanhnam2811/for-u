@@ -157,7 +157,7 @@ function stopTimer() {
 
 // ── Undo ──
 function saveSnapshot() {
-  state.undoStack.push({
+  state.undoStack = [{
     board: state.board.map(r => [...r]),
     score: state.score,
     nextBalls: state.nextBalls.map(b => ({ ...b })),
@@ -165,7 +165,7 @@ function saveSnapshot() {
     ballsCleared: state.ballsCleared,
     longestLine: state.longestLine,
     elapsedTime: state.elapsedTime,
-  });
+  }];
 }
 
 function undo() {
