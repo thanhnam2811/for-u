@@ -139,10 +139,36 @@ export const viewport = {
 
 				// Draw hover cell highlight
 				if (this.hoveredCell && this.hoveredCell.row === r && this.hoveredCell.col === c) {
+					this.ctx.save();
+					// Glow fill
 					this.ctx.beginPath();
 					this.ctx.roundRect(x, y, size, size, 8);
-					this.ctx.fillStyle = 'rgba(255, 255, 255, 0.12)';
+					const grad = this.ctx.createRadialGradient(
+						x + size / 2, y + size / 2, 2,
+						x + size / 2, y + size / 2, size * 0.7
+					);
+					grad.addColorStop(0, 'rgba(255, 117, 151, 0.25)');
+					grad.addColorStop(1, 'rgba(255, 117, 151, 0.05)');
+					this.ctx.fillStyle = grad;
 					this.ctx.fill();
+
+					// Glow border
+					const pulse = 0.5 + Math.sin(this.pathPulseTime * 3) * 0.3;
+					this.ctx.beginPath();
+					this.ctx.roundRect(x, y, size, size, 8);
+					this.ctx.strokeStyle = `rgba(255, 117, 151, ${0.25 * pulse})`;
+					this.ctx.lineWidth = 2;
+					this.ctx.stroke();
+
+					// Extra outer glow
+					this.ctx.shadowColor = 'rgba(255, 117, 151, 0.5)';
+					this.ctx.shadowBlur = 12;
+					this.ctx.beginPath();
+					this.ctx.roundRect(x, y, size, size, 8);
+					this.ctx.strokeStyle = 'rgba(255, 117, 151, 0.15)';
+					this.ctx.lineWidth = 1;
+					this.ctx.stroke();
+					this.ctx.restore();
 				}
 			}
 		}
@@ -167,6 +193,13 @@ export const viewport = {
 					scale = 0.85 + Math.sin(this.pathPulseTime * 2.5) * 0.08;
 				}
 
+				// Hover lift effect
+				const isHovered = this.hoveredCell && this.hoveredCell.row === r && this.hoveredCell.col === c;
+				if (isHovered) {
+					scale *= 1.12;
+					offsetY = -3;
+				}
+
 				// Danger Alert: shake + desaturate if next spawn blocks crucial path
 				const isNextSpawnCrucial = state.nextBalls.some(nb => nb.row === r && nb.col === c);
 				if (isNextSpawnCrucial) {
@@ -181,6 +214,13 @@ export const viewport = {
 				const ballSprite = spriteCache.balls[color]?.[stateIndex];
 				if (!ballSprite) continue;
 
+				// Hover glow
+				if (isHovered) {
+					this.ctx.save();
+					this.ctx.shadowColor = 'rgba(255, 117, 151, 0.6)';
+					this.ctx.shadowBlur = 20;
+				}
+
 				this.ctx.drawImage(
 					ballSprite,
 					x + offset + offsetX,
@@ -189,6 +229,10 @@ export const viewport = {
 					ballWidth
 				);
 				this.drawCallCount++;
+
+				if (isHovered) {
+					this.ctx.restore();
+				}
 
 				// Desaturate overlay for danger alert balls
 				if (isNextSpawnCrucial) {
