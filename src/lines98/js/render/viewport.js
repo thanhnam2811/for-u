@@ -178,6 +178,40 @@ export const viewport = {
 
 					this.ctx.restore();
 				}
+
+				// Draw selected cell highlight — brighter border glow
+				if (state.selected && state.selected.row === r && state.selected.col === c) {
+					const theme = THEMES[state.theme] || THEMES.classic;
+					const cellBallColor = state.board[r][c] > 0
+						? (theme.balls[state.board[r][c] - 1]?.main || '#FF7597')
+						: '#FF7597';
+
+					this.ctx.save();
+
+					// Soft fill glow — slightly stronger than hover
+					this.ctx.beginPath();
+					this.ctx.roundRect(x, y, size, size, 8);
+					const grad = this.ctx.createRadialGradient(
+						x + size / 2, y + size / 2, 2,
+						x + size / 2, y + size / 2, size * 0.7
+					);
+					grad.addColorStop(0, hexToRgba(cellBallColor, 0.25));
+					grad.addColorStop(1, hexToRgba(cellBallColor, 0.06));
+					this.ctx.fillStyle = grad;
+					this.ctx.fill();
+
+					// Brighter pulsing border
+					const pulse = 0.6 + Math.sin(this.pathPulseTime * 3) * 0.3;
+					this.ctx.beginPath();
+					this.ctx.roundRect(x, y, size, size, 8);
+					this.ctx.strokeStyle = hexToRgba(cellBallColor, 0.5 * pulse);
+					this.ctx.lineWidth = 2;
+					this.ctx.shadowColor = cellBallColor;
+					this.ctx.shadowBlur = 12;
+					this.ctx.stroke();
+
+					this.ctx.restore();
+				}
 			}
 		}
 	},
@@ -223,8 +257,8 @@ export const viewport = {
 				const ballSprite = spriteCache.balls[color]?.[stateIndex];
 				if (!ballSprite) continue;
 
-				// Hover or Selected — same subtle lift + glow
-				if (isHovered || isSelected) {
+				// Hover — subtle lift + glow
+				if (isHovered && !isSelected) {
 					const theme = THEMES[state.theme] || THEMES.classic;
 					const ballColor = theme.balls[color - 1];
 					const glowColor = ballColor?.glow || 'rgba(255, 117, 151, 0.6)';
@@ -235,7 +269,30 @@ export const viewport = {
 					this.drawCallCount++;
 					this.ctx.restore();
 
-					// Danger desaturate overlay
+					if (isNextSpawnCrucial) {
+						this.ctx.save();
+						this.ctx.globalAlpha = 0.35;
+						this.ctx.fillStyle = '#A0A0A0';
+						this.ctx.beginPath();
+						this.ctx.arc(x + offset + offsetX + ballWidth / 2, y + offset + offsetY + ballWidth / 2, ballWidth / 2, 0, Math.PI * 2);
+						this.ctx.fill();
+						this.ctx.restore();
+					}
+					continue;
+				}
+
+				// Selected — stronger glow + cell border handled in drawGrid
+				if (isSelected) {
+					const theme = THEMES[state.theme] || THEMES.classic;
+					const ballColor = theme.balls[color - 1];
+					const glowColor = ballColor?.glow || 'rgba(255, 117, 151, 0.6)';
+					this.ctx.save();
+					this.ctx.shadowColor = glowColor;
+					this.ctx.shadowBlur = 18;
+					this.ctx.drawImage(ballSprite, x + offset + offsetX, y + offset + offsetY, ballWidth, ballWidth);
+					this.drawCallCount++;
+					this.ctx.restore();
+
 					if (isNextSpawnCrucial) {
 						this.ctx.save();
 						this.ctx.globalAlpha = 0.35;

@@ -50,12 +50,12 @@ export class ScreenTransform {
     const step = dt / 16.67;
     this.time += 0.015 * step;
 
-    // 1. Idle rotation/tilt oscillation (slow wave between -0.3 and 0.3 degrees)
-    this.angle = Math.sin(this.time) * 0.005;
+    // 1. No idle rotation — board stays still
+    this.angle = 0;
 
-    // 2. 2.5D perspective skew — subtle idle oscillation
-    this.skewX += (this.skewTargetX + Math.sin(this.time * 0.7) * 0.008 - this.skewX) * 0.03 * step;
-    this.skewY += (this.skewTargetY + Math.cos(this.time * 0.5) * 0.005 - this.skewY) * 0.03 * step;
+    // 2. No idle skew oscillation — only converge toward target (default 0)
+    this.skewX += (this.skewTargetX - this.skewX) * 0.03 * step;
+    this.skewY += (this.skewTargetY - this.skewY) * 0.03 * step;
 
     // 3. Zoom interpolation (towards 1.0 or 1.05)
     this.scale += (this.zoomTarget - this.scale) * this.zoomSpeed * step;
