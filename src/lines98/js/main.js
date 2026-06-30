@@ -572,12 +572,11 @@ function showGameOverModal() {
 	}
 
 	// Auto-submit score to leaderboard if authenticated
-	// Auto-submit score to leaderboard if authenticated
 	if (currentUser) {
 		submitScore({
 			uid: currentUser.uid,
-			displayName: currentUser.displayName || 'Anonymous',
-			photoURL: currentUser.photoURL || '',
+			displayName: _getUserDisplayName(currentUser),
+			photoURL: _getUserPhotoURL(currentUser),
 			score: state.score,
 			turns: state.turn,
 			ballsCleared: state.ballsCleared,
@@ -600,8 +599,8 @@ function _submitHighScoreIfNeeded() {
 	bestSubmittedScore = state.score;
 	submitScore({
 		uid: currentUser.uid,
-		displayName: currentUser.displayName || 'Anonymous',
-		photoURL: currentUser.photoURL || '',
+		displayName: _getUserDisplayName(currentUser),
+		photoURL: _getUserPhotoURL(currentUser),
 		score: state.score,
 		turns: state.turn,
 		ballsCleared: state.ballsCleared,
@@ -611,6 +610,26 @@ function _submitHighScoreIfNeeded() {
 	}).catch((err) => console.error('Auto submit error:', err));
 }
 
+function _getUserDisplayName(user) {
+	if (!user) return 'Anonymous';
+	if (user.providerData && user.providerData.length > 0) {
+		for (const p of user.providerData) {
+			if (p.displayName && p.providerId !== 'password') return p.displayName;
+		}
+	}
+	return user.displayName || 'Anonymous';
+}
+
+function _getUserPhotoURL(user) {
+	if (!user) return '';
+	if (user.providerData && user.providerData.length > 0) {
+		for (const p of user.providerData) {
+			if (p.photoURL && p.providerId !== 'password') return p.photoURL;
+		}
+	}
+	return user.photoURL || '';
+}
+
 // ── Online Feature Helpers ──
 
 function _updateUserAvatar(user) {
@@ -618,7 +637,8 @@ function _updateUserAvatar(user) {
 	const img = document.getElementById('user-avatar-img');
 	if (!icon || !img) return;
 
-	if (user.photoURL) {
+	const photoURL = _getUserPhotoURL(user);
+	if (photoURL) {
 		icon.style.display = 'none';
 		img.style.display = 'block';
 		img.src = user.photoURL;
