@@ -527,7 +527,7 @@ function saveGameProgress() {
 // Kick off initialization
 window.addEventListener('DOMContentLoaded', init);
 
-function showGameOverModal() {
+async function showGameOverModal() {
 	const overlay = document.getElementById('game-over-overlay');
 	const finalScore = document.getElementById('final-score');
 	const finalHigh = document.getElementById('final-high');
@@ -557,8 +557,9 @@ function showGameOverModal() {
 	}
 
 	// Auto-submit score to leaderboard if authenticated
+	console.log('Game over — currentUser:', !!currentUser, 'score:', state.score);
 	if (currentUser) {
-		submitScore({
+		const result = await submitScore({
 			uid: currentUser.uid,
 			displayName: currentUser.displayName || 'Anonymous',
 			photoURL: currentUser.photoURL || '',
@@ -568,7 +569,8 @@ function showGameOverModal() {
 			longestLine: state.longestLine,
 			replaySeed: state.seed,
 			replayCode: exportReplay(),
-		}).catch((err) => console.error('Score submit error:', err));
+		});
+		console.log('Submit score result:', result);
 	}
 }
 
