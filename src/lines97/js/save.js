@@ -159,21 +159,27 @@ export function saveToLeaderboard() {
   if (board.length > 10) board.length = 10;
   try { localStorage.setItem(LS_LEADERBOARD, JSON.stringify(board)); } catch (_) {}
 
-  // Sync to Firestore if authenticated
-  const user = auth.currentUser;
-  if (user) {
-    if (state.score >= state.highScore) {
-      const userDocRef = doc(db, 'players', user.uid);
-      const profile = getUserProfile(user);
-      setDoc(userDocRef, {
-        highScore: state.highScore,
-        highScoreMoves: state.moves,
-        updatedAt: Date.now(),
-        displayName: profile.displayName,
-        photoURL: profile.photoURL
-      }, { merge: true }).catch(err => console.error("Firestore saveToLeaderboard error:", err));
-    }
+  // Sync high score to the cloud leaderboard if this run set a new record
+  if (state.score >= state.highScore) {
+    syncHighScoreToCloud();
   }
+}
+
+// Push the current high score to Firestore immediately (called the moment a new
+// record happens during play, not just when the game ends) so the global
+// leaderboard reflects it even if the player never hits "game over".
+export function syncHighScoreToCloud() {
+  const user = auth.currentUser;
+  if (!user) return;
+  const userDocRef = doc(db, 'players', user.uid);
+  const profile = getUserProfile(user);
+  setDoc(userDocRef, {
+    highScore: state.highScore,
+    highScoreMoves: state.moves,
+    updatedAt: Date.now(),
+    displayName: profile.displayName,
+    photoURL: profile.photoURL
+  }, { merge: true }).catch(err => console.error("Firestore syncHighScoreToCloud error:", err));
 }
 
 export function getLeaderboard() {
