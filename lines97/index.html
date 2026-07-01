@@ -85,27 +85,23 @@
     </div>
 
     <!-- Controls -->
-    <div class="game-controls-container grid grid-cols-6 sm:grid-cols-5 gap-2 w-full mb-4">
-      <button class="col-span-2 sm:col-span-1 flex flex-col items-center justify-center py-2.5 px-1 rounded-2xl bg-white/45 dark:bg-slate-900/40 border border-white/60 dark:border-slate-800/60 shadow-glass-light dark:shadow-glass-dark backdrop-blur-glass text-slate-600 dark:text-slate-300 hover:text-brand-pink dark:hover:text-brand-purple hover:scale-105 active:scale-95 transition-all select-none relative cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100" id="undo-btn" disabled>
-        <span class="material-icons-round text-lg sm:text-xl mb-1">undo</span>
-        <span class="font-display font-bold text-[10px] sm:text-xs tracking-wide">Hoàn tác</span>
+    <div class="game-controls-container flex items-center justify-center gap-2.5 sm:gap-3 w-full pt-2.5 px-3 bg-white/60 dark:bg-slate-900/50 backdrop-blur-glass border-t border-white/60 dark:border-slate-800/60 shadow-glass-light dark:shadow-glass-dark">
+      <button class="flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 border border-white/60 dark:border-slate-800/60 rounded-xl bg-white/45 dark:bg-slate-900/40 text-slate-500 dark:text-slate-400 hover:text-brand-pink dark:hover:text-brand-purple hover:scale-105 active:scale-95 transition-all shadow-glass-light dark:shadow-glass-dark cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100" id="undo-btn" disabled aria-label="Hoàn tác">
+        <span class="material-icons-round text-xl">undo</span>
       </button>
-      <button class="col-span-2 sm:col-span-1 flex flex-col items-center justify-center py-2.5 px-1 rounded-2xl bg-white/45 dark:bg-slate-900/40 border border-white/60 dark:border-slate-800/60 shadow-glass-light dark:shadow-glass-dark backdrop-blur-glass text-slate-600 dark:text-slate-300 hover:text-brand-pink dark:hover:text-brand-purple hover:scale-105 active:scale-95 transition-all select-none relative cursor-pointer" id="hint-btn">
-        <span class="material-icons-round text-lg sm:text-xl mb-1">lightbulb</span>
-        <span class="font-display font-bold text-[10px] sm:text-xs tracking-wide">Gợi ý</span>
+      <button class="relative flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 border border-white/60 dark:border-slate-800/60 rounded-xl bg-white/45 dark:bg-slate-900/40 text-slate-500 dark:text-slate-400 hover:text-brand-pink dark:hover:text-brand-purple hover:scale-105 active:scale-95 transition-all shadow-glass-light dark:shadow-glass-dark cursor-pointer" id="hint-btn" aria-label="Gợi ý">
+        <span class="material-icons-round text-xl">lightbulb</span>
         <span class="absolute -top-1.5 -right-1.5 bg-gradient-to-br from-brand-pink to-pink-600 text-white text-[9px] font-semibold px-2 py-0.5 rounded-full shadow-[0_2px_6px_rgba(255,117,151,0.4)]" id="hint-count">3</span>
       </button>
-      <button class="col-span-2 sm:col-span-1 flex flex-col items-center justify-center py-2.5 px-1 rounded-2xl bg-white/45 dark:bg-slate-900/40 border border-white/60 dark:border-slate-800/60 shadow-glass-light dark:shadow-glass-dark backdrop-blur-glass text-slate-600 dark:text-slate-300 hover:text-brand-pink dark:hover:text-brand-purple hover:scale-105 active:scale-95 transition-all select-none relative cursor-pointer" id="new-game-btn">
-        <span class="material-icons-round text-lg sm:text-xl mb-1">refresh</span>
-        <span class="font-display font-bold text-[10px] sm:text-xs tracking-wide">Mới</span>
+      <button class="flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 border border-white/60 dark:border-slate-800/60 rounded-xl bg-white/45 dark:bg-slate-900/40 text-slate-500 dark:text-slate-400 hover:text-brand-pink dark:hover:text-brand-purple hover:scale-105 active:scale-95 transition-all shadow-glass-light dark:shadow-glass-dark cursor-pointer" id="new-game-btn" aria-label="Ván mới">
+        <span class="material-icons-round text-xl">refresh</span>
       </button>
-      <button class="col-span-3 sm:col-span-1 flex flex-col items-center justify-center py-2.5 px-1 rounded-2xl bg-white/45 dark:bg-slate-900/40 border border-white/60 dark:border-slate-800/60 shadow-glass-light dark:shadow-glass-dark backdrop-blur-glass text-slate-600 dark:text-slate-300 hover:text-brand-pink dark:hover:text-brand-purple hover:scale-105 active:scale-95 transition-all select-none relative cursor-pointer" id="sound-toggle">
-        <span class="material-icons-round text-lg sm:text-xl mb-1" id="sound-icon">volume_up</span>
-        <span class="font-display font-bold text-[10px] sm:text-xs tracking-wide" id="sound-label">Âm</span>
+      <button class="flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 border border-white/60 dark:border-slate-800/60 rounded-xl bg-white/45 dark:bg-slate-900/40 text-slate-500 dark:text-slate-400 hover:text-brand-pink dark:hover:text-brand-purple hover:scale-105 active:scale-95 transition-all shadow-glass-light dark:shadow-glass-dark cursor-pointer" id="sound-toggle" aria-label="Âm thanh">
+        <span class="material-icons-round text-xl" id="sound-icon">volume_up</span>
+        <span class="sr-only" id="sound-label">Âm thanh</span>
       </button>
-      <button class="col-span-3 sm:col-span-1 flex flex-col items-center justify-center py-2.5 px-1 rounded-2xl bg-white/45 dark:bg-slate-900/40 border border-white/60 dark:border-slate-800/60 shadow-glass-light dark:shadow-glass-dark backdrop-blur-glass text-slate-600 dark:text-slate-300 hover:text-brand-pink dark:hover:text-brand-purple hover:scale-105 active:scale-95 transition-all select-none relative cursor-pointer" id="leaderboard-btn">
-        <span class="material-icons-round text-lg sm:text-xl mb-1">emoji_events</span>
-        <span class="font-display font-bold text-[10px] sm:text-xs tracking-wide">Top</span>
+      <button class="flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 border border-white/60 dark:border-slate-800/60 rounded-xl bg-white/45 dark:bg-slate-900/40 text-slate-500 dark:text-slate-400 hover:text-brand-pink dark:hover:text-brand-purple hover:scale-105 active:scale-95 transition-all shadow-glass-light dark:shadow-glass-dark cursor-pointer" id="leaderboard-btn" aria-label="Bảng xếp hạng">
+        <span class="material-icons-round text-xl">emoji_events</span>
       </button>
     </div>
 
