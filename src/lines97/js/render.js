@@ -3,6 +3,7 @@ import { SIZE, PALETTES, MOVE_STEP_MS } from './constants.js';
 import { state } from './state.js';
 import { Sound } from './sound.js';
 import { calculateScore } from './logic.js';
+import { syncHighScoreToCloud } from './save.js';
 
 export const $ = (s) => document.querySelector(s);
 export const $$ = (s) => document.querySelectorAll(s);
@@ -229,7 +230,11 @@ export async function removeWithEffect(positions) {
   const points = calculateScore(positions.length);
   state.score += points;
   const isNew = state.score > state.highScore;
-  if (isNew) { state.highScore = state.score; localStorage.setItem('lines97_highScore', state.highScore); }
+  if (isNew) {
+    state.highScore = state.score;
+    localStorage.setItem('lines97_highScore', state.highScore);
+    syncHighScoreToCloud();
+  }
 
   for (const { row, col } of positions) {
     const cell = getCell(row, col);

@@ -33,8 +33,9 @@
 }
 
 html, body {
-  min-height: 100vh;
-  min-height: 100dvh;
+  height: 100vh; /* fallback for browsers without dvh support */
+  height: 100dvh;
+  overflow: hidden;
   overscroll-behavior: none;
 }
 
@@ -51,6 +52,9 @@ html, body {
   --cell-size: calc(var(--board-size) / 9);
   --ball-size: calc(var(--cell-size) * 0.72);
   --primary-pink: #FF7597;
+
+  /* Height reserved at the bottom of the layout for the fixed footer bar */
+  --footer-bar-h: calc(3.75rem + env(safe-area-inset-bottom, 0px));
 }
 
 /* Board scaling media query */
@@ -296,20 +300,20 @@ html, body {
   padding-left: 0.875rem; /* px-3.5 */
   padding-right: 0.875rem; /* px-3.5 */
   padding-top: calc(1rem + env(safe-area-inset-top, 0px));
-  padding-bottom: 1rem; /* pb-4 */
+  padding-bottom: calc(1rem + var(--footer-bar-h)); /* reserve space for the fixed footer bar */
 }
 
 @media (min-width: 640px) {
   .game-container {
     padding-top: calc(1.5rem + env(safe-area-inset-top, 0px));
-    padding-bottom: 1.5rem;
+    padding-bottom: calc(1.5rem + var(--footer-bar-h));
   }
 }
 
 @media (min-width: 768px) {
   .game-container {
     padding-top: calc(2rem + env(safe-area-inset-top, 0px));
-    padding-bottom: 2rem;
+    padding-bottom: calc(2rem + var(--footer-bar-h));
   }
 }
 
@@ -317,13 +321,18 @@ html, body {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
+/* === FOOTER CONTROL BAR — pinned to the bottom edge of the screen === */
+.game-controls-container {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 30;
+  padding-bottom: calc(0.625rem + env(safe-area-inset-bottom, 0px));
+}
+
 /* === MOBILE GAME OVERLAY GRID OPTIMIZATION === */
 @media (max-width: 480px) {
-  #undo-btn { grid-column: span 2; }
-  #hint-btn { grid-column: span 2; }
-  #new-game-btn { grid-column: span 2; }
-  #sound-toggle { grid-column: span 3; }
-  #leaderboard-btn { grid-column: span 3; }
   .preview-ball {
     width: 18px;
     height: 18px;
@@ -342,13 +351,12 @@ html, body {
 @media (max-height: 780px) {
   .game-container {
     padding-top: calc(0.5rem + env(safe-area-inset-top, 0px));
-    padding-bottom: 0.5rem;
+    padding-bottom: calc(0.5rem + var(--footer-bar-h));
   }
   .game-header { margin-bottom: 0.5rem; }
   .game-score-container { margin-bottom: 0.5rem; }
   .game-stats-bar { margin-bottom: 0.5rem; padding-top: 0.5rem; padding-bottom: 0.5rem; }
   .game-board-container { margin-bottom: 0.5rem; }
-  .game-controls-container { margin-bottom: 0.5rem; }
 }
 
 @media (max-height: 720px) {
@@ -359,8 +367,7 @@ html, body {
   .game-score-container { margin-bottom: 0.35rem; }
   .game-stats-bar { margin-bottom: 0.35rem; padding-top: 0.4rem; padding-bottom: 0.4rem; }
   .game-board-container { margin-bottom: 0.35rem; }
-  .game-controls-container { margin-bottom: 0.35rem; }
-  
+
   /* Shrink elements inside containers slightly */
   .game-header h1 { font-size: 1.25rem; }
   .game-header button { width: 2.25rem; height: 2.25rem; border-radius: 0.75rem; }
@@ -384,8 +391,7 @@ html, body {
   .game-score-container { margin-bottom: 0.25rem; }
   .game-stats-bar { margin-bottom: 0.25rem; padding-top: 0.25rem; padding-bottom: 0.25rem; }
   .game-board-container { margin-bottom: 0.25rem; }
-  .game-controls-container { margin-bottom: 0.25rem; }
-  
+
   .game-header h1 { font-size: 1.1rem; }
   .game-header button { width: 2rem; height: 2rem; border-radius: 0.5rem; }
   .game-header button span { font-size: 1rem; }
