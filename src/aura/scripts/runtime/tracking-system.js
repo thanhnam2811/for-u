@@ -1,5 +1,6 @@
 import { state } from "../state.js";
-import { analyzeHands } from "../ai.js";
+import { analyzeHands } from "../gesture/prayer-detection.js";
+import { ensureFaceLandmarker } from "../gesture/models.js";
 import { shouldRunTask } from "../game-loop.js";
 
 const HAND_INTERVAL_BY_QUALITY = {
@@ -37,6 +38,11 @@ export function updateTracking(frame, video) {
 		} catch (err) {
 			console.error("[AuraApp] Lỗi nhận diện tay:", err);
 		}
+	}
+
+	if (state.activeFaceFilter !== 'none' && !state.faceLandmarker) {
+		// Model face được tải lazy — chỉ khi user bật filter AR
+		void ensureFaceLandmarker();
 	}
 
 	if (state.activeFaceFilter !== 'none' && state.faceLandmarker) {

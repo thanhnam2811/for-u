@@ -210,7 +210,6 @@ export function setupUI() {
 	btnVeilHelp?.addEventListener('click', openVeilHelp);
 	btnCloseVeilHelp?.addEventListener('click', closeVeilHelp);
 	veilHelpBackdrop?.addEventListener('click', closeVeilHelp);
-	helpBackdrop?.addEventListener('click', closeHelp);
 
 	// Đảm bảo không sử dụng Face Filter do đã ẩn carousel
 	state.activeFaceFilter = 'none';
@@ -444,25 +443,24 @@ export function setupUI() {
 				const startX = rect.left + rect.width / 2;
 				const startY = rect.top + rect.height / 2;
 
-				import('./effects/lantern.js').then(({ LotusLantern }) => {
-					// Xóa bớt nếu quá nhiều
-					if (state.lanterns.length >= MAX_LANTERNS) {
-						state.lanterns[0].startFadeOut();
-					}
+				// LotusLantern đã import tĩnh ở đầu file — không cần dynamic import
+				// Xóa bớt nếu quá nhiều
+				if (state.lanterns.length >= MAX_LANTERNS) {
+					state.lanterns[0].startFadeOut();
+				}
 
-					const lantern = new LotusLantern({
-						type: typeKey,
-						startX,
-						startY,
-						canvasWidth: canvas.width,
-						canvasHeight: canvas.height
-					});
-					state.lanterns.push(lantern);
-					state.engine.dirtyFlags.lanterns = true;
-
-					// Chống click đúp (cooldown 300ms)
-					setTimeout(() => { isBuying = false; }, 300);
+				const lantern = new LotusLantern({
+					type: typeKey,
+					startX,
+					startY,
+					canvasWidth: canvas.width,
+					canvasHeight: canvas.height
 				});
+				state.lanterns.push(lantern);
+				state.engine.dirtyFlags.lanterns = true;
+
+				// Chống click đúp (cooldown 300ms)
+				setTimeout(() => { isBuying = false; }, 300);
 			} else {
 				// Không đủ tiền -> Rung lắc
 				btn.classList.add('error');

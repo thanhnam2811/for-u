@@ -197,11 +197,6 @@ export const state = {
 	// ─────────────────────────────────────────────
 	// Mảng chứa các đối tượng hiệu ứng đang vẽ
 	// ─────────────────────────────────────────────
-	particles: [],
-	ripples: [],
-	bodyAuraWaves: [],
-	auraBursts: [],
-	bodyGlowPulses: [],          // Hiệu ứng glow từ viền cơ thể ra ngoài
 	prayerAuras: [],             // Timeline hào quang cinematic sau khi chắp tay
 	lanterns: [],                // Mảng chứa các Hoa Đăng đang trôi
 	lanternsLastAddedAt: 0,      // Cooldown click cho Hoa Đăng
@@ -254,11 +249,37 @@ export function getSensitivityThresholdForSlider(sliderVal) {
 // Cập nhật ngưỡng độ nhạy ban đầu từ slider val
 state.sensitivityThreshold = getSensitivityThresholdForSlider(state.sensitivitySliderVal);
 
+// Debounce đồng bộ Cloud: gom nhiều lần cộng phước liên tiếp thành 1 lần ghi Firestore
+const PHUOC_SYNC_DEBOUNCE_MS = 4000;
+let phuocSyncTimer = null;
+
+function schedulePhuocSync() {
+	if (phuocSyncTimer) clearTimeout(phuocSyncTimer);
+	phuocSyncTimer = setTimeout(() => {
+		phuocSyncTimer = null;
+		void syncPhuocToCloud();
+	}, PHUOC_SYNC_DEBOUNCE_MS);
+}
+
+function flushPhuocSync() {
+	if (!phuocSyncTimer) return;
+	clearTimeout(phuocSyncTimer);
+	phuocSyncTimer = null;
+	void syncPhuocToCloud();
+}
+
+// Điểm local là nguồn chính (localStorage); nếu flush lúc rời trang không kịp,
+// lần đăng nhập sau syncUserAuraProgress sẽ lấy max(local, cloud) nên không mất điểm.
+window.addEventListener('pagehide', flushPhuocSync);
+document.addEventListener('visibilitychange', () => {
+	if (document.visibilityState === 'hidden') flushPhuocSync();
+});
+
 // Hàm cập nhật và lưu phước đức vào localStorage
 export function incrementPhuoc() {
 	state.phuocCount++;
 	localStorage.setItem('phuoc_count', state.phuocCount);
-	void syncPhuocToCloud();
+	schedulePhuocSync();
 	return state.phuocCount;
 }
 

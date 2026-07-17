@@ -63,9 +63,6 @@ function playBellSound(config, now) {
 		lfo.start(now);
 	}
 
-	const oscs = [];
-	const gains = [];
-
 	// Tạo tần số gốc
 	createPartial(config.baseFreq, config.gains[0], config.decays[0], config.type);
 
@@ -73,6 +70,12 @@ function playBellSound(config, now) {
 	config.partials.forEach((freq, idx) => {
 		createPartial(freq, config.gains[idx + 1] || 0.1, config.decays[idx + 1] || 1.0, config.type);
 	});
+
+	// Tự động dừng LFO sau khi âm thanh dứt hẳn, tránh oscillator chạy vô hạn (rò rỉ)
+	if (lfo) {
+		const maxDecay = Math.max(config.decays[0], ...config.partials.map((_, idx) => config.decays[idx + 1] || 1.0));
+		lfo.stop(now + maxDecay + 0.5);
+	}
 
 	function createPartial(frequency, gainVal, decayTime, type) {
 		const osc = state.audioCtx.createOscillator();
@@ -93,9 +96,6 @@ function playBellSound(config, now) {
 		osc.start(now);
 		// Tự động dọn dẹp khi âm thanh kết thúc
 		osc.stop(now + decayTime + 0.5);
-
-		oscs.push(osc);
-		gains.push(oscGain);
 	}
 }
 

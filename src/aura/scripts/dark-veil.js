@@ -23,14 +23,24 @@ let fogBackdropCache = {
 	width: 0,
 	height: 0,
 	quality: 'high',
+	scale: 0,
 	opacityBucket: -1,
 	lastRenderAt: 0
 };
 
 const FOG_REFRESH_INTERVAL_MS = {
-	high: 33,
-	medium: 48,
-	low: 66
+	high: 100,
+	medium: 150,
+	low: 220
+};
+
+// Sương vốn mềm/blur nên render fogBackdropCanvas ở độ phân giải thu nhỏ rồi
+// phóng to lên (drawImage scale) mà không khác biệt thị giác — tiết kiệm rất
+// nhiều chi phí gradient/fillRect full canvas mỗi lần refresh.
+const FOG_BACKDROP_SCALE = {
+	high: 0.5,
+	medium: 0.4,
+	low: 1 / 3
 };
 
 export function initDarkVeil() {
@@ -151,19 +161,24 @@ export function drawDarkVeil(ctx, canvasWidth, canvasHeight, now = performance.n
 		darkCanvas.width = canvasWidth;
 		darkCanvas.height = canvasHeight;
 	}
-	if (fogBackdropCanvas && (fogBackdropCanvas.width !== canvasWidth || fogBackdropCanvas.height !== canvasHeight)) {
-		fogBackdropCanvas.width = canvasWidth;
-		fogBackdropCanvas.height = canvasHeight;
+
+	// fogBackdropCanvas render ở độ phân giải thu nhỏ theo quality rồi phóng to khi vẽ
+	const fogScale = FOG_BACKDROP_SCALE[fogQuality] || FOG_BACKDROP_SCALE.high;
+	const backdropWidth = Math.max(1, Math.round(canvasWidth * fogScale));
+	const backdropHeight = Math.max(1, Math.round(canvasHeight * fogScale));
+	if (fogBackdropCanvas && (fogBackdropCanvas.width !== backdropWidth || fogBackdropCanvas.height !== backdropHeight)) {
+		fogBackdropCanvas.width = backdropWidth;
+		fogBackdropCanvas.height = backdropHeight;
 	}
 	if (!darkCanvas || !darkCtx || !fogBackdropCanvas || !fogBackdropCtx) return;
 
-	if (_shouldRefreshFogBackdrop(canvasWidth, canvasHeight, fogQuality, now)) {
-		_renderFogBackdrop(canvasWidth, canvasHeight, now, fogQuality);
+	if (_shouldRefreshFogBackdrop(backdropWidth, backdropHeight, fogQuality, now)) {
+		_renderFogBackdrop(backdropWidth, backdropHeight, now, fogQuality);
 	}
 
-	// Vẽ lớp sương tối lên offscreen canvas
+	// Vẽ lớp sương tối lên offscreen canvas (phóng to từ backdrop thu nhỏ lên full size)
 	darkCtx.clearRect(0, 0, canvasWidth, canvasHeight);
-	darkCtx.drawImage(fogBackdropCanvas, 0, 0);
+	darkCtx.drawImage(fogBackdropCanvas, 0, 0, canvasWidth, canvasHeight);
 
 	// "Đục lỗ" tại vùng hào quang đã xóa (nếu đang clearing)
 	if (state.darkClearRadius > 5) {
@@ -195,7 +210,7 @@ export function drawDarkVeil(ctx, canvasWidth, canvasHeight, now = performance.n
 
 			const typeConfig = LANTERN_TYPES[lantern.type] || LANTERN_TYPES['basic'];
 			const lanternRadiusQuality = isLowQuality ? 0.75 : isMediumQuality ? 0.88 : 1;
-			const radius = 120 * lantern.scale * lantern.alpha * typeConfig.fogClearRadius * lanternRadiusQuality;
+			const radius = typeConfig.fogClearRadius * lantern.scale * lantern.alpha * lanternRadiusQuality;
 			if (radius < 5) return;
 
 			const clearGrad = darkCtx.createRadialGradient(
@@ -221,18 +236,23 @@ export function drawDarkVeil(ctx, canvasWidth, canvasHeight, now = performance.n
 	ctx.restore();
 }
 
-function _shouldRefreshFogBackdrop(canvasWidth, canvasHeight, fogQuality, now) {
+function _shouldRefreshFogBackdrop(backdropWidth, backdropHeight, fogQuality, now) {
 	const opacityBucket = Math.round(state.darkOpacity * 24);
+	const scale = FOG_BACKDROP_SCALE[fogQuality] || FOG_BACKDROP_SCALE.high;
 	const refreshInterval = FOG_REFRESH_INTERVAL_MS[fogQuality] || FOG_REFRESH_INTERVAL_MS.high;
 	return (
-		fogBackdropCache.width !== canvasWidth
-		|| fogBackdropCache.height !== canvasHeight
+		fogBackdropCache.width !== backdropWidth
+		|| fogBackdropCache.height !== backdropHeight
 		|| fogBackdropCache.quality !== fogQuality
+		|| fogBackdropCache.scale !== scale
 		|| fogBackdropCache.opacityBucket !== opacityBucket
 		|| (now - fogBackdropCache.lastRenderAt) >= refreshInterval
 	);
 }
 
+// canvasWidth/canvasHeight ở đây là kích thước fogBackdropCanvas ĐÃ THU NHỎ
+// (theo FOG_BACKDROP_SCALE), không phải kích thước canvas chính — được phóng
+// to lên khi drawDarkVeil vẽ fogBackdropCanvas ra darkCanvas.
 function _renderFogBackdrop(canvasWidth, canvasHeight, now, fogQuality) {
 	const isLowQuality = fogQuality === 'low';
 	const isMediumQuality = fogQuality === 'medium';
@@ -462,6 +482,7 @@ function _renderFogBackdrop(canvasWidth, canvasHeight, now, fogQuality) {
 	fogBackdropCache.width = canvasWidth;
 	fogBackdropCache.height = canvasHeight;
 	fogBackdropCache.quality = fogQuality;
+	fogBackdropCache.scale = FOG_BACKDROP_SCALE[fogQuality] || FOG_BACKDROP_SCALE.high;
 	fogBackdropCache.opacityBucket = Math.round(state.darkOpacity * 24);
 	fogBackdropCache.lastRenderAt = now;
 }
@@ -510,5 +531,6 @@ function _updateWarningUI(ratio) {
 }
 
 function _setVeilStatus(label) {
-	if (veilLabel) veilLabel.innerText = label;
+	// Chỉ ghi DOM khi label thực sự đổi — tránh set innerText mỗi frame ở phase 'holding'
+	if (veilLabel && veilLabel.innerText !== label) veilLabel.innerText = label;
 }

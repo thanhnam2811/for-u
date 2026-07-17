@@ -1,9 +1,8 @@
 import { state, saveLanternsState, syncUserAuraProgress } from "./state.js";
 import { setupUI, showToast } from "./ui.js";
 import { setupWebcam, getCameraDevices } from "./camera.js";
-import { loadHandLandmarkerModel, drawHandSkeleton } from "./ai.js";
+import { loadHandLandmarkerModel, drawHandSkeleton } from "./gesture/models.js";
 import { initDarkVeil, updateDarkVeil, drawDarkVeil, triggerVeilClear } from "./dark-veil.js";
-import { drawFaceFilter } from "./filters/index.js";
 import { initAudio } from "./audio.js";
 import { createGameLoop, shouldRunTask } from "./game-loop.js";
 import { updateTracking } from "./runtime/tracking-system.js";
@@ -30,6 +29,21 @@ let debugErrorCopyButton = null;
 let debugErrorCloseButton = null;
 let lastDebugErrorText = "";
 let statFps = null;
+
+// Filter AR khuôn mặt hiện đang tắt (activeFaceFilter luôn 'none') — chỉ tải module khi thực sự dùng
+let faceFilterModule = null;
+let faceFilterModuleLoading = false;
+
+function ensureFaceFilterModule() {
+	if (faceFilterModule || faceFilterModuleLoading) return;
+	faceFilterModuleLoading = true;
+	import('./filters/index.js')
+		.then((module) => { faceFilterModule = module; })
+		.catch((err) => {
+			faceFilterModuleLoading = false;
+			console.error('[AuraApp] Không thể tải module filter AR:', err);
+		});
+}
 
 const debugEnabled = new URLSearchParams(window.location.search).get('debug') === '1';
 
@@ -154,11 +168,6 @@ function updateFrame(frame) {
 
 	updateTracking(frame, video);
 
-	for (let i = state.particles.length - 1; i >= 0; i--) {
-		state.particles[i].update();
-		if (state.particles[i].life <= 0) state.particles.splice(i, 1);
-	}
-
 	for (let i = state.prayerAuras.length - 1; i >= 0; i--) {
 		state.prayerAuras[i].update();
 		if (state.prayerAuras[i].done) state.prayerAuras.splice(i, 1);
@@ -190,14 +199,14 @@ function renderFrame(frame) {
 	}
 
 	if (state.activeFaceFilter !== 'none' && state.faceLandmarks) {
-		drawFaceFilter(ctx, state.faceLandmarks, state.activeFaceFilter, frame.canvasWidth, frame.canvasHeight, frame.now);
+		if (faceFilterModule) {
+			faceFilterModule.drawFaceFilter(ctx, state.faceLandmarks, state.activeFaceFilter, frame.canvasWidth, frame.canvasHeight, frame.now);
+		} else {
+			ensureFaceFilterModule();
+		}
 	}
 
 	ctx.restore();
-
-	for (let i = state.particles.length - 1; i >= 0; i--) {
-		state.particles[i].draw(ctx);
-	}
 
 	for (let i = state.prayerAuras.length - 1; i >= 0; i--) {
 		state.prayerAuras[i].draw(ctx);

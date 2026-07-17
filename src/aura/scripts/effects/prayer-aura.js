@@ -1,6 +1,6 @@
 import { state } from "../state.js";
 import { THEME_COLORS } from "../constants.js";
-import { hexToRgb } from "./core-effects.js";
+import { hexToRgb } from "../utils/math.js";
 
 function clamp01(value) {
 	return Math.min(1, Math.max(0, value));
